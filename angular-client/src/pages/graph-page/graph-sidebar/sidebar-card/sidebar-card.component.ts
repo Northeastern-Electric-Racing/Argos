@@ -1,9 +1,9 @@
-import { Component, inject, Input, OnInit } from '@angular/core';
+import { Component, OnInit, computed, inject, input, signal, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { decimalPipe } from 'src/utils/pipes.utils';
-import { MatIcon } from '@angular/material/icon';
-import { NgStyle } from '@angular/common';
-import TypographyComponent from 'src/components/typography/typography.component';
+import { UiIconComponent } from 'src/ui/icon/icon.component';
+import { tw } from 'src/ui/recipes/tw';
 
 /**
  * Sidebar Card Component to display a card in the sidebar.
@@ -13,42 +13,45 @@ import TypographyComponent from 'src/components/typography/typography.component'
 @Component({
   selector: 'sidebar-card',
   templateUrl: './sidebar-card.component.html',
-  styleUrls: ['./sidebar-card.component.css'],
-  standalone: true,
-  imports: [MatIcon, NgStyle, TypographyComponent]
+  changeDetection: ChangeDetectionStrategy.Eager,
+  imports: [UiIconComponent]
 })
 export default class SidebarCardComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
 
-  @Input() title!: string;
-  @Input() dropDown?: boolean;
-  @Input() open?: boolean;
-  @Input() dataValue?: string;
-  @Input() topicName!: string;
-  @Input() isDesktop: boolean = true;
-  iconId!: string;
+  title = input.required<string>();
+  dropDown = input<boolean | undefined>(undefined);
+  open = input<boolean | undefined>(undefined);
+  dataValue = signal<string | undefined>(undefined);
+  topicName = input.required<string>();
+  isDesktop = input<boolean>(true);
+  iconId = computed(() => `${this.title()}-icon`);
+  protected readonly titleWithIcon = tw('my-1.25 ml-8.75');
+  protected readonly titleCentred = tw('mx-1.25 text-center');
 
   ngOnInit(): void {
-    this.iconId = `${this.title}-icon`;
-
-    this.storage.get(this.topicName.slice(0, -1)).subscribe((value) => {
-      const displayValue = decimalPipe(value.values[0], 3).toFixed(3) + value.unit;
-      this.dataValue = displayValue;
-    });
+    this.storage
+      .get(this.topicName().slice(0, -1))
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
+        const displayValue = decimalPipe(value.values[0], 3).toFixed(3) + value.unit;
+        this.dataValue.set(displayValue);
+      });
   }
 
   /**
    * Runs animation when card is selected
    */
   selectCard() {
-    const card = document.getElementById(this.title);
+    const card = document.getElementById(this.title());
     if (card) {
       card.classList.add('selected');
       setTimeout(() => {
         card.classList.remove('selected');
       }, 250);
     }
-    const dropDown = document.getElementById(this.iconId);
+    const dropDown = document.getElementById(this.iconId());
     if (dropDown) {
       dropDown.classList.toggle('selected');
     }

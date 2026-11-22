@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, HostListener, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { combineLatest, map } from 'rxjs';
 import Storage from 'src/services/storage.service';
@@ -19,7 +19,6 @@ import { StatDisplayComponent } from '../../../../components/stat-display/stat-d
 @Component({
   selector: 'bms-at-a-glance',
   templateUrl: './bms-at-a-glance.component.html',
-  styleUrl: './bms-at-a-glance.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     InfoPanelComponent,
@@ -27,7 +26,11 @@ import { StatDisplayComponent } from '../../../../components/stat-display/stat-d
     StatDisplayComponent,
     GlanceThermometerComponent,
     BatteryLevelIndicatorComponent
-  ]
+  ],
+  host: {
+    class: 'block',
+    '(window:resize)': 'onResize()'
+  }
 })
 export class BmsAtAGlanceComponent {
   private storage = inject(Storage);
@@ -68,7 +71,6 @@ export class BmsAtAGlanceComponent {
   protected enableWidgets = signal(window.innerWidth >= 1000);
   protected getPackVoltageStatusColor = () => getConnectionDotStatusColor(this.packVoltage() ?? 0);
 
-  @HostListener('window:resize')
   onResize() {
     this.enableWidgets.set(window.innerWidth >= 1000);
   }

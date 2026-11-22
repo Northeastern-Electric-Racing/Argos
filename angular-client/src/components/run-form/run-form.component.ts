@@ -1,28 +1,40 @@
-import { Component, OnInit } from '@angular/core';
+import { ToastService } from 'src/ui/toast/toast.service';
+import {
+  Component,
+  OnInit,
+  DestroyRef,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  ElementRef,
+  Injector,
+  afterNextRender,
+  effect,
+  signal
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DynamicFormField, FormTemplateComponent } from '../form-template/form-template.component';
 import { inject } from '@angular/core';
 import { Run } from 'src/utils/types.utils';
 import { getAllRuns, getRunById } from 'src/api/run.api';
-import { DynamicDialogRef } from 'primeng/dynamicdialog';
 import APIService from 'src/services/api.service';
-import { MessageService } from 'primeng/api';
-import { FormGroup } from '@angular/forms';
-import { updateRun } from 'src/api/run.api';
 import { DropdownOption, SelectorConfig, SelectDropdownComponent } from '../select-dropdown/select-dropdown.component';
 import LoadingPageComponent from '../loading-page/loading-page.component';
 
 @Component({
   selector: 'run-form',
   templateUrl: './run-form.component.html',
-  styleUrl: './run-form.component.css',
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [SelectDropdownComponent, FormTemplateComponent, LoadingPageComponent]
 })
 export class RunFormComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   public apiService = inject(APIService);
-  private messageService = inject(MessageService);
-  private ref = inject(DynamicDialogRef);
-  templateReady = false;
+  private messageService = inject(ToastService);
+  private cdr = inject(ChangeDetectorRef);
+  private host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private injector = inject(Injector);
+  private focusedFirstField = false;
+  templateReady = signal(false);
   selectedRun: Run | undefined = undefined;
   allRuns: Run[] = [];
   runsLoaded = false;
@@ -66,16 +78,22 @@ export class RunFormComponent implements OnInit {
   inputFields: DynamicFormField[] = [this.locationName, this.driverName, this.notes];
 
   constructor() {
-    this.ref.onClose.subscribe((form: FormGroup) => {
-      if (this.selectedRun === undefined) {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No run selected' });
-        return;
-      }
-      updateRun(
-        this.selectedRun.id,
-        form.controls['driverName'].value,
-        form.controls['locationName'].value,
-        form.controls['notes'].value
+    // The dialog picks its initial focus while only the spinner is here, so it lands on Close.
+    // Once the form first renders, move focus to its first field (unless the user moved it).
+    effect(() => {
+      if (!this.templateReady() || this.focusedFirstField) return;
+      this.focusedFirstField = true;
+      afterNextRender(
+        () => {
+          // Move focus only while it is on <body> or still on the dialog's own chrome (its Close button).
+          const host = this.host.nativeElement;
+          const active = document.activeElement;
+          const onChrome =
+            !!active && !host.contains(active) && active.closest('[role="dialog"]') === host.closest('[role="dialog"]');
+          if (active && active !== document.body && !onChrome) return;
+          host.querySelector<HTMLElement>('[role="combobox"], input')?.focus();
+        },
+        { injector: this.injector }
       );
     });
   }
@@ -88,21 +106,21 @@ export class RunFormComponent implements OnInit {
   loadAllRuns = () => {
     if (this.runsLoaded) return;
 
-    this.templateReady = false;
+    this.templateReady.set(false);
     const runsQueryResponse = this.apiService.query<Run[]>(() => getAllRuns());
 
-    runsQueryResponse.isLoading.subscribe((isLoading: boolean) => {
-      this.templateReady = !isLoading;
+    runsQueryResponse.isLoading.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((isLoading: boolean) => {
+      this.templateReady.set(!isLoading);
     });
 
-    runsQueryResponse.error.subscribe((error) => {
-      error && this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
+    runsQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
+      if (error) this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
       if (error) {
         console.log('loading error: ', error);
       }
     });
 
-    runsQueryResponse.data.subscribe((data) => {
+    runsQueryResponse.data.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((data) => {
       if (data) {
         this.allRuns = data;
         this.runsLoaded = true;
@@ -120,6 +138,8 @@ export class RunFormComponent implements OnInit {
             defaultValue: this.formatRunInfo(latestRun)
           };
         }
+        // Zoneless: the form fields and selector config are plain fields, so ask for a re-render.
+        this.cdr.markForCheck();
       }
     });
   };
@@ -162,21 +182,21 @@ export class RunFormComponent implements OnInit {
     }
 
     // If not found locally, fetch from API
-    this.templateReady = false;
+    this.templateReady.set(false);
     const runQueryResponse = this.apiService.query<Run>(() => getRunById(runId));
 
-    runQueryResponse.isLoading.subscribe((isLoading: boolean) => {
-      this.templateReady = !isLoading;
+    runQueryResponse.isLoading.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((isLoading: boolean) => {
+      this.templateReady.set(!isLoading);
     });
 
-    runQueryResponse.error.subscribe((error) => {
-      error && this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
+    runQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
+      if (error) this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
       if (error) {
         console.log('loading error: ', error);
       }
     });
 
-    runQueryResponse.data.subscribe((run) => {
+    runQueryResponse.data.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((run) => {
       if (run) {
         this.updateFormFields(run);
         this.selectedRun = run;
@@ -186,6 +206,7 @@ export class RunFormComponent implements OnInit {
           ...this.selectorConfig,
           defaultValue: this.formatRunInfo(run)
         };
+        this.cdr.markForCheck();
       }
     });
   };

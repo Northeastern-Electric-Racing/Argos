@@ -1,6 +1,7 @@
-import { Component, effect, inject, input, OnInit } from '@angular/core';
+import { Component, effect, inject, input, OnInit, DestroyRef, ChangeDetectionStrategy, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Subject, takeUntil } from 'rxjs';
 import { Router } from '@angular/router';
-import { Subscription } from 'rxjs';
 import { appRoutes } from 'src/app/app-routes';
 import { FaultService } from 'src/services/fault.service';
 import Storage from 'src/services/storage.service';
@@ -9,55 +10,68 @@ import { allChipFaults, topics } from 'src/utils/topic.utils';
 import { FaultData } from 'src/utils/types.utils';
 import { ChipFaultPipe } from 'src/utils/pipes/chip-fault.pipe';
 import { InfoBackgroundComponent } from '../../../../components/info-background/info-background.component';
-import { TableModule } from 'primeng/table';
-import { PrimeTemplate } from 'primeng/api';
+import { CdkTableModule } from '@angular/cdk/table';
 import { DatePipe } from '@angular/common';
+import { cellClass, headerCellClass, rowClass, tableClass, tableClasses } from 'src/ui/recipes/table';
+import { cellButtonClass } from 'src/ui/recipes/cell-button';
+import { cx, tw } from 'src/ui/recipes/tw';
+
+/** The chip-faults table: striped, hoverable rows in a 300px scroll box under a sticky header. */
+const chipFaultsTable = {
+  wrapper: cx(tableClasses.wrapper, tw('mt-5 max-h-75')),
+  table: tableClass(),
+  th: headerCellClass(),
+  td: cellClass(),
+  row: rowClass({ striped: true, hover: true }),
+  /** The Name cell's button, shared with the fault tables. */
+  cellButton: cellButtonClass
+} as const;
 
 @Component({
   selector: 'chip-faults',
   templateUrl: './chip-faults.component.html',
-  styleUrl: './chip-faults.component.css',
-  standalone: true,
-  imports: [InfoBackgroundComponent, TableModule, PrimeTemplate, DatePipe]
+  changeDetection: ChangeDetectionStrategy.Eager,
+  imports: [InfoBackgroundComponent, CdkTableModule, DatePipe]
 })
 export class ChipFaultsComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
+  /** Emits when the inputs change, ending the subscriptions made for the previous ones. */
+  private dataChange$ = new Subject<void>();
   private faultService = inject(FaultService);
   private storage = inject(Storage);
   chip = input.required<Chip>();
   title!: string;
   segment = input.required<number>();
-  subscribtions: Subscription[] = [];
-  chipFaults: FaultData[] = [];
-  selectedFault: FaultData | undefined = undefined;
+  /** Newest first, capped at 50. A new array on each fault, since the CDK table only re-renders an array source when its reference changes. */
+  readonly chipFaults = signal<FaultData[]>([]);
+  readonly columns = ['name', 'occurredAt'];
+  protected readonly t = chipFaultsTable;
   private router = inject(Router);
   chipFaultPipe = inject(ChipFaultPipe);
 
   constructor() {
     effect(() => {
-      this.subscribtions.forEach((sub) => sub.unsubscribe());
+      this.dataChange$.next();
       this.resetFaults();
       this.subscribeToData(this.segment());
     });
   }
 
   resetFaults() {
-    this.subscribtions.forEach((sub) => sub.unsubscribe());
-    this.chipFaults = [];
+    this.chipFaults.set([]);
   }
 
   subscribeToData(segment: number, chip: Chip = this.chip()) {
     allChipFaults.forEach((faultName) => {
-      this.subscribtions.push(
-        this.storage.get(topics.chipFault(segment, chip, faultName)).subscribe((data) => {
+      this.storage
+        .get(topics.chipFault(segment, chip, faultName))
+        .pipe(takeUntil(this.dataChange$), takeUntilDestroyed(this.destroyRef))
+        .subscribe((data) => {
           if (parseInt(data.values[0]) === 0) return;
           const fault = this.chipFaultPipe.transform(data, chip, segment, faultName);
           if (!fault) return;
-          if (this.chipFaults.length >= 50) {
-            this.chipFaults.pop();
-          }
-          this.chipFaults.unshift(fault);
-        })
-      );
+          this.chipFaults.update((faults) => [fault, ...faults].slice(0, 50));
+        });
     });
   }
 
@@ -66,11 +80,9 @@ export class ChipFaultsComponent implements OnInit {
     this.title = `Chip ${chipToString(this.chip())} Faults`;
   }
 
-  onRowSelect = () => {
-    if (this.selectedFault) {
-      this.faultService.selectFault(this.selectedFault);
-      this.navigateTo(appRoutes.faultsGraphRoute());
-    }
+  onRowSelect = (fault: FaultData) => {
+    this.faultService.selectFault(fault);
+    this.navigateTo(appRoutes.faultsGraphRoute());
   };
 
   navigateTo(route: string): void {

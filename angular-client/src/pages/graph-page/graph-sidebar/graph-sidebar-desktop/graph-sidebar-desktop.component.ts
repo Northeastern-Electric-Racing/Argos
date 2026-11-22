@@ -1,10 +1,21 @@
-import { Component, Injector, OnDestroy, OnInit, computed, inject, input, signal } from '@angular/core';
+import { DialogRef } from '@angular/cdk/dialog';
+import { UiDialogService } from 'src/ui/dialog/dialog.service';
+import {
+  Component,
+  Injector,
+  OnDestroy,
+  computed,
+  inject,
+  input,
+  linkedSignal,
+  signal,
+  untracked,
+  ChangeDetectionStrategy
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { TreeNode, PrimeTemplate } from 'primeng/api';
-import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { TreeNodeSelectEvent, TreeNodeUnSelectEvent, Tree } from 'primeng/tree';
-import { ToggleSwitch } from 'primeng/toggleswitch';
+import { TopicTreeComponent } from '../topic-tree/topic-tree.component';
+import { UiSwitchComponent } from 'src/ui/switch/switch.component';
 import { take } from 'rxjs';
 import {
   DropdownOption,
@@ -19,40 +30,50 @@ import {
   findSelectedTreeNodes,
   flattenTreeNodes,
   filterSelectedNodes,
+  TreeNode,
   TreeNodeData
 } from 'src/utils/tree.utils';
 import { DataType } from 'src/utils/types.utils';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
 import { ButtonComponent } from '../../../../components/argos-button/argos-button.component';
-import TypographyComponent from 'src/components/typography/typography.component';
 import { PresetDialogComponent } from '../../preset-dialog/preset-dialog.component';
 
 @Component({
   selector: 'graph-sidebar-desktop',
   templateUrl: './graph-sidebar-desktop.component.html',
-  styleUrls: ['./graph-sidebar-desktop.component.css'],
-  imports: [ButtonComponent, Tree, PrimeTemplate, TypographyComponent, ToggleSwitch, FormsModule, SelectDropdownComponent]
+  changeDetection: ChangeDetectionStrategy.Eager,
+  imports: [ButtonComponent, TopicTreeComponent, UiSwitchComponent, FormsModule, SelectDropdownComponent]
 })
-export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
+export default class GraphSidebarDesktopComponent implements OnDestroy {
   private topicSelectionService = inject(TopicSelectionService);
   private presetService = inject(GraphPresetService);
-  private dialogService = inject(DialogService);
+  private dialogService = inject(UiDialogService);
   private storage = inject(Storage);
   private injector = inject(Injector);
-  private presetDialogRef?: DynamicDialogRef;
+  private presetDialogRef?: DialogRef<DataType[] | null> | null;
 
   dataTypes = input<DataType[]>([]);
-  treeNodes: TreeNode<TreeNodeData>[] = [];
-  flatNodes: TreeNode<TreeNodeData>[] = [];
-  selectedNodes?: TreeNode<TreeNodeData>[];
+  treeNodes = computed(() => {
+    const nodes = dataTypesToNodes(this.dataTypes());
+    // Leaf toSignal()s can't be created in a reactive context; they clean up via the injector.
+    return untracked(() => mapNodesToTreeNodes(nodes, this.storage, this.injector));
+  });
+  flatNodes = computed(() => flattenTreeNodes(this.treeNodes()));
+  // Re-derived when the tree is rebuilt; also set locally by the tree's two-way selection.
+  selectedNodes = linkedSignal<TreeNode<TreeNodeData>[] | undefined>(() =>
+    findSelectedTreeNodes(this.treeNodes(), this.topicSelectionService)
+  );
+  selectedKeys = computed(() => (this.selectedNodes() ?? []).map((n) => n.key ?? ''));
+  /** Leaf nodes by topic key; flat leaves share keys and data with their tree originals. */
+  leafByKey = computed(() => new Map(this.flatNodes().map((n) => [n.key ?? '', n])));
   flattenMode = signal(false);
   selectedOnly = signal(false);
 
   private selectedDataTypesSig = toSignal(this.topicSelectionService.getSelectedDataTypes(), { initialValue: [] });
-  private selectedFlatNodes = computed(() => filterSelectedNodes(this.flatNodes, this.selectedDataTypesSig()));
+  private selectedFlatNodes = computed(() => filterSelectedNodes(this.flatNodes(), this.selectedDataTypesSig()));
   activeNodes = computed(() => {
     if (this.selectedOnly()) return this.selectedFlatNodes();
-    return this.flattenMode() ? this.flatNodes : this.treeNodes;
+    return this.flattenMode() ? this.flatNodes() : this.treeNodes();
   });
 
   private presets = toSignal(this.presetService.getPresets(), { initialValue: [] as Preset[] });
@@ -67,43 +88,35 @@ export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
   }));
   activePresetName = toSignal(this.presetService.getActivePresetName(), { initialValue: undefined });
 
-  ngOnInit(): void {
-    const nodes = dataTypesToNodes(this.dataTypes());
-    this.treeNodes = mapNodesToTreeNodes(nodes, this.storage, this.injector);
-    this.flatNodes = flattenTreeNodes(this.treeNodes);
-    this.selectedNodes = findSelectedTreeNodes(this.treeNodes, this.topicSelectionService);
-  }
-
   toggleFlattenMode(value: boolean) {
     this.flattenMode.set(value);
     if (this.selectedOnly()) return;
-    const active = value ? this.flatNodes : this.treeNodes;
-    this.selectedNodes = findSelectedTreeNodes(active, this.topicSelectionService);
+    const active = value ? this.flatNodes() : this.treeNodes();
+    this.selectedNodes.set(findSelectedTreeNodes(active, this.topicSelectionService));
   }
 
   toggleSelectedOnly(value: boolean) {
     this.selectedOnly.set(value);
-    this.selectedNodes = findSelectedTreeNodes(this.activeNodes(), this.topicSelectionService);
+    this.selectedNodes.set(findSelectedTreeNodes(this.activeNodes(), this.topicSelectionService));
   }
 
   clearSelections = () => {
-    this.treeNodes.forEach((n) => (n.expanded = false));
+    this.treeNodes().forEach((n) => (n.expanded = false));
     this.topicSelectionService.clearSelection();
-    this.selectedNodes = undefined;
+    this.selectedNodes.set(undefined);
   };
 
   openPresetsDialog = () => {
-    this.presetDialogRef = this.dialogService.open(PresetDialogComponent, {
+    this.presetDialogRef = this.dialogService.open<DataType[] | null>(PresetDialogComponent, {
       header: 'Topic Presets',
       width: '640px',
       draggable: true,
-      closable: true,
-      closeAriaLabel: 'Close',
       data: {
         dataTypes: this.dataTypes()
       }
     });
-    this.presetDialogRef.onClose.pipe(take(1)).subscribe((matched: DataType[] | null) => {
+    // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
+    this.presetDialogRef?.closed.pipe(take(1)).subscribe((matched) => {
       if (matched) {
         this.applyMatched(matched);
       }
@@ -116,25 +129,20 @@ export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
     }
   }
 
-  nodeSelect(event: TreeNodeSelectEvent) {
-    const dt = event.node.data?.dataType;
-    if (dt) {
+  nodeSelect(key: string) {
+    const node = this.leafByKey().get(key);
+    const dt = node?.data?.dataType;
+    if (node && dt) {
       this.topicSelectionService.addDataType(dt);
+      this.selectedNodes.update((nodes) => [...(nodes ?? []), node]);
     }
   }
 
-  onRowClick(evt: MouseEvent, node: TreeNode) {
-    if (node.children?.length !== 0) {
-      evt.preventDefault();
-      evt.stopPropagation();
-      node.expanded = !node.expanded;
-    }
-  }
-
-  onNodeUnselect(event: TreeNodeUnSelectEvent) {
-    const dt = event.node.data?.dataType;
+  onNodeUnselect(key: string) {
+    const dt = this.leafByKey().get(key)?.data?.dataType;
     if (dt) {
       this.topicSelectionService.removeDataType(dt);
+      this.selectedNodes.update((nodes) => (nodes ?? []).filter((n) => n.key !== key));
     }
   }
 
@@ -146,6 +154,6 @@ export default class GraphSidebarDesktopComponent implements OnInit, OnDestroy {
   private applyMatched(matched: DataType[]) {
     if (matched.length === 0) return; // unknown topics warn toast
     this.topicSelectionService.setSelectedDataTypes(matched);
-    this.selectedNodes = findSelectedTreeNodes(this.activeNodes(), this.topicSelectionService);
+    this.selectedNodes.set(findSelectedTreeNodes(this.activeNodes(), this.topicSelectionService));
   }
 }

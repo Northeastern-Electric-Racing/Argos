@@ -56,14 +56,31 @@ This section should be your first refrence when developing or running into devel
 
 We use diesel, for our ORM: [diesel docs](https://diesel.rs/guides/getting-started).
 
-However, when creating schema changes please use charybis, [Charybdis README](../charybdis/README.md).
+However, when creating schema changes to the car database please use charybdis, [Charybdis README](../charybdis/README.md).
 
-#### Integration tests:
+#### The argos database:
 
-Since this app uses the database for testing, you must:
+The argos database holds Argos-only data, such as tracks and laps, in its own Postgres container (`argos-db` in `compose/compose.yml`). It is not car telemetry: it is not uploaded to the cloud, not in Grafana, and not managed by charybdis. Its data is a bind mount, so `down -v` keeps it; wipe it with `sudo rm -rf compose/argos-db-data` (its files belong to the container's postgres user).
 
-1. Install the [diesel CLI](https://diesel.rs/guides/getting-started.html#installing-diesel-cli) globally.
-2. run `./integration_test.sh`:
+Scylla connects to `ARGOS_DATABASE_URL`, retrying in the background until it answers, and runs its migrations from `argos_migrations/`, so a deploy needs no manual SQL. Without it, scylla runs as before and only the map has no tracks. For `cargo run`, set it to the container, `postgresql://postgres:password@127.0.0.1:5433/postgres`.
+
+To change its schema, add a Diesel migration instead of a charybdis one:
+
+```
+diesel migration generate --config-file diesel.argos.toml <migration_name>
+```
+
+Write its `up.sql` and `down.sql`, then `diesel migration run --config-file diesel.argos.toml --database-url <ARGOS_DATABASE_URL>` applies it and regenerates `src/argos_schema.rs`.
+
+#### Tests:
+
+- Unit tests need no database and run in parallel: `cargo test`.
+- Integration tests (`tests/integration/`) need Postgres. They wait for the car and argos databases (`DATABASE_URL`, `ARGOS_DATABASE_URL`), migrate them as scylla does on startup, and share them, so they run one at a time: `cargo test --test integration -- --test-threads=1`. Plain `cargo test` skips them.
+- `./integration_test.sh` starts throwaway databases and runs both.
+
+#### Mock GPS:
+
+`SCYLLA_SIREN_HOST_URL=localhost:1883 cargo run --bin gps_mock` publishes mock fixes on `TPU/GPS/Location` every 100 ms, driving laps of a loop, so the map and lap timing work without the car. It is a dev tool: the Docker image ships only `scylla-server`.
 
 <!-- #### Test it yourself!
 

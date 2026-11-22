@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges } from '@angular/core';
+import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import Theme from 'src/services/theme.service';
 
 /**
@@ -8,17 +8,12 @@ import Theme from 'src/services/theme.service';
 @Component({
   selector: 'battery-level-indicator',
   templateUrl: './battery-level-indicator.component.html',
-  styleUrl: './battery-level-indicator.component.css',
-  standalone: true
+  changeDetection: ChangeDetectionStrategy.Eager,
+  host: { class: 'inline-flex shrink-0 self-center' }
 })
-export class BatteryLevelIndicatorComponent implements OnChanges {
-  @Input() percentage: number = 0;
+export class BatteryLevelIndicatorComponent {
+  percentage = input<number>(0);
 
-  fillHeight = '0%';
-  fillColor = Theme.battteryHigh;
-
-  ngOnChanges(): void {
-    this.fillHeight = Math.max(0, Math.min(100, this.percentage)) + '%';
-    this.fillColor = this.percentage <= 20 ? Theme.battteryLow : Theme.battteryHigh;
-  }
+  fillHeight = computed(() => Math.max(0, Math.min(100, this.percentage())) + '%');
+  fillColor = computed(() => (this.percentage() <= 20 ? Theme.battteryLow : Theme.battteryHigh));
 }

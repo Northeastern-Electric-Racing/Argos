@@ -1,11 +1,14 @@
 # ---------- Build Phase ----------
-FROM node:alpine AS Build
+FROM node:24-alpine AS Build
 WORKDIR /usr/src/app
 
 COPY package.json package-lock.json ./
 RUN npm install
 
 COPY . .
+
+# The offline map is git-ignored and fetched by utils/fetch-basemap.sh; without it the map has no background
+RUN test -s src/assets/map/basemap.pmtiles || { echo "No offline map: run utils/fetch-basemap.sh first" >&2; exit 1; }
 
 # Build the app once (no real env values here)
 RUN npm run build:production

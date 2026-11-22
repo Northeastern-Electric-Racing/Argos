@@ -1,193 +1,82 @@
-import { Component, Input, OnDestroy, OnInit, inject } from '@angular/core';
-import ApexCharts from 'apexcharts';
-import { ApexXAxis, ApexDataLabels, ApexChart, ApexMarkers, ApexGrid, ApexTooltip, ApexFill } from 'ng-apexcharts';
-import { DialogService } from 'primeng/dynamicdialog';
-import { GraphDialogComponent } from '../graph-dialog/graph-dialog.component';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  afterNextRender,
+  computed,
+  effect,
+  inject,
+  input,
+  untracked,
+  viewChild
+} from '@angular/core';
+import { ChartData } from 'chart.js';
+import { BaseChartDirective, provideCharts } from 'ng2-charts';
 import { GraphData } from 'src/utils/types.utils';
-
-type ChartOptions = {
-  chart: ApexChart;
-  xaxis: ApexXAxis;
-  yaxis: ApexYAxis;
-  dataLabels: ApexDataLabels;
-  markers: ApexMarkers;
-  grid: ApexGrid;
-  tooltip: ApexTooltip;
-  fill: ApexFill;
-  stroke: ApexStroke;
-};
+import {
+  DEFAULT_TIME_RANGE_SEC,
+  LIVE_LINE_REGISTERABLES,
+  LIVE_REFRESH_MS,
+  applyLiveWindow,
+  buildLiveLineOptions,
+  liveWindow,
+  windowPoints
+} from './live-line-chart.utils';
 
 @Component({
   selector: 'graph-component',
   templateUrl: './graph.component.html',
-  styleUrls: ['./graph.component.css'],
-  providers: [DialogService],
-  standalone: true
+  providers: [provideCharts({ registerables: LIVE_LINE_REGISTERABLES })],
+  // Fills its box by default; zero specificity, so a consumer's h-*/w-* class wins (#909's :host block).
+  host: { class: 'relative block [:where(&)]:h-full [:where(&)]:w-full' },
+  changeDetection: ChangeDetectionStrategy.Eager,
+  imports: [BaseChartDirective]
 })
-export class GraphComponent implements OnInit, OnDestroy {
-  public dialogService = inject(DialogService);
-  @Input() data!: GraphData[];
-  @Input() color!: string; // Must be hex
-  @Input() title?: string;
-  @Input() graphContainerId!: string;
-  @Input({ required: false }) timeRangeSec!: number;
-  options!: ChartOptions;
-  chart!: ApexCharts;
-  timeDiffMs: number = 0;
-  isSliding: boolean = false;
-  timeRangeMs: number = 120000; // 2 minutes in ms
-  timeOuts: NodeJS.Timeout[] = [];
-  openDialog = () => {
-    this.dialogService.open(GraphDialogComponent, {
-      header: this.title,
-      data: {
-        data: this.data,
-        color: this.color,
-        title: this.title
-      }
+export class GraphComponent {
+  private chartDirective = viewChild<BaseChartDirective<'line', GraphData[]>>(BaseChartDirective);
+  data = input.required<GraphData[]>();
+  color = input.required<string>(); // Must be hex
+  title = input<string | undefined>(undefined);
+  timeRangeSec = input<number | undefined>(undefined);
+  timeRangeMs = computed(() => (this.timeRangeSec() ?? DEFAULT_TIME_RANGE_SEC) * 1000);
+
+  readonly chartData: ChartData<'line', GraphData[]> = { datasets: [{ data: [] }] };
+  readonly chartOptions = buildLiveLineOptions({ legend: false });
+
+  constructor() {
+    const destroyRef = inject(DestroyRef);
+    afterNextRender(() => {
+      this.syncChart();
+      const refresh = setInterval(() => this.syncChart(), LIVE_REFRESH_MS);
+      destroyRef.onDestroy(() => clearInterval(refresh));
     });
-  };
-
-  updateChart = () => {
-    this.chart.updateSeries([
-      {
-        name: this.title,
-        data: Array.from(this.data)
-      }
-    ]);
-
-    if (!this.isSliding && this.data.length > 2) {
-      this.timeDiffMs = this.data[this.data.length - 1].x - this.data[0].x;
-    }
-
-    if (!this.isSliding && this.timeDiffMs > this.timeRangeMs) {
-      this.isSliding = true;
-      this.chart.updateOptions({
-        ...this.options,
-        xaxis: {
-          ...this.options.xaxis,
-          range: this.timeRangeMs
-        }
-      });
-    }
-
-    this.timeOuts.push(
-      setTimeout(() => {
-        this.updateChart();
-      }, 800)
-    );
-  };
-
-  ngOnInit(): void {
-    this.timeRangeMs = (this.timeRangeSec ?? 120) * 1000;
-
-    this.options = {
-      chart: {
-        id: 'graph',
-        type: 'line',
-        height: '100%',
-        zoom: {
-          autoScaleYaxis: true
-        },
-        animations: {
-          enabled: false,
-          dynamicAnimation: {
-            speed: 1000
-          }
-        },
-        toolbar: {
-          show: false
-        }
-        // background: '#5A5A5A'
-      },
-      dataLabels: {
-        enabled: false
-      },
-      stroke: {
-        curve: 'straight',
-        colors: [this.color]
-      },
-      markers: {
-        size: 0
-      },
-      xaxis: {
-        type: 'category',
-        tickAmount: 2,
-        labels: {
-          show: true,
-          style: {
-            colors: '#FFFFFF'
-          },
-          formatter: (value) => {
-            return (
-              '' +
-              new Date(value).getHours() +
-              ':' +
-              ((new Date(value).getMinutes() < 10 ? '0' : '') + new Date(value).getMinutes()) +
-              ':' +
-              ((new Date(value).getSeconds() < 10 ? '0' : '') + new Date(value).getSeconds())
-            );
-          }
-        },
-        axisBorder: {
-          show: false
-        },
-        axisTicks: {
-          show: false
-        }
-      },
-      yaxis: {
-        tickAmount: 2,
-        labels: {
-          style: {
-            colors: '#FFFFFF'
-          }
-        }
-      },
-      tooltip: {
-        theme: 'dark',
-        x: {
-          //format by hours and minutes and seconds
-          format: 'M/d/yy, h:mm:ss'
-        }
-      },
-      fill: {
-        type: 'linear',
-        gradient: {
-          shadeIntensity: 1,
-          opacityFrom: 0.7,
-          opacityTo: 0.9,
-          stops: [0, 100]
-        }
-      },
-      grid: {
-        show: false
-      }
-    };
-
-    //Weird rendering stuff with apex charts, view link to see why https://github.com/apexcharts/react-apexcharts/issues/187
-    this.timeOuts.push(
-      setTimeout(() => {
-        const chartContainer = document.getElementById(this.graphContainerId);
-        if (!chartContainer) {
-          return;
-        }
-
-        this.chart = new ApexCharts(chartContainer, {
-          series: [{ data: [] }],
-          ...this.options
-        });
-
-        this.chart.render();
-        this.updateChart();
-      }, 100)
-    );
+    // Input changes (a new colour, title or data array) apply to the live chart straight away
+    effect(() => {
+      this.data();
+      this.color();
+      this.title();
+      this.timeRangeMs();
+      untracked(() => this.syncChart());
+    });
   }
 
-  ngOnDestroy(): void {
-    this.chart.destroy();
-    this.timeOuts.forEach((timeout) => {
-      clearTimeout(timeout);
-    });
+  private get chart() {
+    return this.chartDirective()?.chart;
+  }
+
+  private syncChart(): void {
+    const { chart } = this;
+    if (!chart) return;
+    const data = this.data();
+    const window = liveWindow([data], this.timeRangeMs());
+
+    const [dataset] = chart.data.datasets;
+    dataset.label = this.title();
+    dataset.borderColor = this.color();
+    dataset.backgroundColor = this.color();
+    dataset.data = window ? windowPoints(data, window.min) : [];
+
+    applyLiveWindow(chart, window);
+    chart.update('none');
   }
 }

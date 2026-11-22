@@ -1,74 +1,71 @@
-<info-background title="Laps" [fill]="true" style="width: 100%; height: 100%">
-  <div class="lap-table-wrap">
+<info-background title="Laps" [fill]="true" class="h-full w-full">
+  <div [class]="cls.tableWrap">
     @if (timer.laps().length === 0) {
-      <div class="empty-laps">
+      <div class="flex items-center justify-center p-8">
         @if (timer.activeSession()) {
-          <typography
-            variant="info-subtitle"
-            content="Hit Start then Lap to begin recording"
-            additionalStyles="font-size: 14px; color: var(--color-text-subtitle);"
-          />
+          <typography variant="info-subtitle" content="Hit Start then Lap to begin recording" />
         } @else {
-          <typography
-            variant="info-subtitle"
-            content="No active session"
-            additionalStyles="font-size: 14px; color: var(--color-text-subtitle);"
-          />
+          <typography variant="info-subtitle" content="No active session" />
         }
       </div>
     } @else {
-      <p-table [value]="lapsNewestFirst()">
-        <ng-template #header>
+      <table [class]="cls.table">
+        <thead>
           <tr>
-            <th class="col-num">#</th>
-            <th class="col-dur">Duration</th>
-            <th class="col-delta">Δ Best</th>
-            <th class="col-time">Time of Day</th>
-            <th class="col-time">Started At</th>
-            <th class="col-run">Run</th>
-            <th class="col-stat">Avg Speed</th>
-            <th class="col-stat">Energy</th>
-            <th class="col-stat">Max Temp</th>
+            <th [class]="headers.num">#</th>
+            <th [class]="headers.dur">Duration</th>
+            <th [class]="headers.delta">Δ Best</th>
+            <th [class]="headers.time">Time of Day</th>
+            <th [class]="headers.time">Started At</th>
+            <th [class]="headers.run">Run</th>
+            <th [class]="headers.stat">Avg Speed</th>
+            <th [class]="headers.stat">Energy</th>
+            <th [class]="headers.stat">Max Temp</th>
           </tr>
-        </ng-template>
-        <ng-template #body let-lap>
-          <tr [class.lap-row-best]="isBestLap(lap)" [class.lap-row-worst]="isWorstLap(lap)">
-            <td class="col-num">{{ lap.number }}</td>
-            <td class="col-dur monospace">{{ formatLapMs(lap.durationMs) }}</td>
-            <td class="col-delta monospace" [class.delta-positive]="!isBestLap(lap)">
+        </thead>
+        <tbody>
+          @for (lap of lapsNewestFirst(); track lap.number) {
+            <tr [class]="rowClass">
+              <td [class]="numCellClass(lap)">{{ lap.number }}</td>
+              <td [class]="cells.mono">{{ formatLapMs(lap.durationMs) }}</td>
               @if (isBestLap(lap)) {
-                <span class="best-flag"><mat-icon>flag</mat-icon> —</span>
+                <td [class]="cells.mono">
+                  <span class="inline-flex items-center gap-1 font-semibold text-battery-high">
+                    <ui-icon name="flag" size="xs" /><span class="sr-only">Best lap</span>
+                    —
+                  </span>
+                </td>
               } @else {
-                {{ formatLapDelta(lap) }}
+                <td [class]="cells.slower">{{ formatLapDelta(lap) }}</td>
               }
-            </td>
-            <td class="col-time monospace">{{ lap.endEpochMs | date: 'HH:mm:ss.SSS' }}</td>
-            <td class="col-time monospace">{{ lap.startEpochMs | date: 'HH:mm:ss.SSS' }}</td>
-            <td class="col-run">{{ lap.runId ?? '—' }}</td>
-            <td class="col-stat">
-              @if (lap.stats.avgSpeed !== null) {
-                {{ lap.stats.avgSpeed | number: '1.0-0' }} mph
-              } @else {
-                —
-              }
-            </td>
-            <td class="col-stat">
-              @if (lap.stats.energyUsed !== null) {
-                {{ lap.stats.energyUsed | number: '1.2-2' }}%
-              } @else {
-                —
-              }
-            </td>
-            <td class="col-stat">
-              @if (lap.stats.maxMotorTemp !== null) {
-                {{ lap.stats.maxMotorTemp | number: '1.0-0' }}°C
-              } @else {
-                —
-              }
-            </td>
-          </tr>
-        </ng-template>
-      </p-table>
+              <td [class]="cells.mono">{{ lap.endEpochMs | date: 'HH:mm:ss.SSS' }}</td>
+              <td [class]="cells.mono">{{ lap.startEpochMs | date: 'HH:mm:ss.SSS' }}</td>
+              <td [class]="cells.plain">{{ lap.runId ?? '—' }}</td>
+              <td [class]="cells.plain">
+                @if (lap.stats.avgSpeed !== null) {
+                  {{ lap.stats.avgSpeed | number: '1.0-0' }} mph
+                } @else {
+                  —
+                }
+              </td>
+              <td [class]="cells.plain">
+                @if (lap.stats.energyUsed !== null) {
+                  {{ lap.stats.energyUsed | number: '1.2-2' }}%
+                } @else {
+                  —
+                }
+              </td>
+              <td [class]="cells.plain">
+                @if (lap.stats.maxMotorTemp !== null) {
+                  {{ lap.stats.maxMotorTemp | number: '1.0-0' }}°C
+                } @else {
+                  —
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
     }
   </div>
 </info-background>

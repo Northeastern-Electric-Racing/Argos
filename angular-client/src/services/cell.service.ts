@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { ALPHA_THERM_CELL_MAP, BETA_THERM_CELL_MAP, BMS_CONFIG } from 'src/utils/bms.config';
 import { Chip, numToSegmentType, Segment } from 'src/utils/bms.utils';
 import Storage from './storage.service';
@@ -58,15 +58,9 @@ const startingPerSegmentBetaCells: CellReading[][] = createPerSegmentCells(Chip.
   providedIn: 'root'
 })
 export class CellService {
-  private storageService: Storage;
-  private perSegmentAlphaCells: CellReading[][];
-  private perSegmentBetaCells: CellReading[][];
-
-  constructor(storageService: Storage) {
-    this.storageService = storageService;
-    this.perSegmentAlphaCells = startingPerSegmentAlphaCells;
-    this.perSegmentBetaCells = startingPerSegmentBetaCells;
-  }
+  private storageService = inject(Storage);
+  private perSegmentAlphaCells: CellReading[][] = startingPerSegmentAlphaCells;
+  private perSegmentBetaCells: CellReading[][] = startingPerSegmentBetaCells;
 
   updateCellInfo = () => {
     this.subscribeToAlphaCellInfo();

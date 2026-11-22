@@ -1,20 +1,29 @@
-<div class="seven-segment-wrapper">
+<div class="inline-flex items-end gap-2">
   <div
-    class="seven-segment-container"
+    class="inline-flex items-center justify-center rounded-sm bg-surface-1 font-segment7 leading-none"
     [style.font-size.px]="fontSize()"
     [style.padding-left.px]="paddingLeft()"
     [style.padding-right.px]="paddingRight()"
     [style.padding-top.px]="paddingTop()"
     [style.padding-bottom.px]="paddingBottom()"
   >
-    <div class="segment-stack" [style.justify-items]="stackAlign()">
+    <div class="grid items-center" [style.justify-items]="stackAlign()">
       <!-- Background: all segments dimly lit -->
-      <span class="segment-text background" [style.text-align]="textAlign()">{{ backgroundText() }}</span>
-      <!-- Foreground: actual value in bright red -->
-      <span class="segment-text foreground" [style.text-align]="textAlign()">{{ foregroundText() }}</span>
+      <span
+        class="col-start-1 row-start-1 block w-full text-center tracking-wider whitespace-pre text-segment-ghost"
+        aria-hidden="true"
+        [style.text-align]="textAlign()"
+        >{{ backgroundText() }}</span
+      >
+      <!-- Foreground: the value in lit red, accent (develop's #ff3333 snapped to it; 4.51:1 on surface-1) -->
+      <span
+        class="col-start-1 row-start-1 block w-full text-center tracking-wider whitespace-pre text-accent"
+        [style.text-align]="textAlign()"
+        >{{ foregroundText() }}</span
+      >
     </div>
   </div>
   @if (unit()) {
-    <span class="unit-label" [style.font-size.px]="unitFontSize()">{{ unit() }}</span>
+    <span class="font-sans leading-none font-medium text-fg italic" [style.font-size.px]="unitFontSize()">{{ unit() }}</span>
   }
 </div>

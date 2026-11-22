@@ -1,90 +1,49 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, computed, input, signal, ChangeDetectionStrategy } from '@angular/core';
 import Theme from 'src/services/theme.service';
-import { trigger, state, style, animate, transition } from '@angular/animations';
+import { tw } from 'src/ui/recipes/tw';
+
+/** The nub fades to grey (814's #808080, the control-border token) over a second while clicked. */
+const nubClasses = {
+  idle: tw('bg-battery-shell transition-colors duration-1000 ease-linear'),
+  clicked: tw('bg-control-border transition-colors duration-1000 ease-linear')
+} as const;
 
 @Component({
   selector: 'battery-percentage',
   templateUrl: 'battery-percentage.component.html',
-  styleUrls: ['battery-percentage.component.css'],
-  // TODO: this is just a dumb animation that changes the color of the nub, would like to make something actually
-  // cool or interesting in the future
-  animations: [
-    // metadata array
-    trigger('toggleClick', [
-      // trigger block
-      state(
-        'true',
-        style({
-          // final CSS following animation
-          backgroundColor: 'grey'
-        })
-      ),
-      state(
-        'false',
-        style({
-          backgroundColor: Theme.batteryBack
-        })
-      ),
-      transition('true => false', animate('1000ms linear')), // animation timing
-      transition('false => true', animate('1000ms linear'))
-    ])
-  ],
-  standalone: true
+  changeDetection: ChangeDetectionStrategy.Eager
 })
-export class BatteryPercentageComponent implements OnInit {
-  @Input() percentage!: number;
-  @Input() height!: number;
-  @Input() width!: number;
+export class BatteryPercentageComponent {
+  percentage = input.required<number>();
+  height = input.required<number>();
+  width = input.required<number>();
 
-  // Background Styles
-  heightpx!: string;
-  widthpx!: string;
-  backgroundColor: string = Theme.batteryBack;
+  // Background Styles (the shell is the battery-shell token)
+  heightpx = computed(() => this.height() + 'px');
+  widthpx = computed(() => this.width() + 'px');
 
   // Fill Styles
-  fillWidth!: string;
-  fillMarginBottom!: string;
+  fillWidth = computed(() => this.width() * 0.9 + 'px');
+  fillMarginBottom = computed(() => this.height() * 0.05 + 'px');
 
   // Nub Styles
-  clicked: boolean = false;
-  nubHeight!: string;
-  nubWidth!: string;
+  clicked = signal(false);
+  protected nubClass = computed(() => (this.clicked() ? nubClasses.clicked : nubClasses.idle));
+  nubHeight = computed(() => this.height() / 10 + 'px');
+  nubWidth = computed(() => this.width() / 2 + 'px');
 
   // Corner Styles
-  roundCorner!: string;
-
-  // setting color and rendering
-  ngOnInit() {
-    this.renderBattery();
-  }
-
-  // fills battery bar based on current percentage
-  renderBattery() {
-    const minDim = Math.min(this.width, this.height);
-    this.heightpx = this.height + 'px';
-    this.widthpx = this.width + 'px';
-
-    this.fillWidth = this.width * 0.9 + 'px';
-    this.fillMarginBottom = this.height * 0.05 + 'px';
-
-    this.nubHeight = this.height / 10 + 'px';
-    this.nubWidth = this.width / 2 + 'px';
-
-    this.roundCorner = minDim * 0.05 + 'px';
-  }
+  roundCorner = computed(() => Math.min(this.width(), this.height()) * 0.05 + 'px');
 
   getFillHeight = (percentage: number) => {
-    return (percentage / 100) * (this.height * 0.9) + 'px';
+    return (percentage / 100) * (this.height() * 0.9) + 'px';
   };
 
-  getFillColor = (percentage: number) => {
-    if (percentage <= 20) {
-      return Theme.battteryLow;
-    }
-    return Theme.battteryHigh;
-  };
+  /** The fill's level: low at 20% and below, high above; its colour is the matching Theme battery colour. */
+  level = computed(() => (this.percentage() <= 20 ? 'low' : 'high'));
+  fillColor = computed(() => (this.level() === 'low' ? Theme.battteryLow : Theme.battteryHigh));
 
   toggleIsCorrect() {
-    this.clicked = !this.clicked; // change in data-bound value
+    this.clicked.update((clicked) => !clicked);
   }
 }

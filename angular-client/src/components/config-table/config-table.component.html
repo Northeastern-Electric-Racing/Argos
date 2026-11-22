@@ -1,22 +1,25 @@
-<div class="config-table-grid">
+<div class="flex">
   <!-- Left label column -->
-  <div class="label-col">
-    <div class="corner-cell"></div>
+  <div class="flex min-w-25 shrink-0 flex-col">
+    <div class="h-14.5 border-b border-solid border-border"></div>
     @for (row of rows(); track row.label) {
-      <span class="row-label">{{ row.label }}</span>
+      <span
+        class="flex items-center border-b border-solid border-border py-3 pr-4 font-sans text-md font-semibold text-fg-muted last:border-b-0"
+        >{{ row.label }}</span
+      >
     }
   </div>
   <!-- One data column per item -->
   @for (item of columns(); track $index) {
-    <div class="data-col">
-      <div class="col-header">
-        <span class="col-title">{{ columnConfig().title(item) }}</span>
+    <div class="flex min-w-32.5 flex-col border-l border-solid border-border">
+      <div class="flex h-14.5 flex-col justify-center border-b border-solid border-border bg-surface-3 px-4.5 py-2">
+        <span class="font-sans text-title leading-control font-bold text-fg">{{ columnConfig().title(item) }}</span>
         @if (columnConfig().subtitle) {
-          <span class="col-subtitle">{{ columnConfig().subtitle!(item) }}</span>
+          <span class="font-sans text-sm leading-none font-medium text-fg-muted">{{ columnConfig().subtitle!(item) }}</span>
         }
       </div>
       @for (row of rows(); track row.label) {
-        <span class="data-value" [class]="row.getClass ? row.getClass(item) : ''">{{ row.getValue(item) }}</span>
+        <span [class]="valueClass(row, item)">{{ row.getValue(item) }}</span>
       }
     </div>
   }

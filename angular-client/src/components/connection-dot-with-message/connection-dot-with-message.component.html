@@ -1,13 +1,7 @@
-<hstack spacing="10px" style="margin-top: 10px">
+<hstack class="mt-2.5" spacing="10px">
   <div
-    class="connection-dot"
+    class="-mt-2.5 size-7.5 rounded-full border-3 border-solid border-fg"
     [style.background-color]="this.getStatusColor()()"
-    style="margin-top: -10px; width: 30px; height: 30px"
   ></div>
-  <typography
-    variant="info-title"
-    [content]="this.getStatusMessage()()"
-    additionalStyles="fontSize:17px; "
-    style="margin-top: -10px"
-  ></typography>
+  <typography class="-mt-2.5" variant="info-title" textClass="text-base" [content]="this.getStatusMessage()()" />
 </hstack>

@@ -1,42 +1,37 @@
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { Component, inject, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { allSegments } from 'src/utils/bms.utils';
-import { MatGridList, MatGridTile } from '@angular/material/grid-list';
 import { BmsHeaderComponent } from './components/bms-header/bms-header.component';
 import { BmsAtAGlanceComponent } from './components/bms-at-a-glance/bms-at-a-glance.component';
 import { SegmentRowComponent } from './components/segment-row/segment-row.component';
 import { HeatMapService, HeatMapView } from 'src/services/heat-map.service';
 import { DropdownOption, SelectorConfig } from 'src/components/select-dropdown/select-dropdown.component';
 import { SectionHeaderComponent } from 'src/components/section-header/section-header.component';
+import { bmsGrid, bmsTile } from './bms-grid';
+import { injectIsMobile } from 'src/ui/layout/mobile';
 
 const formatAllSelectorName = (name: string) => 'Set ALL Maps: ' + name;
 
 @Component({
   selector: 'app-bms-debug-page',
   templateUrl: './bms-debug-page.component.html',
-  styleUrl: './bms-debug-page.component.css',
-  imports: [
-    MatGridList,
-    MatGridTile,
-    BmsHeaderComponent,
-    BmsAtAGlanceComponent,
-    SegmentRowComponent,
-    SectionHeaderComponent
-  ],
+  imports: [BmsHeaderComponent, BmsAtAGlanceComponent, SegmentRowComponent, SectionHeaderComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   host: {
     '(window:resize)': 'onResize()'
   }
 })
-export class BmsDebugPageComponent implements OnInit, OnDestroy {
+export class BmsDebugPageComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   private heatMapService = inject(HeatMapService);
-  private subscription?: Subscription;
 
   time = new Date();
   newRunIsLoading = false;
-  mobileThreshold = 768;
   windowSize: number = window.innerWidth;
-  isMobile = window.innerWidth < this.mobileThreshold;
+  isMobile = injectIsMobile();
   segments = allSegments;
+  protected readonly grid = bmsGrid;
+  protected readonly tile = bmsTile;
 
   /** "Set ALL Maps" dropdown — shown once at the section header level */
   private allViewOptions: DropdownOption[] = [
@@ -67,13 +62,12 @@ export class BmsDebugPageComponent implements OnInit, OnDestroy {
   ];
   allSegSelectorConfig: SelectorConfig = {
     options: this.allViewOptions,
-    placeholder: 'Set ALL Maps'
+    placeholder: 'Set ALL Maps',
+    ariaLabel: 'Heat map view for all segments'
   };
 
-  constructor() {}
-
   ngOnInit(): void {
-    this.subscription = this.heatMapService.globalView$.subscribe((view) => {
+    this.heatMapService.globalView$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((view) => {
       this.allSegSelectorConfig = {
         ...this.allSegSelectorConfig,
         defaultValue: formatAllSelectorName(view)
@@ -81,12 +75,7 @@ export class BmsDebugPageComponent implements OnInit, OnDestroy {
     });
   }
 
-  ngOnDestroy(): void {
-    this.subscription?.unsubscribe();
-  }
-
   onResize() {
-    this.isMobile = window.innerWidth <= this.mobileThreshold;
     this.windowSize = window.innerWidth;
   }
 }

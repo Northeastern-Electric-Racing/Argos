@@ -1,8 +1,10 @@
+import { DialogRef } from '@angular/cdk/dialog';
+import { ToastService } from 'src/ui/toast/toast.service';
+import { UiDialogService } from 'src/ui/dialog/dialog.service';
+import { ConfirmService } from 'src/ui/confirm/confirm.service';
 import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core';
 import { Router } from '@angular/router';
-import { MessageService } from 'primeng/api';
-import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { InputText } from 'primeng/inputtext';
+import { UiIconComponent } from 'src/ui/icon/icon.component';
 import { take } from 'rxjs';
 import { appRoutes } from 'src/app/app-routes';
 import TypographyComponent from 'src/components/typography/typography.component';
@@ -22,24 +24,36 @@ import { AddRuleDialogComponent } from './add-rule-dialog/add-rule-dialog.compon
 import { RulesTableComponent } from './rules-table/rules-table.component';
 import { NotificationListComponent } from 'src/components/notification-list/notification-list.component';
 import { downloadAsFile, FileReadError, readTextFile } from 'src/utils/file.utils';
+import { UiInputDirective } from 'src/ui/field/field.directive';
+import { injectFocusAfterRender } from 'src/ui/focus/focus-after-render';
+import { injectIsMobile } from 'src/ui/layout/mobile';
 
 const CLIENT_ID_KEY = 'notification_rules_client_id';
 
-/** CSV columns: id, topic, expr, debounce_time */
-// TODO: add description and uploaded_by columns once backend supports them
+/** Required CSV columns: id, topic, expr, debounce_time */
 const CSV_HEADERS = ['id', 'topic', 'expr', 'debounce_time'] as const;
+/** Optional so older exports still import; uploaded_by is left out because the server sets it */
+const CSV_DESCRIPTION_HEADER = 'description';
 
 @Component({
   selector: 'notification-rules-page',
   templateUrl: './notification-rules-page.component.html',
-  styleUrls: ['./notification-rules-page.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TypographyComponent, ButtonComponent, InputText, RulesTableComponent, NotificationListComponent]
+  imports: [
+    TypographyComponent,
+    ButtonComponent,
+    RulesTableComponent,
+    NotificationListComponent,
+    UiIconComponent,
+    UiInputDirective
+  ]
 })
 export default class NotificationRulesPageComponent implements OnInit {
-  private messageService = inject(MessageService);
-  private dialogService = inject(DialogService);
+  private messageService = inject(ToastService);
+  private dialogService = inject(UiDialogService);
+  private confirmService = inject(ConfirmService);
   private router = inject(Router);
+  private focusAfterRender = injectFocusAfterRender();
 
   clientId!: string;
   fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
@@ -50,15 +64,20 @@ export default class NotificationRulesPageComponent implements OnInit {
   selectedRules = signal<ClientRule[]>([]);
   /** Whether the right-side notification stream rail is visible. */
   protected streamRailOpen = signal(true);
+  /** Below Tailwind's md (768px) the rail is always shown and has no toggle. */
+  private isPhone = injectIsMobile();
+  /** Whether the rail is on screen, so aria-hidden and inert follow what is drawn (hidden on a desktop only). */
+  protected streamRailShown = computed(() => this.streamRailOpen() || this.isPhone());
 
   rulesTable = viewChild<RulesTableComponent>('rulesTable');
+  private addButton = viewChild('addButton', { read: ElementRef });
   hasSelection = computed(() => this.selectedRules().length > 0);
 
-  private confirmRef: DynamicDialogRef | undefined;
-  private addRuleRef: DynamicDialogRef | undefined;
+  private confirmRef: DialogRef<boolean> | null | undefined;
+  private addRuleRef: DialogRef<RulePayload | null> | null | undefined;
 
   ngOnInit(): void {
-    // clientId is guaranteed to exist — eagerly created in AppContextComponent
+    // clientId is guaranteed to exist — eagerly created by SocketService, which AppContextComponent injects at bootstrap
     this.clientId = localStorage.getItem(CLIENT_ID_KEY)!;
   }
 
@@ -75,14 +94,13 @@ export default class NotificationRulesPageComponent implements OnInit {
   };
 
   onAddRule = () => {
-    this.addRuleRef = this.dialogService.open(AddRuleDialogComponent, {
+    this.addRuleRef = this.dialogService.open<RulePayload | null>(AddRuleDialogComponent, {
       header: 'Add New Rule',
-      width: '500px',
-      closable: true,
-      closeAriaLabel: 'Close'
+      width: '500px'
     });
 
-    this.addRuleRef.onClose.pipe(take(1)).subscribe(async (rule: RulePayload | null) => {
+    // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
+    this.addRuleRef?.closed.pipe(take(1)).subscribe(async (rule) => {
       if (!rule) return;
 
       try {
@@ -100,11 +118,20 @@ export default class NotificationRulesPageComponent implements OnInit {
     });
   };
 
-  onRemoveSelected = async () => {
+  onRemoveSelected = () => {
     const selected = this.selectedRules();
     if (selected.length === 0) return;
-    if (!confirm(`Delete ${selected.length} selected rule(s)?`)) return;
+    this.confirmService.confirm({
+      header: 'Delete Rules',
+      message: `Delete ${selected.length} selected rule(s)?`,
+      acceptLabel: 'Delete',
+      rejectLabel: 'Cancel',
+      danger: true,
+      accept: () => this.removeRules(selected)
+    });
+  };
 
+  private async removeRules(selected: ClientRule[]): Promise<void> {
     const ids = selected.map((r) => r.id);
     const errors: string[] = [];
     for (const id of ids) {
@@ -128,10 +155,17 @@ export default class NotificationRulesPageComponent implements OnInit {
     } else {
       this.messageService.add({ severity: 'success', summary: 'Deleted', detail: `${selected.length} rule(s) removed` });
       this.selectedRules.set([]);
+      // Remove (the confirm's trigger, which got focus back) is disabled once nothing is selected.
+      this.focusAddButton();
     }
 
     this.rulesTable()?.loadRules();
-  };
+  }
+
+  /** After a delete leaves no row to focus, focus goes to Add, never to <body>. */
+  focusAddButton(): void {
+    this.focusAfterRender(() => (this.addButton()?.nativeElement as HTMLElement | undefined)?.querySelector('button'));
+  }
 
   onToggleSubscription = async () => {
     const selected = this.selectedRules();
@@ -204,15 +238,14 @@ export default class NotificationRulesPageComponent implements OnInit {
     const result = this.parseCsv(csv);
     if (!result) return;
 
-    this.confirmRef = this.dialogService.open(UploadConfirmDialogComponent, {
+    this.confirmRef = this.dialogService.open<boolean>(UploadConfirmDialogComponent, {
       header: 'Confirm Rule Upload',
       width: '600px',
-      closable: true,
-      closeAriaLabel: 'Close',
       data: { rules: result }
     });
 
-    this.confirmRef.onClose.pipe(take(1)).subscribe((confirmed: boolean | undefined) => {
+    // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
+    this.confirmRef?.closed.pipe(take(1)).subscribe((confirmed) => {
       if (confirmed) {
         this.batchAddRules(result);
       }
@@ -251,6 +284,7 @@ export default class NotificationRulesPageComponent implements OnInit {
     const topicIdx = headers.indexOf('topic');
     const exprIdx = headers.indexOf('expr');
     const debounceIdx = headers.indexOf('debounce_time');
+    const descriptionIdx = headers.indexOf(CSV_DESCRIPTION_HEADER);
 
     const rules: RulePayload[] = [];
     const errors: string[] = [];
@@ -279,7 +313,8 @@ export default class NotificationRulesPageComponent implements OnInit {
         continue;
       }
 
-      rules.push({ id, topic, expr, debounce_time: debounceTime });
+      const description = descriptionIdx >= 0 ? cols[descriptionIdx].trim() : '';
+      rules.push({ id, topic, expr, debounce_time: debounceTime, ...(description && { description }) });
     }
 
     if (errors.length > 0) {
@@ -385,12 +420,15 @@ export default class NotificationRulesPageComponent implements OnInit {
         return;
       }
 
-      // TODO: add description and uploaded_by columns once backend supports them
-      const header = CSV_HEADERS.join(',');
+      const header = [...CSV_HEADERS, CSV_DESCRIPTION_HEADER].join(',');
       const rows = rules.map((r) =>
-        [this.escapeCsvCell(r.id), this.escapeCsvCell(r.topic), this.escapeCsvCell(r.expr), String(r.debounce_time)].join(
-          ','
-        )
+        [
+          this.escapeCsvCell(r.id),
+          this.escapeCsvCell(r.topic),
+          this.escapeCsvCell(r.expr),
+          String(r.debounce_time),
+          this.escapeCsvCell(r.description ?? '')
+        ].join(',')
       );
 
       const csvContent = [header, ...rows].join('\n');

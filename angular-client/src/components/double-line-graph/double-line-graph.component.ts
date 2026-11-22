@@ -1,222 +1,98 @@
-import { Component, Input, OnDestroy, OnInit, inject } from '@angular/core';
-import ApexCharts from 'apexcharts';
 import {
-  ApexAxisChartSeries,
-  ApexXAxis,
-  ApexYAxis,
-  ApexDataLabels,
-  ApexChart,
-  ApexMarkers,
-  ApexGrid,
-  ApexTooltip,
-  ApexFill,
-  ApexStroke,
-  ApexLegend
-} from 'ng-apexcharts';
-import { DialogService } from 'primeng/dynamicdialog';
-import { GraphDialogComponent } from '../graph-dialog/graph-dialog.component';
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  afterNextRender,
+  computed,
+  effect,
+  inject,
+  input,
+  untracked,
+  viewChild
+} from '@angular/core';
+import { ChartData } from 'chart.js';
+import { BaseChartDirective, provideCharts } from 'ng2-charts';
 import { GraphData } from 'src/utils/types.utils';
-
-type ChartOptions = {
-  series: ApexAxisChartSeries;
-  chart: ApexChart;
-  xaxis: ApexXAxis;
-  yaxis: ApexYAxis;
-  dataLabels: ApexDataLabels;
-  markers: ApexMarkers;
-  grid: ApexGrid;
-  tooltip: ApexTooltip;
-  fill: ApexFill;
-  stroke: ApexStroke;
-  legend: ApexLegend;
-  colors: string[];
-};
+import {
+  DEFAULT_TIME_RANGE_SEC,
+  LIVE_LINE_REGISTERABLES,
+  LIVE_REFRESH_MS,
+  applyLiveWindow,
+  buildLiveLineOptions,
+  liveWindow,
+  windowPoints
+} from '../graph/live-line-chart.utils';
 
 @Component({
   selector: 'double-line-graph',
   templateUrl: './double-line-graph.component.html',
-  styleUrls: ['./double-line-graph.component.css'],
-  providers: [DialogService],
-  standalone: true
+  providers: [provideCharts({ registerables: LIVE_LINE_REGISTERABLES })],
+  // Fills its box by default; zero specificity, so a consumer's h-*/w-* class wins (#909's :host block).
+  host: { class: 'relative block [:where(&)]:h-full [:where(&)]:w-full' },
+  changeDetection: ChangeDetectionStrategy.Eager,
+  imports: [BaseChartDirective]
 })
-export class DoubleLineGraphComponent implements OnInit, OnDestroy {
-  public dialogService = inject(DialogService);
-  @Input() data1!: GraphData[];
-  @Input() color1!: string; // Must be hex
-  @Input() title1?: string;
-  @Input() data2!: GraphData[];
-  @Input() color2!: string; // Must be hex
-  @Input() title2?: string;
-  @Input() header?: string;
-  @Input() graphContainerId!: string;
-  @Input({ required: false }) timeRangeSec!: number;
-  options!: ChartOptions;
-  chart!: ApexCharts;
-  series: ApexAxisChartSeries = [];
-  timeDiffMs: number = 0;
-  isSliding: boolean = false;
-  timeRangeMs: number = 120000; // 2 minutes in ms
-  timeOuts: NodeJS.Timeout[] = [];
-  openDialog = () => {
-    this.dialogService.open(GraphDialogComponent, {
-      header: this.header,
-      data: {
-        data: this.data1,
-        color: this.color1,
-        title: this.title1
-      }
-    });
-  };
+export class DoubleLineGraphComponent {
+  private chartDirective = viewChild<BaseChartDirective<'line', GraphData[]>>(BaseChartDirective);
+  data1 = input.required<GraphData[]>();
+  color1 = input.required<string>(); // Must be hex
+  title1 = input<string | undefined>(undefined);
+  data2 = input.required<GraphData[]>();
+  color2 = input.required<string>(); // Must be hex
+  title2 = input<string | undefined>(undefined);
+  header = input<string | undefined>(undefined);
+  timeRangeSec = input<number | undefined>(undefined);
+  timeRangeMs = computed(() => (this.timeRangeSec() ?? DEFAULT_TIME_RANGE_SEC) * 1000);
 
-  ngOnDestroy(): void {
-    this.chart.destroy();
-    this.timeOuts.forEach((timeout) => clearTimeout(timeout));
+  readonly chartData: ChartData<'line', GraphData[]> = { datasets: [{ data: [] }, { data: [] }] };
+  readonly chartOptions = buildLiveLineOptions({ legend: true });
+
+  constructor() {
+    const destroyRef = inject(DestroyRef);
+    afterNextRender(() => {
+      this.syncChart();
+      const refresh = setInterval(() => this.syncChart(), LIVE_REFRESH_MS);
+      destroyRef.onDestroy(() => clearInterval(refresh));
+    });
+    // Input changes (new colours, titles or data arrays) apply to the live chart straight away
+    effect(() => {
+      this.data1();
+      this.data2();
+      this.color1();
+      this.color2();
+      this.title1();
+      this.title2();
+      this.timeRangeMs();
+      untracked(() => this.syncChart());
+    });
   }
 
-  updateChart = () => {
-    this.series = [
-      {
-        name: this.title1,
-        data: Array.from(this.data1)
-      },
-      {
-        name: this.title2,
-        data: Array.from(this.data2)
-      }
+  private get chart() {
+    return this.chartDirective()?.chart;
+  }
+
+  private syncChart(): void {
+    const { chart } = this;
+    if (!chart) return;
+    const lines = [
+      { data: this.data1(), color: this.color1(), title: this.title1() },
+      { data: this.data2(), color: this.color2(), title: this.title2() }
     ];
-    // temp fix, for now just basing change on data1 length...
-    // even though probably should check data1 also
-    if (!this.isSliding && this.data1.length > 2) {
-      this.timeDiffMs = this.data1[this.data1.length - 1].x - this.data1[0].x;
-    }
-
-    if (!this.isSliding && this.timeDiffMs > this.timeRangeMs) {
-      this.isSliding = true;
-      this.chart.updateOptions({
-        ...this.options,
-        xaxis: {
-          ...this.options.xaxis,
-          range: this.timeRangeMs
-        }
-      });
-    }
-
-    this.chart.updateSeries(this.series);
-    this.timeOuts.push(
-      setTimeout(() => {
-        this.updateChart();
-      }, 800)
+    const window = liveWindow(
+      lines.map((line) => line.data),
+      this.timeRangeMs()
     );
-  };
 
-  ngOnInit(): void {
-    this.timeRangeMs = (this.timeRangeSec ?? 120) * 1000;
+    // Update the datasets in place: Chart.js keys legend toggles on dataset identity
+    lines.forEach((line, index) => {
+      const dataset = chart.data.datasets[index];
+      dataset.label = line.title;
+      dataset.borderColor = line.color;
+      dataset.backgroundColor = line.color;
+      dataset.data = window ? windowPoints(line.data, window.min) : [];
+    });
 
-    this.series = [
-      {
-        name: this.title1,
-        data: this.data1
-      },
-      {
-        name: this.title2,
-        data: this.data2
-      }
-    ];
-
-    this.options = {
-      series: this.series,
-      chart: {
-        id: 'graph',
-        type: 'line',
-        height: '100%',
-        zoom: {
-          autoScaleYaxis: true
-        },
-        animations: {
-          enabled: true,
-          dynamicAnimation: {
-            speed: 1000
-          }
-        },
-        toolbar: {
-          show: false
-        }
-        // background: '#5A5A5A'
-      },
-      colors: [this.color1, this.color2], // Set series colors here
-      dataLabels: {
-        enabled: false
-      },
-      stroke: {
-        curve: 'straight',
-        width: 2
-      },
-      markers: {
-        size: 0
-      },
-      xaxis: {
-        type: 'category',
-        tickAmount: 2,
-        labels: {
-          show: true,
-          style: {
-            colors: '#FFFFFF'
-          },
-          formatter: (value) => {
-            return '' + new Date(value).getHours() + ':' + new Date(value).getMinutes() + ':' + new Date(value).getSeconds();
-          }
-        },
-        axisBorder: {
-          show: false
-        },
-        axisTicks: {
-          show: false
-        }
-      },
-      yaxis: {
-        tickAmount: 2,
-        labels: {
-          style: {
-            colors: '#FFFFFF'
-          }
-        }
-      },
-      tooltip: {
-        theme: 'dark',
-        x: {
-          // format by hours and minutes and seconds
-          format: 'M/d/yy, h:mm:ss'
-        }
-      },
-      fill: {
-        type: 'linear',
-        gradient: {
-          shadeIntensity: 1,
-          opacityFrom: 1,
-          opacityTo: 1,
-          stops: [0, 100, 0, 100]
-        }
-      },
-      grid: {
-        show: false
-      },
-      legend: {
-        labels: {
-          colors: '#fffff4' // Set legend label color to black
-        }
-      }
-    };
-
-    // Delay rendering to ensure the container is available
-    setTimeout(() => {
-      const chartContainer = document.getElementById(this.graphContainerId);
-      if (!chartContainer) {
-        return;
-      }
-
-      this.chart = new ApexCharts(chartContainer, this.options);
-      this.chart.render();
-      this.updateChart();
-    }, 100);
+    applyLiveWindow(chart, window);
+    chart.update('none');
   }
 }

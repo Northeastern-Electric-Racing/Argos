@@ -1,4 +1,5 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
 import { floatPipe } from 'src/utils/pipes.utils';
@@ -10,17 +11,20 @@ import HStackComponent from 'src/components/hstack/hstack.component';
 @Component({
   selector: 'state-of-charge-display',
   templateUrl: './state-of-charge-display.component.html',
-  styleUrls: ['./state-of-charge-display.component.css'],
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [InfoBackgroundComponent, BatteryPercentageComponent, TypographyComponent, HStackComponent]
 })
 export default class StateOfChargeDisplayComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
   stateOfCharge: number = 0;
 
   ngOnInit() {
-    this.storage.get(topics.stateOfCharge()).subscribe((value) => {
-      this.stateOfCharge = floatPipe(value.values[0]);
-    });
+    this.storage
+      .get(topics.stateOfCharge())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
+        this.stateOfCharge = floatPipe(value.values[0]);
+      });
   }
 }

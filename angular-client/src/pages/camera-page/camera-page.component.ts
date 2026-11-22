@@ -1,23 +1,23 @@
-import { Component, ElementRef, inject, OnInit, ViewChild } from '@angular/core';
-import { MessageService } from 'primeng/api';
-import { SelectChangeEvent, Select } from 'primeng/select';
+import { ToastService } from 'src/ui/toast/toast.service';
+import { Component, ElementRef, OnInit, inject, viewChild, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { UiSelectComponent } from 'src/ui/select/select.component';
 import { urls } from 'src/api/urls';
 import { getAllVideos } from 'src/api/video.api';
 import APIService from 'src/services/api.service';
 import MediaMTXWebRTCReader from 'src/utils/MediaMTXReader';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
-import TypographyComponent from 'src/components/typography/typography.component';
 
 @Component({
   selector: 'camera-page',
   templateUrl: './camera-page.component.html',
-  styleUrl: './camera-page.component.css',
-  standalone: true,
-  imports: [Select, ReactiveFormsModule, FormsModule, TypographyComponent]
+  changeDetection: ChangeDetectionStrategy.Eager,
+  imports: [UiSelectComponent, ReactiveFormsModule, FormsModule]
 })
 export class CameraPageComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   private serverService = inject(APIService);
-  private messageService = inject(MessageService);
+  private messageService = inject(ToastService);
 
   url = 'http://192.168.100.11:8889/frontcam/';
   urlAvailable = false;
@@ -28,8 +28,8 @@ export class CameraPageComponent implements OnInit {
   videoUrls: string[] = ['Live Stream'];
   videoUrlsIsLoading: boolean = true;
 
-  @ViewChild('remoteVideo') remoteVideo?: ElementRef<HTMLVideoElement>;
-  @ViewChild('playbackVideo', { static: false }) playbackVideoRef!: ElementRef<HTMLVideoElement>;
+  remoteVideo = viewChild<ElementRef<HTMLVideoElement>>('remoteVideo');
+  playbackVideoRef = viewChild<ElementRef<HTMLVideoElement>>('playbackVideo');
 
   async ngOnInit(): Promise<void> {
     this.urlAvailable = await this.checkConnection();
@@ -37,20 +37,21 @@ export class CameraPageComponent implements OnInit {
       url: new URL('whep', this.url),
       onError: console.log,
       onTrack: (e) => {
-        if (this.remoteVideo) {
-          [this.remoteVideo.nativeElement.srcObject] = e.streams;
+        const video = this.remoteVideo();
+        if (video) {
+          [video.nativeElement.srcObject] = e.streams;
         }
       }
     });
 
     const videosQueryResponse = this.serverService.query<string[]>(() => getAllVideos(), { queryKey: ['videos'] });
-    videosQueryResponse.error.subscribe((error) => {
-      error && this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
+    videosQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
+      if (error) this.messageService.add({ severity: 'error', summary: 'Error', detail: error.message });
     });
-    videosQueryResponse.isLoading.subscribe((isLoading) => {
+    videosQueryResponse.isLoading.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((isLoading) => {
       this.videoUrlsIsLoading = isLoading;
     });
-    videosQueryResponse.data.subscribe((data) => {
+    videosQueryResponse.data.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((data) => {
       if (data) this.videoUrls = data.concat('Live Stream');
     });
   }
@@ -66,7 +67,8 @@ export class CameraPageComponent implements OnInit {
     this.liveStream = false;
     // Wait for Angular to update the DOM
     setTimeout(() => {
-      const videoEl = this.playbackVideoRef.nativeElement;
+      const videoEl = this.playbackVideoRef()?.nativeElement;
+      if (!videoEl) return;
       videoEl.load(); // This reloads the new <source> inside the <video>
       videoEl.play();
     });
@@ -78,11 +80,11 @@ export class CameraPageComponent implements OnInit {
     this.liveStream = true;
   };
 
-  onDropdownChange = (event: SelectChangeEvent) => {
-    if (event.value === 'Live Stream') {
+  onDropdownChange = (value: string) => {
+    if (value === 'Live Stream') {
       this.onLiveStreamSelected();
     } else {
-      this.onVideoSelected(event.value);
+      this.onVideoSelected(value);
     }
   };
 }

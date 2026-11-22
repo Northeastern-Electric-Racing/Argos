@@ -22,3 +22,6 @@ export const decimalPipe = (value: string, places: number = 1): number => {
   const decimalMultiplier = 10 ** places;
   return Math.round(parseFloat(value) * decimalMultiplier) / decimalMultiplier;
 };
+
+export const formatDisplayValue = (value: number | undefined, precision: number, unit: string): string =>
+  (value?.toFixed(precision) ?? '-') + (unit === 'C' ? '\u00B0' : '');

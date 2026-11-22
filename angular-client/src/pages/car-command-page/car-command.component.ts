@@ -1,6 +1,18 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { ConfirmService } from 'src/ui/confirm/confirm.service';
+import { injectFocusAfterRender } from 'src/ui/focus/focus-after-render';
+import { ToastService } from 'src/ui/toast/toast.service';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  ElementRef,
+  OnInit,
+  computed,
+  inject,
+  signal,
+  viewChild
+} from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { ConfirmationService, MessageService } from 'primeng/api';
 import {
   authenticatePw,
   getSettings,
@@ -17,7 +29,6 @@ import APIService from 'src/services/api.service';
 import { DataType, ScyllaSettings } from 'src/utils/types.utils';
 import { groupCarCommands } from 'src/utils/topic.utils';
 
-import { Password } from 'primeng/password';
 import { FormsModule } from '@angular/forms';
 import { ButtonComponent } from '../../components/argos-button/argos-button.component';
 import LoadingPageComponent from 'src/components/loading-page/loading-page.component';
@@ -27,16 +38,13 @@ import { InfoBackgroundComponent } from 'src/components/info-background/info-bac
 import SettingToggleComponent from './setting-toggle/setting-toggle.component';
 import SettingInputComponent from './setting-input/setting-input.component';
 import CommandCardComponent from './command-card/command-card.component';
-import { ConfirmDialog } from 'primeng/confirmdialog';
+import { UiFieldErrorDirective, UiInputDirective, UiLabelDirective } from 'src/ui/field/field.directive';
 
 @Component({
   selector: 'car-command',
   templateUrl: './car-command.component.html',
-  styleUrls: ['./car-command.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [ConfirmationService],
   imports: [
-    Password,
     FormsModule,
     ButtonComponent,
     LoadingPageComponent,
@@ -46,14 +54,18 @@ import { ConfirmDialog } from 'primeng/confirmdialog';
     SettingToggleComponent,
     SettingInputComponent,
     CommandCardComponent,
-    ConfirmDialog
+    UiInputDirective,
+    UiLabelDirective,
+    UiFieldErrorDirective
   ]
 })
 export default class CarCommandComponent implements OnInit {
   private serverService = inject(APIService);
-  private toastService = inject(MessageService);
-  private confirmationService = inject(ConfirmationService);
+  private toastService = inject(ToastService);
+  private confirmationService = inject(ConfirmService);
   private destroyRef = inject(DestroyRef);
+  private focusAfterRender = injectFocusAfterRender();
+  private commandsHeader = viewChild<ElementRef<HTMLElement>>('commandsHeader');
 
   private dataTypesResponse = this.serverService.query<DataType[]>(getAllDatatypes);
   private allDataTypes = toSignal(this.dataTypesResponse.data, { initialValue: [] as DataType[] });
@@ -128,9 +140,20 @@ export default class CarCommandComponent implements OnInit {
       }
     });
     authenticationQueryResponse.data.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((data) => {
-      if (data) this.isAuthenticated.set(true);
+      if (data) {
+        this.isAuthenticated.set(true);
+        this.focusCommands();
+      }
     });
   };
+
+  /**
+   * The password form leaves with the Authenticate button; focus goes to the commands' first control, not <body>,
+   * with a ring only after a keyboard Authenticate.
+   */
+  private focusCommands() {
+    this.focusAfterRender(() => this.commandsHeader()?.nativeElement.querySelector('button'));
+  }
 
   onUpdateVideosPressed = () => {
     const updateVideoQueryResponse = this.serverService.query(() => updateVideos(), { invalidates: ['videos'] });

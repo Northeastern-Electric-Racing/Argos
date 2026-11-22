@@ -1,15 +1,16 @@
-import { Component, Input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'thermometer',
   templateUrl: './thermometer.component.html',
-  styleUrls: ['./thermometer.component.css'],
-  standalone: true
+  changeDetection: ChangeDetectionStrategy.Eager,
+  // The glass, its bulb and the mercury are drawn inside a 75% box of the consumer's container.
+  host: { class: 'relative flex h-3/4 w-3/4 justify-center' }
 })
 export default class ThermometerComponent {
-  @Input() temperature: number = 0;
-  @Input() min: number = 0;
-  @Input() max: number = 100;
+  temperature = input<number>(0);
+  min = input<number>(0);
+  max = input<number>(100);
 
   mapColor = (value: number, min: number, max: number) => {
     const range = max - min;

@@ -10,24 +10,22 @@ cd ../compose || { echo "Compose directory not found"; exit 1; }
 echo "Stopping any existing integration-test stack..."
 docker compose -p "$PROJECT" down 2>/dev/null || true
 
-# Start a new odyssey-db container under our project
-echo "Starting odyssey-db..."
-docker compose -p "$PROJECT" up -d odyssey-db || { echo "Failed to start odyssey-db"; exit 1; }
-
-# Wait for the database to initialize
-echo "Waiting for the database to initialize..."
-sleep 5
+# Start new car and argos database containers under our project
+echo "Starting odyssey-db and argos-db..."
+docker compose -p "$PROJECT" up -d odyssey-db argos-db || { echo "Failed to start the databases"; exit 1; }
 
 # Navigate to the scylla-server directory
 cd ../scylla-server || { echo "scylla-server directory not found"; exit 1; }
 
-# Run database migrations
-echo "Running database migrations..."
-DATABASE_URL=postgresql://postgres:password@127.0.0.1:${ODYSSEY_DB_PORT:-5432}/postgres diesel migration run || { echo "Migration failed"; exit 1; }
+# Unit tests need no database and run in parallel
+echo "Running unit tests..."
+cargo test || { echo "Unit tests failed"; exit 1; }
 
-# Run tests
-echo "Running tests..."
-DATABASE_URL=postgresql://postgres:password@127.0.0.1:${ODYSSEY_DB_PORT:-5432}/postgres cargo test -- --test-threads=1 || { echo "Tests failed"; exit 1; }
+# Integration tests wait for the databases, migrate them, and share them, so run them one at a time
+echo "Running integration tests..."
+DATABASE_URL=postgresql://postgres:password@127.0.0.1:${ODYSSEY_DB_PORT:-5432}/postgres \
+  ARGOS_DATABASE_URL=postgresql://postgres:password@127.0.0.1:${ARGOS_DB_PORT:-5433}/postgres \
+  cargo test --test integration -- --test-threads=1 || { echo "Integration tests failed"; exit 1; }
 
 # Navigate back to the compose directory
 cd ../compose || { echo "Compose directory not found"; exit 1; }

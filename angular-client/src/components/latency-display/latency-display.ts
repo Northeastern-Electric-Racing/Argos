@@ -1,4 +1,5 @@
-import { Component, Input, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, input, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
 import { InfoBackgroundComponent } from '../info-background/info-background.component';
@@ -11,25 +12,31 @@ import HStackComponent from '../hstack/hstack.component';
 @Component({
   selector: 'latency-display',
   templateUrl: './latency-display.html',
-  styleUrls: ['./latency-display.css'],
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [InfoBackgroundComponent, DividerComponent, TypographyComponent, VStackComponent, HStackComponent]
 })
 export default class LatencyDisplayComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
-  @Input() lowVal: number = 0;
-  @Input() medVal: number = 50;
-  @Input() highVal: number = 100;
+  lowVal = input<number>(0);
+  medVal = input<number>(50);
+  highVal = input<number>(100);
   latency: number = 0;
   newLatency: number = 0;
 
   ngOnInit(): void {
-    this.storage.get(topics.latency()).subscribe((value) => {
-      this.latency = parseInt(value.values[0]);
-    });
-    this.storage.get(topics.newLatency()).subscribe((value) => {
-      this.newLatency = parseInt(value.values[0]);
-    });
+    this.storage
+      .get(topics.latency())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
+        this.latency = parseInt(value.values[0]);
+      });
+    this.storage
+      .get(topics.newLatency())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
+        this.newLatency = parseInt(value.values[0]);
+      });
   }
 
   mapColor = (latency: number, medVal: number): string => {

@@ -1,0 +1,22 @@
+@if (collapsed()) {
+  <button #handle type="button" [class]="handleClass" (click)="toggle()" aria-expanded="false" aria-label="Show status bar">
+    <ui-icon name="chevron_left" size="lg" />
+  </button>
+} @else {
+  <div [class]="panelClass">
+    <div class="flex items-center justify-between self-stretch">
+      <span class="text-xs font-semibold tracking-[0.04em] text-fg-label uppercase">{{ title() }}</span>
+      <button
+        #collapseButton
+        type="button"
+        [class]="collapseClass"
+        (click)="toggle()"
+        aria-expanded="true"
+        aria-label="Hide status bar"
+      >
+        <ui-icon name="chevron_right" size="md" />
+      </button>
+    </div>
+    <ng-content />
+  </div>
+}

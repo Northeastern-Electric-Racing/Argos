@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 
 /**
  * Compact thermometer widget sized for the At A Glance bar.
@@ -7,25 +7,25 @@ import { Component, Input } from '@angular/core';
 @Component({
   selector: 'glance-thermometer',
   templateUrl: './glance-thermometer.component.html',
-  styleUrl: './glance-thermometer.component.css',
-  standalone: true
+  changeDetection: ChangeDetectionStrategy.Eager,
+  host: { class: 'inline-flex shrink-0 self-center' }
 })
 export class GlanceThermometerComponent {
-  @Input() temperature: number = 0;
-  @Input() min: number = 0;
-  @Input() max: number = 100;
+  temperature = input<number>(0);
+  min = input<number>(0);
+  max = input<number>(100);
 
-  get mercuryHeight(): string {
-    const clamped = Math.max(this.min, Math.min(this.temperature, this.max));
-    const pct = ((clamped - this.min) / (this.max - this.min)) * 100;
-    // Mercury fills 0–70% of the tube area (leaving room for glass top)
+  // Mercury fills 0–70% of the tube area (leaving room for glass top)
+  mercuryHeight = computed(() => {
+    const clamped = Math.max(this.min(), Math.min(this.temperature(), this.max()));
+    const pct = ((clamped - this.min()) / (this.max() - this.min())) * 100;
     return Math.max(5, pct * 0.7) + '%';
-  }
+  });
 
-  get mercuryColor(): string {
-    const range = this.max - this.min;
-    if (this.temperature < this.min + range / 2) return '#3b82f6';
-    if (this.temperature < this.min + range / 1.5) return '#eab308';
+  mercuryColor = computed(() => {
+    const range = this.max() - this.min();
+    if (this.temperature() < this.min() + range / 2) return '#3b82f6';
+    if (this.temperature() < this.min() + range / 1.5) return '#eab308';
     return '#ef4444';
-  }
+  });
 }

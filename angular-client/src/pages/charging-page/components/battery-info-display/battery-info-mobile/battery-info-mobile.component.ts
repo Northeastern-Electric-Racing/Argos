@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 
 import { BatteryPercentageComponent } from '../../../../../components/battery-percentage/battery-percentage.component';
 import { DividerComponent } from '../../../../../components/divider/divider';
@@ -10,8 +10,7 @@ import ThermometerComponent from 'src/components/thermometer/thermometer.compone
 @Component({
   selector: 'battery-info-mobile',
   templateUrl: './battery-info-mobile.component.html',
-  styleUrls: ['./battery-info-mobile.component.css'],
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     BatteryPercentageComponent,
     DividerComponent,
@@ -22,9 +21,9 @@ import ThermometerComponent from 'src/components/thermometer/thermometer.compone
   ]
 })
 export default class BatteryInfoMobileComponent {
-  @Input() voltage: number = 0;
-  @Input() packTemp: number = 0;
-  @Input() stateOfCharge: number = 0;
-  @Input() chargeCurrentLimit: number = 0;
-  @Input() dischargeCurrentLimit: number = 0;
+  voltage = input<number>(0);
+  packTemp = input<number>(0);
+  stateOfCharge = input<number>(0);
+  chargeCurrentLimit = input<number>(0);
+  dischargeCurrentLimit = input<number>(0);
 }

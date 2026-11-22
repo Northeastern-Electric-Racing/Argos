@@ -1,4 +1,5 @@
-import { Component, HostListener, input, OnInit } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
+import { injectIsMobile } from 'src/ui/layout/mobile';
 import { DataType } from 'src/utils/types.utils';
 import GraphSidebarDesktopComponent from './graph-sidebar-desktop/graph-sidebar-desktop.component';
 import GraphSidebarMobileComponent from './graph-sidebar-mobile/graph-sidebar-mobile.component';
@@ -11,22 +12,11 @@ import GraphSidebarMobileComponent from './graph-sidebar-mobile/graph-sidebar-mo
 @Component({
   selector: 'graph-sidebar',
   templateUrl: './graph-sidebar.component.html',
-  styleUrls: ['./graph-sidebar.component.css'],
-  standalone: true,
-  imports: [GraphSidebarDesktopComponent, GraphSidebarMobileComponent]
+  imports: [GraphSidebarDesktopComponent, GraphSidebarMobileComponent],
+  changeDetection: ChangeDetectionStrategy.Eager
 })
-export default class GraphSidebarComponent implements OnInit {
+export default class GraphSidebarComponent {
   dataTypes = input.required<DataType[]>();
 
-  isMobile!: boolean;
-  mobileThreshold = 768;
-
-  ngOnInit() {
-    this.isMobile = window.innerWidth <= this.mobileThreshold;
-  }
-
-  @HostListener('window:resize')
-  onResize() {
-    this.isMobile = window.innerWidth <= this.mobileThreshold;
-  }
+  isMobile = injectIsMobile();
 }

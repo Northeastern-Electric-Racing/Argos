@@ -1,5 +1,5 @@
-import { Component, HostListener, Input, OnDestroy, OnInit, inject } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { Component, OnDestroy, OnInit, inject, signal, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
 
@@ -22,8 +22,6 @@ import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle
 @Component({
   selector: 'charging-page-mobile',
   templateUrl: './charging-page-mobile.component.html',
-  styleUrls: ['./charging-page-mobile.component.css'],
-  standalone: true,
   imports: [
     DividerComponent,
     DatePipe,
@@ -40,38 +38,41 @@ import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle
     TypographyComponent,
     HStackComponent,
     SidebarToggleComponent
-  ]
+  ],
+  changeDetection: ChangeDetectionStrategy.Eager,
+  host: {
+    '(window:resize)': 'onResize()'
+  }
 })
 export default class ChargingPageMobileComponent implements OnInit, OnDestroy {
+  private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
-  private subscriptions: Subscription[] = [];
   private timeInterval!: NodeJS.Timeout;
-  @Input() time = new Date();
+  time = signal(new Date());
   location: string = 'No Location Set';
   mobileThreshold = 1070;
   isMobile = window.innerWidth < this.mobileThreshold;
 
   ngOnInit() {
     this.timeInterval = setInterval(() => {
-      this.time = new Date();
+      this.time.set(new Date());
     }, 1000);
 
-    this.subscriptions.push(
-      this.storage.get(topics.location()).subscribe((value) => {
+    this.storage
+      .get(topics.location())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
         [this.location] = value.values || ['No Location Set'];
-      })
-    );
+      });
   }
 
   ngOnDestroy(): void {
-    this.subscriptions.forEach((sub) => sub.unsubscribe());
     if (this.timeInterval) {
       clearInterval(this.timeInterval);
     }
   }
 
-  @HostListener('window:resize')
   onResize() {
-    this.isMobile = window.innerWidth <= this.mobileThreshold;
+    this.isMobile = window.innerWidth < this.mobileThreshold;
   }
 }

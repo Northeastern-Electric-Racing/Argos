@@ -4,7 +4,6 @@ import { Segment } from 'src/utils/bms.utils';
 // `appRoutes` without pulling in the NgModule (which imports every page component). That import
 // direction created component <-> app-routing.module cycles that threw module-load TDZ errors.
 
-const landingRoute = () => `/landing`;
 const graphRoute = () => `/graph`;
 const mapRoute = () => `/map`;
 const chargingRoute = () => `/charging`;
@@ -21,7 +20,6 @@ const lapTimerRoute = () => `/lap-timer`;
 const shutdownRoute = () => `/shutdown`;
 
 export const appRoutes = {
-  landingRoute,
   graphRoute,
   mapRoute,
   chargingRoute,

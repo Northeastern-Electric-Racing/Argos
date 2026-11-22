@@ -1,5 +1,5 @@
+import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 
 import { FormTemplateComponent } from './form-template.component';
 
@@ -11,8 +11,8 @@ describe('FormTemplateComponent', () => {
     await TestBed.configureTestingModule({
       imports: [FormTemplateComponent],
       providers: [
-        { provide: DynamicDialogConfig, useValue: { data: {} } },
-        { provide: DynamicDialogRef, useValue: { close: () => {} } }
+        { provide: DIALOG_DATA, useValue: {} },
+        { provide: DialogRef, useValue: { close: () => {} } }
       ]
     }).compileComponents();
 
@@ -25,5 +25,25 @@ describe('FormTemplateComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('labels each input and links its error message', () => {
+    fixture.componentRef.setInput('fields', [
+      { type: 'text', name: 'driver', label: 'Driver', disabled: false, required: true }
+    ]);
+    fixture.detectChanges();
+    const el: HTMLElement = fixture.nativeElement;
+    const input = el.querySelector<HTMLInputElement>('#form-field-driver')!;
+    expect(el.querySelector('label')!.getAttribute('for')).toBe('form-field-driver');
+    expect(input.getAttribute('aria-required')).toBe('true');
+    expect(input.hasAttribute('aria-describedby')).toBe(false);
+
+    component.form.get('driver')!.setValue('');
+    component.form.get('driver')!.markAsTouched();
+    fixture.detectChanges();
+
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+    const error = el.querySelector('#' + input.getAttribute('aria-describedby'))!;
+    expect(error.textContent).toContain('Driver is required');
   });
 });

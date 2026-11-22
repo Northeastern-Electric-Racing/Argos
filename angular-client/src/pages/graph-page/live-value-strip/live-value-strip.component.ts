@@ -15,7 +15,8 @@ interface LiveStripItem {
 @Component({
   selector: 'live-value-strip',
   templateUrl: './live-value-strip.component.html',
-  styleUrls: ['./live-value-strip.component.css'],
+  // Display is the consumer's (the graph page shows the strip on phones only); it scrolls sideways when full.
+  host: { class: 'overflow-x-auto overflow-y-hidden px-2 py-1' },
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export default class LiveValueStripComponent {

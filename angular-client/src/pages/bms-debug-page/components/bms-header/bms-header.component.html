@@ -1,20 +1,21 @@
-<mat-grid-list cols="6" gutterSize="15px" rowHeight="1.5rem">
-  <mat-grid-tile [colspan]="3" rowspan="3" style="padding-left: 16px">
+<!-- 814's 6-column mat-grid-list as the grid recipe; these tiles let their content spill -->
+<div [class]="grid">
+  <div [class]="titleTile">
     <typography
-      class="title-style"
+      class="mb-2.5 ml-7.5 grid h-full w-full items-center text-ellipsis whitespace-nowrap"
       variant="x-large-title"
+      textClass="m-0 mt-2.5 text-left text-banner leading-0 tracking-[0.2rem] [word-spacing:0.2rem]"
       [content]="this.pageTitle()"
-      additionalStyles="font-size: 6rem; letter-spacing: 0.2rem; word-spacing: 0.2rem; line-height: 0px; text-align: left; margin-top: 10px;"
     />
-  </mat-grid-tile>
+  </div>
 
-  <mat-grid-tile [colspan]="1" rowspan="3">
-    <segment-selector style="height: 80%; width: 100%; margin-top: 10px" />
-  </mat-grid-tile>
-  <mat-grid-tile [colspan]="1" rowspan="3">
-    <crc style="height: 80%; width: 100%; margin-top: 10px" />
-  </mat-grid-tile>
-  <mat-grid-tile [colspan]="1" rowspan="3">
-    <bms-overflow style="height: 80%; width: 100%; margin-top: 10px" />
-  </mat-grid-tile>
-</mat-grid-list>
+  <div [class]="tile">
+    <segment-selector class="mt-2.5 h-4/5 w-full" />
+  </div>
+  <div [class]="tile">
+    <crc class="mt-2.5 h-4/5 w-full" />
+  </div>
+  <div [class]="tile">
+    <bms-overflow class="mt-2.5 h-4/5 w-full" />
+  </div>
+</div>

@@ -1,7 +1,18 @@
-import { ChangeDetectorRef, Component, computed, OnDestroy, OnInit, signal, inject } from '@angular/core';
+import { ToastService } from 'src/ui/toast/toast.service';
+import {
+  ChangeDetectorRef,
+  Component,
+  computed,
+  OnDestroy,
+  OnInit,
+  signal,
+  inject,
+  DestroyRef,
+  ChangeDetectionStrategy
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
-import { MessageService } from 'primeng/api';
-import { BehaviorSubject, Subscription } from 'rxjs';
+import { BehaviorSubject, Subject, takeUntil } from 'rxjs';
 import { getDataByDatatTypeNameAndTiming, getDataByDataTypeNameAndRunId } from 'src/api/data.api';
 import { getAllDatatypes } from 'src/api/datatype.api';
 import { getAllRuns } from 'src/api/run.api';
@@ -19,17 +30,21 @@ import GraphSidebarComponent from './graph-sidebar/graph-sidebar.component';
 import CustomGraphComponent from './graph/graph.component';
 import LiveValueStripComponent from './live-value-strip/live-value-strip.component';
 import LoadingPageComponent from 'src/components/loading-page/loading-page.component';
+import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle.component';
 import ErrorPageComponent from 'src/components/error-page/error-page.component';
-import TypographyComponent from '../../components/typography/typography.component';
-import { InputNumberModule } from 'primeng/inputnumber';
-import { FormsModule } from '@angular/forms';
+import { numberInputClass } from 'src/ui/recipes/number-input';
+import { UiInputDirective } from 'src/ui/field/field.directive';
+import { FormsModule, NgModel } from '@angular/forms';
 
 @Component({
   selector: 'graph-page',
   templateUrl: './graph-page.component.html',
-  styleUrls: ['./graph-page.component.css'],
+  // 60px is the app nav bar.
+  host: { class: 'block h-[calc(100vh-60px)]' },
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     LoadingPageComponent,
+    SidebarToggleComponent,
     ErrorPageComponent,
     ButtonComponent,
     FaultButtonsComponent,
@@ -37,15 +52,17 @@ import { FormsModule } from '@angular/forms';
     GraphSidebarComponent,
     CustomGraphComponent,
     LiveValueStripComponent,
-    TypographyComponent,
-    InputNumberModule,
+    UiInputDirective,
     FormsModule
   ]
 })
 export default class GraphPageComponent implements OnInit, OnDestroy {
+  private destroyRef = inject(DestroyRef);
+  protected readonly rangeInputClass = numberInputClass('sm');
+  protected readonly yAxisInputClass = numberInputClass('xs');
   private serverService = inject(APIService);
   private storage = inject(Storage);
-  private toastService = inject(MessageService);
+  private toastService = inject(ToastService);
   private faultService = inject(FaultService);
   private topicSelectionService = inject(TopicSelectionService);
   private router = inject(Router); // for fault page navigation
@@ -54,10 +71,9 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
   // (removing this re-introduces NG0100 on the loading→content branch flip). See PR #550 review thread.
   private cdr = inject(ChangeDetectorRef);
 
-  // keep track of the subscriptions, that way we cancel all subs anywhere anytime
-  subscriptions: Subscription[] = [];
-  // Persistent subscriptions that should not be cleared when switching data modes
-  persistentSubscriptions: Subscription[] = [];
+  // Emits when the selection is cleared, ending the subscriptions made for the previous data types.
+  // Everything else lives until the page is destroyed.
+  private dataTypeChange$ = new Subject<void>();
 
   // the local tracking of selected data types
   selectedDataTypes: DataType[] = [];
@@ -179,6 +195,18 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Keeps the range at 1 or more, in the field too, as develop's p-inputnumber [min]="1" did; native min only
+   * marks the field invalid. The value is set on the form control, so a field already at 1 isn't left invalid.
+   * An empty field (null) passes through.
+   */
+  protected onRangeValueChange(typed: number | null, field: NgModel) {
+    const value = typed === null ? typed : Math.max(1, typed);
+    if (value !== typed) field.control.setValue(value, { emitViewToModelChange: false });
+    this.rangeValue = value as number;
+    this.onGraphConfigChange();
+  }
+
   toggleRangeMode = () => {
     this.rangeMode = this.rangeMode === 'time' ? 'points' : 'time';
     this.onGraphConfigChange();
@@ -190,22 +218,21 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     this.run = undefined;
 
     // Subscribe to the topic selection service (persistent - should not be cleared)
-    this.persistentSubscriptions.push(
-      this.topicSelectionService.getSelectedDataTypes().subscribe((dataTypes) => {
+    this.topicSelectionService
+      .getSelectedDataTypes()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((dataTypes) => {
         // Only process if we have data types AND they're different from current selection
         if (dataTypes.length > 0 || this.selectedDataTypes.length > 0) {
           this.processDataTypeSelection(dataTypes);
         }
         this.updateUrl(dataTypes);
-      })
-    );
+      });
 
     // Subscribe to URL changes to sync back to service
-    this.persistentSubscriptions.push(
-      this.route.queryParamMap.subscribe((params) => {
-        this.syncUrlToService(params);
-      })
-    );
+    this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
+      this.syncUrlToService(params);
+    });
 
     this.onFaultPage = this.router.url.includes(appRoutes.faultsRoute());
     if (this.onFaultPage) this.initFaultPage();
@@ -214,16 +241,6 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
 
   // All memory in use should be discarded here.
   ngOnDestroy(): void {
-    // Clean up regular subscriptions
-    this.subscriptions.forEach((sub) => {
-      sub.unsubscribe();
-    });
-
-    // Clean up persistent subscriptions
-    this.persistentSubscriptions.forEach((sub) => {
-      sub.unsubscribe();
-    });
-
     this.selectedDataTypeValuesSubject.forEach((item) => {
       item.updates.complete();
     });
@@ -241,25 +258,19 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     this.rightHeader = `Real Time`;
 
     const runsQueryResponse = this.serverService.query<Run[]>(() => getAllRuns(), { queryKey: ['runs'] });
-    this.persistentSubscriptions.push(
-      runsQueryResponse.isLoading.subscribe((isLoading: boolean) => {
-        this.runsIsLoading = isLoading;
-      })
-    );
-    this.persistentSubscriptions.push(
-      runsQueryResponse.error.subscribe((error) => {
-        if (error) {
-          this.toastService.add({ severity: 'error', summary: 'Error', detail: error.message });
-        }
-      })
-    );
-    this.persistentSubscriptions.push(
-      runsQueryResponse.data.subscribe((data) => {
-        if (data) {
-          this.allRuns = data;
-        }
-      })
-    );
+    runsQueryResponse.isLoading.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((isLoading: boolean) => {
+      this.runsIsLoading = isLoading;
+    });
+    runsQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
+      if (error) {
+        this.toastService.add({ severity: 'error', summary: 'Error', detail: error.message });
+      }
+    });
+    runsQueryResponse.data.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((data) => {
+      if (data) {
+        this.allRuns = data;
+      }
+    });
   };
   private initFaultPage = () => {
     this.renderFaultPage = true;
@@ -270,7 +281,7 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
     if (!this.selectedFault) {
       this.router.navigate([appRoutes.faultsRoute()]);
     }
-    this.persistentSubscriptions.push(selectedFaultSubscription.subscribe((fault) => (this.selectedFault = fault)));
+    selectedFaultSubscription.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((fault) => (this.selectedFault = fault));
     this.rightHeader = `Fault: ${this.selectedFault?.name}`;
   };
 
@@ -385,30 +396,24 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
    */
   private queryDataTypes() {
     const dataTypesQueryResponse = this.serverService.query<DataType[]>(getAllDatatypes);
-    this.persistentSubscriptions.push(
-      dataTypesQueryResponse.isLoading.subscribe((isLoading: boolean) => {
-        this.dataTypesIsLoading = isLoading;
-        this.cdr.detectChanges();
-      })
-    );
-    this.persistentSubscriptions.push(
-      dataTypesQueryResponse.error.subscribe((error) => {
-        if (error) {
-          this.dataTypesIsError = true;
-          this.dataTypesError = error;
-        }
-      })
-    );
-    this.persistentSubscriptions.push(
-      dataTypesQueryResponse.data.subscribe((data) => {
-        if (data) {
-          this.dataTypes = data;
-          // Once the datatypes are actually loaded, sync to url
-          this.syncUrlToService(this.route.snapshot.queryParamMap);
-          this.updateUrl(this.topicSelectionService.getSelectedDataTypes().value);
-        }
-      })
-    );
+    dataTypesQueryResponse.isLoading.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((isLoading: boolean) => {
+      this.dataTypesIsLoading = isLoading;
+      this.cdr.detectChanges();
+    });
+    dataTypesQueryResponse.error.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error) => {
+      if (error) {
+        this.dataTypesIsError = true;
+        this.dataTypesError = error;
+      }
+    });
+    dataTypesQueryResponse.data.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((data) => {
+      if (data) {
+        this.dataTypes = data;
+        // Once the datatypes are actually loaded, sync to url
+        this.syncUrlToService(this.route.snapshot.queryParamMap);
+        this.updateUrl(this.topicSelectionService.getSelectedDataTypes().value);
+      }
+    });
   }
 
   private syncUrlToService(params: ParamMap) {
@@ -445,8 +450,9 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
       const valuesSubject = this.storage.get(key);
 
       if (target !== undefined) {
-        this.subscriptions.push(
-          valuesSubject.subscribe((value: DataValue) => {
+        valuesSubject
+          .pipe(takeUntil(this.dataTypeChange$), takeUntilDestroyed(this.destroyRef))
+          .subscribe((value: DataValue) => {
             // Skip processing if paused
             if (this.isPaused) {
               return;
@@ -457,8 +463,7 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
             });
 
             target.updates.next(newPoints);
-          })
-        );
+          });
       }
     });
   };
@@ -504,48 +509,45 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
 
       const dataQueryResponse = this.serverService.query<DataValue[]>(queryFn);
 
-      // Track all subscriptions to prevent memory leaks
-      this.subscriptions.push(
-        dataQueryResponse.error.subscribe((error) => {
+      dataQueryResponse.error
+        .pipe(takeUntil(this.dataTypeChange$), takeUntilDestroyed(this.destroyRef))
+        .subscribe((error) => {
           if (error) {
             this.selectedDataTypeValuesIsError = true;
             this.selectedDataTypeValuesError = error;
           }
-        })
-      );
+        });
 
-      this.subscriptions.push(
-        dataQueryResponse.isLoading.subscribe((isLoading: boolean) => {
+      dataQueryResponse.isLoading
+        .pipe(takeUntil(this.dataTypeChange$), takeUntilDestroyed(this.destroyRef))
+        .subscribe((isLoading: boolean) => {
           this.selectedDataTypeValuesIsLoading = isLoading;
-        })
-      );
+        });
 
-      this.subscriptions.push(
-        dataQueryResponse.data.subscribe((data) => {
-          if (data) {
-            const graphData: GraphData[][] = [];
-            data.forEach((dataValue) => {
-              dataValue.values.forEach((val, i) => {
-                if (graphData[i]) {
-                  graphData[i].push({ x: +dataValue.time, y: +val });
-                } else {
-                  graphData[i] = [{ x: +dataValue.time, y: +val }];
-                }
-              });
+      dataQueryResponse.data.pipe(takeUntil(this.dataTypeChange$), takeUntilDestroyed(this.destroyRef)).subscribe((data) => {
+        if (data) {
+          const graphData: GraphData[][] = [];
+          data.forEach((dataValue) => {
+            dataValue.values.forEach((val, i) => {
+              if (graphData[i]) {
+                graphData[i].push({ x: +dataValue.time, y: +val });
+              } else {
+                graphData[i] = [{ x: +dataValue.time, y: +val }];
+              }
             });
+          });
 
-            let target = this.selectedDataTypeValuesSubject.find((s) => s.label === dataType.name);
+          let target = this.selectedDataTypeValuesSubject.find((s) => s.label === dataType.name);
 
-            if (!target) {
-              // (shouldn't normally happen, but keep it safe)
-              target = { label: dataType.name, updates: new BehaviorSubject<GraphData[][]>([]) };
-              this.selectedDataTypeValuesSubject.push(target);
-            }
-
-            target.updates.next(graphData);
+          if (!target) {
+            // (shouldn't normally happen, but keep it safe)
+            target = { label: dataType.name, updates: new BehaviorSubject<GraphData[][]>([]) };
+            this.selectedDataTypeValuesSubject.push(target);
           }
-        })
-      );
+
+          target.updates.next(graphData);
+        }
+      });
     });
   };
 
@@ -579,11 +581,8 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
   clearGraph = 0;
 
   clearDataType: () => void = () => {
-    // Unsubscribe from all previous subscriptions
-    this.subscriptions.forEach((sub) => {
-      sub.unsubscribe();
-    });
-    this.subscriptions = [];
+    // End the subscriptions made for the previous data types
+    this.dataTypeChange$.next();
 
     // Clear and complete existing subjects to prevent memory leaks
     this.selectedDataTypeValuesSubject.forEach((item) => {

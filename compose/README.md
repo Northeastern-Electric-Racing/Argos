@@ -25,6 +25,7 @@ Profiles:
 
 The base docker compose (`compose.yml`) contains some important features to note.  However, it is useless standalone.  Please read the profile customization selection below before using the base compose.
 - It persists the database between `down` commands via a volume named `<project>_db-data` (e.g. `odyssey_client-dev_db-data` for the default `client-dev` stack).  Wipe it with `./argos.sh <profile> down -v` or `docker volume rm <project>_db-data` to start with a new database next `up`.
+- It runs `argos-db` for Argos-only data such as the map's tracks, on a bind mount (`compose/argos-db-data/<project>`) rather than a volume, so `down -v` keeps it; wipe it with `sudo rm -rf compose/argos-db-data` (its files belong to the container's postgres user).
 - It weighs the CPU usage of siren higher, so it is prioritized in CPU starvation scenarios.
 
 
@@ -32,7 +33,9 @@ The base docker compose (`compose.yml`) contains some important features to note
 
 #### Running multiple dev stacks side-by-side
 
-Every published host port in the dev compose files reads from an env var with today's value as the default: `ODYSSEY_DB_PORT` (5432), `SCYLLA_HOST_PORT` (8000), `CLIENT_HOST_PORT` (80), `SIREN_MQTT_PORT` (1883), `SIREN_WS_PORT` (9002), `GRAFANA_HOST_PORT` (3002). With no env vars set, behavior is byte-identical to before.
+Every published host port in the dev compose files reads from an env var with today's value as the default: `ODYSSEY_DB_PORT` (5432), `ARGOS_DB_PORT` (5433), `SCYLLA_HOST_PORT` (8000), `CLIENT_HOST_PORT` (80), `SIREN_MQTT_PORT` (1883), `SIREN_WS_PORT` (9002), `GRAFANA_HOST_PORT` (3000). With no env vars set, behavior is byte-identical to before.
+
+The Zenoh router (`siren-base/compose.zenohd.yml`) publishes 7447/tcp and 7446/udp as fixed ports, so stacks using it cannot yet be offset and will collide if run side-by-side.
 
 To run a second dev stack alongside the first, set those vars (shifted to free values) plus `STACK_OFFSET=N`, which `argos.sh` appends to the project name as `_N` so `down`, `logs`, and `exec` target the right stack:
 
@@ -46,7 +49,8 @@ N=10
 env STACK_OFFSET=$N \
     ODYSSEY_DB_PORT=$((5432+N))   SCYLLA_HOST_PORT=$((8000+N)) \
     CLIENT_HOST_PORT=$((80+N))    SIREN_MQTT_PORT=$((1883+N)) \
-    SIREN_WS_PORT=$((9002+N))     GRAFANA_HOST_PORT=$((3002+N)) \
+    SIREN_WS_PORT=$((9002+N))     GRAFANA_HOST_PORT=$((3000+N)) \
+    ARGOS_DB_PORT=$((5433+N)) \
     ./argos.sh fake-data up -d
 
 # Teardown: stack 1 needs nothing; stack 2 only needs STACK_OFFSET since
@@ -60,7 +64,7 @@ STACK_OFFSET=$N ./argos.sh fake-data down
 #### Examples with and without profiles
 
 - To send some simulated data to a client you are running with `npm`: `./argos.sh client-dev up`
-- To start a mqtt server with simulated data you want to send to an instance of scylla running through `cargo`: `docker compose -f ./siren-base/compose.siren.yml -f ./compose/compose.calypso.yml up`
+- To start a mqtt server with simulated data you want to send to an instance of scylla running through `cargo`: `CALYPSO_ZENOH=false CALYPSO_SIREN_HOST_URL=siren:1883 docker compose -f ./siren-base/compose.siren.yml -f ./siren-base/compose.calypso.yml up` (the Calypso fragment defaults to Zenoh, so MQTT needs those two overrides)
 
 
 #### Customizing runtime profiles of the project via docker compose

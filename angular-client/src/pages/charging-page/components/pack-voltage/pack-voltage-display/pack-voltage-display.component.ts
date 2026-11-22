@@ -1,4 +1,5 @@
-import { Component, HostListener, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
 import { topics } from 'src/utils/topic.utils';
 import { GraphData } from 'src/utils/types.utils';
@@ -11,17 +12,20 @@ import HStackComponent from 'src/components/hstack/hstack.component';
 @Component({
   selector: 'pack-voltage-display',
   templateUrl: './pack-voltage-display.component.html',
-  styleUrls: ['./pack-voltage-display.component.css'],
-  standalone: true,
   imports: [
     InfoBackgroundComponent,
     PackVoltageMobileDisplayComponent,
     PackVoltageGraphComponent,
     TypographyComponent,
     HStackComponent
-  ]
+  ],
+  changeDetection: ChangeDetectionStrategy.Eager,
+  host: {
+    '(window:resize)': 'onResize()'
+  }
 })
 export default class PackVoltageDisplayComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
   voltage: number = 0;
   packVoltData: GraphData[] = [];
@@ -29,20 +33,23 @@ export default class PackVoltageDisplayComponent implements OnInit {
     onClick: () => {
       this.packVoltData = [];
     },
-    icon: 'restart_alt'
+    icon: 'restart_alt',
+    ariaLabel: 'Reset the pack voltage graph'
   };
   mobileThreshold = 1070;
-  isDesktop = window.innerWidth > this.mobileThreshold;
+  isDesktop = window.innerWidth >= this.mobileThreshold;
 
-  @HostListener('window:resize')
   onResize() {
     this.isDesktop = window.innerWidth >= this.mobileThreshold;
   }
 
   ngOnInit() {
-    this.storage.get(topics.packVoltage()).subscribe((value) => {
-      this.voltage = parseFloat(value.values[0]);
-      this.packVoltData.push({ x: +value.time, y: this.voltage });
-    });
+    this.storage
+      .get(topics.packVoltage())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
+        this.voltage = parseFloat(value.values[0]);
+        this.packVoltData.push({ x: +value.time, y: this.voltage });
+      });
   }
 }
