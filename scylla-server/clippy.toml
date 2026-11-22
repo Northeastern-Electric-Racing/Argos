@@ -1,0 +1,6 @@
+# Register Socket.IO event handlers in connect middleware (`.with(...)`), which socketioxide awaits
+# before it acks the connection. A connect handler runs after the ack, so it can miss an event the
+# client sends as soon as it is acked; see Subscriptions::register.
+disallowed-methods = [
+  { path = "socketioxide::socket::Socket::on", reason = "register event handlers in connect middleware, which runs before the CONNECT ack; a connect handler runs after it and can miss events sent right away" },
+]

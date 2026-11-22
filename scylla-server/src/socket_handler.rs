@@ -6,7 +6,7 @@ use serde::Serialize;
 use socketioxide::SocketIo;
 use socketioxide::adapter::Adapter;
 use socketioxide::extract::SocketRef;
-use socketioxide::handler::{FromConnectParts, Value};
+use socketioxide::handler::{ConnectHandler, FromConnectParts, Value};
 use socketioxide::socket::{Sid, Socket};
 use std::convert::Infallible;
 use std::sync::Arc;
@@ -22,7 +22,7 @@ use crate::metadata_structs::{
     map_dti_flt,
 };
 use crate::rule_structs::{RULE_SOCKET_KEY, RuleManager};
-use crate::socket_subscriptions::{HandshakeTopics, Subscriptions};
+use crate::socket_subscriptions::{SubscribesTopics, Subscriptions};
 use crate::{ClientData, SOCKET_DISCARD_PERCENT};
 
 pub async fn socket_handler(
@@ -159,14 +159,22 @@ pub async fn socket_handler_with_metadata(
         Arc::new(RwLock::new(FxHashMap::default()));
     let writable_socket_map = client_socket_map.clone();
     let subscriptions = Arc::new(Subscriptions::default());
+    // `data`: every topic, or only the topics of the socket's `set_subscriptions` lists. Registered
+    // in connect middleware, which socketioxide awaits before it acks the connection, so a list the
+    // client sends as soon as it is acked finds its handler.
+    let mw_subscriptions = subscriptions.clone();
+    let register_subscriptions =
+        move |socket: SocketRef, SubscribesTopics(subscribes): SubscribesTopics| {
+            let subscriptions = mw_subscriptions.clone();
+            async move {
+                subscriptions.register(&socket, subscribes).await;
+                Ok::<(), Infallible>(())
+            }
+        };
     let ns_subscriptions = subscriptions.clone();
     io.ns(
         "/",
-        |socket: SocketRef,
-         SocketClientId(client_id): SocketClientId,
-         HandshakeTopics(topics): HandshakeTopics| async move {
-            // `data`: every topic, or only the handshake's or `set_subscriptions`' topics
-            ns_subscriptions.register(&socket, topics).await;
+        (|socket: SocketRef, SocketClientId(client_id): SocketClientId| async move {
             // unfortunate locking and ref counting due to the async closures
             let mut owned = writable_socket_map.write().await;
             if client_id.is_empty() {
@@ -188,7 +196,8 @@ pub async fn socket_handler_with_metadata(
                 ns_subscriptions.unregister(socket.id).await;
                 writable_socket_map.write().await.remove(&client_id);
             });
-        },
+        })
+        .with(register_subscriptions),
     );
 
     let mut msg_cnt = 0u64;

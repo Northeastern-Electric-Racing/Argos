@@ -1,18 +1,21 @@
 //! Delivery of the `data` event through one Socket.IO room per topic (ADR 0009).
 //!
-//! A socket that never names its topics is in [`EVERY_TOPIC_ROOM`] and gets
-//! every topic, as before (old clients). A socket that names them, in the
-//! handshake's `auth.topics` or with [`SET_SUBSCRIPTIONS_EVENT`], is in exactly
-//! those topic rooms, and never in [`EVERY_TOPIC_ROOM`] again, even with an
-//! empty list.
+//! A client that reads topics connects with `subscriptions=1` in its query
+//! string ([`SubscribesTopics`]). Its socket starts in no room, and each
+//! [`SET_SUBSCRIPTIONS_EVENT`] list moves it to exactly those topic rooms. A
+//! socket without the flag (old clients) is in [`EVERY_TOPIC_ROOM`] for its
+//! whole connection and gets every topic, as before; its `set_subscriptions`
+//! are ignored. The flag settles this at connect, so a socket never moves
+//! between the two, and an emit never sees it in both rooms (socketioxide
+//! would send it the message twice).
 //!
 //! Each `set_subscriptions` list carries a number, `seq`, that the client
 //! raises with every list. socketioxide runs each event in its own task, so
 //! lists sent close together can be handled out of order; the server applies
 //! a list only if its number is higher than the last one applied to that
-//! socket, and drops older ones. The handshake's list counts as 0. A client
-//! can so change its topics as often as it likes and the socket always ends
-//! up on its latest list.
+//! socket (0 at connect), and drops older ones. A client can so change its
+//! topics as often as it likes and the socket always ends up on its latest
+//! list.
 //!
 //! socketioxide creates a room on its first join and removes it on its last
 //! leave (or disconnect), so a topic room exists only while a socket reads the
@@ -22,8 +25,8 @@
 //! topic nobody reads without serializing it, and a new topic list joins and
 //! leaves only the rooms that change.
 //!
-//! Only `data` goes through rooms. `metadata`, `faults`, `timers` and rule
-//! notifications are sent as before.
+//! Only `data` goes through rooms. `metadata`, `faults` and `timers` are sent
+//! as before.
 
 use std::convert::Infallible;
 use std::sync::{Arc, PoisonError, RwLock, RwLockReadGuard, RwLockWriteGuard};
@@ -44,7 +47,11 @@ use crate::metadata_structs::DATA_SOCKET_KEY;
 /// [`SubscriptionAck`].
 pub const SET_SUBSCRIPTIONS_EVENT: &str = "set_subscriptions";
 
-/// Room for sockets that never named their topics. `#` is the MQTT
+/// Query-string key of the flag a client that sends `set_subscriptions`
+/// connects with: `subscriptions=1`.
+pub const SUBSCRIPTIONS_QUERY_KEY: &str = "subscriptions";
+
+/// Room for sockets that connected without the flag. `#` is the MQTT
 /// "everything" filter and never a published topic name, and topics with
 /// wildcards are dropped, so it cannot collide with a topic room.
 pub const EVERY_TOPIC_ROOM: &str = "#";
@@ -59,65 +66,43 @@ pub struct TopicList {
 
 /// Ack payload for `set_subscriptions`: the socket's latest applied list, by
 /// its number and topic count. When the acked list was older than one already
-/// applied, `seq` is that newer list's.
+/// applied, `seq` is that newer list's; when none was applied (or the socket
+/// connected without the flag), both are 0.
 #[derive(serde::Serialize, Debug)]
 pub struct SubscriptionAck {
     pub count: usize,
     pub seq: u64,
 }
 
-/// Connect extractor for the topics a socket named in its handshake, the
-/// Socket.IO auth payload `{"topics": [...]}`. `None` when there is no
-/// `topics` field, or it is not a list of strings.
-pub struct HandshakeTopics(pub Option<Vec<String>>);
+/// Connect extractor: whether the connection's query string carries
+/// `subscriptions=1`, i.e. the client sends its topics with
+/// `set_subscriptions` and wants only those.
+pub struct SubscribesTopics(pub bool);
 
-#[derive(serde::Deserialize)]
-struct HandshakeAuth {
-    topics: Option<Vec<String>>,
-}
-
-impl<A: Adapter> FromConnectParts<A> for HandshakeTopics {
+impl<A: Adapter> FromConnectParts<A> for SubscribesTopics {
     type Error = Infallible;
 
-    fn from_connect_parts(s: &Arc<Socket<A>>, auth: &Option<Value>) -> Result<Self, Infallible> {
-        let Ok(TryData(auth)) = TryData::<HandshakeAuth>::from_connect_parts(s, auth);
-        let topics = match auth {
-            Ok(auth) => auth.topics,
-            Err(err) => {
-                warn!(
-                    "Socket {} sent an unreadable auth payload, sending it every topic: {}",
-                    s.id, err
-                );
-                None
-            }
-        };
-        Ok(HandshakeTopics(topics))
+    fn from_connect_parts(s: &Arc<Socket<A>>, _: &Option<Value>) -> Result<Self, Infallible> {
+        Ok(SubscribesTopics(subscribes_topics(
+            s.req_parts().uri.query(),
+        )))
     }
+}
+
+fn subscribes_topics(query: Option<&str>) -> bool {
+    query.is_some_and(|query| {
+        query
+            .split('&')
+            .any(|pair| pair.split_once('=') == Some((SUBSCRIPTIONS_QUERY_KEY, "1")))
+    })
 }
 
 /// Which `data` messages a connected socket receives.
 enum Delivery {
     /// Every topic, through [`EVERY_TOPIC_ROOM`].
     EveryTopic,
-    /// Exactly these topic rooms, from the list numbered `seq`.
+    /// Exactly these topic rooms, from the list numbered `seq` (0 at connect).
     Topics { topics: FxHashSet<String>, seq: u64 },
-}
-
-impl Delivery {
-    /// The number of the last list applied; 0 before any.
-    fn seq(&self) -> u64 {
-        match self {
-            Delivery::EveryTopic => 0,
-            Delivery::Topics { seq, .. } => *seq,
-        }
-    }
-
-    fn count(&self) -> usize {
-        match self {
-            Delivery::EveryTopic => 0,
-            Delivery::Topics { topics, .. } => topics.len(),
-        }
-    }
 }
 
 /// What an emit needs to know: which rooms have sockets.
@@ -131,8 +116,8 @@ struct Gate {
 
 /// Room membership for `data`, mirrored from the adapter.
 ///
-/// Shared by the connect handler, which registers sockets, and the data loop,
-/// which emits through it.
+/// Shared by the connect middleware, which registers sockets, and the data
+/// loop, which emits through it.
 #[derive(Default)]
 pub struct Subscriptions {
     /// Each registered socket's delivery. Held across a socket's whole room
@@ -141,48 +126,40 @@ pub struct Subscriptions {
     sockets: Mutex<FxHashMap<Sid, Delivery>>,
     /// Read by every emit to pick its rooms; written briefly to update counts.
     gate: RwLock<Gate>,
-    /// Read by every emit across its broadcast; written across a socket's
-    /// move out of [`EVERY_TOPIC_ROOM`], which happens at most once per
-    /// socket. An emit so sees that socket only in [`EVERY_TOPIC_ROOM`] or
-    /// only in its topic rooms: never both (socketioxide does not dedupe a
-    /// socket in two target rooms, so it would get the message twice) and
-    /// never neither (it would miss a topic it kept).
-    every_topic_exit: tokio::sync::RwLock<()>,
 }
 
 impl Subscriptions {
-    /// Puts a newly connected socket in the rooms for its handshake `topics`,
-    /// or in [`EVERY_TOPIC_ROOM`] without them, and listens for its
-    /// `set_subscriptions`. The caller's disconnect handler must call
-    /// [`Self::unregister`].
-    pub async fn register(self: &Arc<Self>, socket: &SocketRef, topics: Option<Vec<String>>) {
+    /// Puts a newly connected socket in [`EVERY_TOPIC_ROOM`], or in no room
+    /// when it `subscribes` to topics, and listens for its
+    /// `set_subscriptions`.
+    ///
+    /// Call it from connect middleware, which socketioxide awaits before it
+    /// acks the connection. The connect handler runs after the ack, and a
+    /// client sends its first list as soon as it is acked: an event that
+    /// arrives before its handler is registered is dropped. The caller's
+    /// disconnect handler must call [`Self::unregister`].
+    pub async fn register(self: &Arc<Self>, socket: &SocketRef, subscribes: bool) {
         {
             let mut sockets = self.sockets.lock().await;
-            match topics {
-                None => {
-                    self.gate_mut().every_topic += 1;
-                    socket.join(EVERY_TOPIC_ROOM);
-                    sockets.insert(socket.id, Delivery::EveryTopic);
-                }
-                Some(topics) => {
-                    let wanted = valid_topics(socket.id, topics);
-                    debug!(
-                        "Socket {} connected subscribed to {} topics",
-                        socket.id,
-                        wanted.len()
-                    );
-                    self.join(socket, wanted.iter().cloned().collect());
-                    sockets.insert(
-                        socket.id,
-                        Delivery::Topics {
-                            topics: wanted,
-                            seq: 0,
-                        },
-                    );
-                }
+            if subscribes {
+                sockets.insert(
+                    socket.id,
+                    Delivery::Topics {
+                        topics: FxHashSet::default(),
+                        seq: 0,
+                    },
+                );
+            } else {
+                self.gate_mut().every_topic += 1;
+                socket.join(EVERY_TOPIC_ROOM);
+                sockets.insert(socket.id, Delivery::EveryTopic);
             }
         }
         let subscriptions = self.clone();
+        #[expect(
+            clippy::disallowed_methods,
+            reason = "register is called from connect middleware, before the CONNECT ack"
+        )]
         socket.on(
             SET_SUBSCRIPTIONS_EVENT,
             async move |socket: SocketRef, TryData(list): TryData<TopicList>, ack: AckSender| {
@@ -230,55 +207,49 @@ impl Subscriptions {
     /// applied. Returns the socket's latest applied list.
     async fn set_subscriptions(&self, socket: &SocketRef, list: TopicList) -> SubscriptionAck {
         let mut sockets = self.sockets.lock().await;
-        // None: disconnected while this event was in flight
         let Some(delivery) = sockets.get_mut(&socket.id) else {
+            // disconnected while this event was in flight
             return SubscriptionAck { count: 0, seq: 0 };
         };
-        if list.seq <= delivery.seq() {
+        let Delivery::Topics {
+            topics: current,
+            seq,
+        } = delivery
+        else {
+            warn!(
+                "Socket {} sent {} without connecting with {}=1, so it keeps every topic",
+                socket.id, SET_SUBSCRIPTIONS_EVENT, SUBSCRIPTIONS_QUERY_KEY
+            );
+            return SubscriptionAck { count: 0, seq: 0 };
+        };
+        if list.seq <= *seq {
             debug!(
                 "Socket {} sent list {} after list {}, dropping it",
-                socket.id,
-                list.seq,
-                delivery.seq()
+                socket.id, list.seq, seq
             );
             return SubscriptionAck {
-                count: delivery.count(),
-                seq: delivery.seq(),
+                count: current.len(),
+                seq: *seq,
             };
         }
         let wanted = valid_topics(socket.id, list.topics);
-        let count = wanted.len();
-        match delivery {
-            Delivery::EveryTopic => {
-                let _exit = self.every_topic_exit.write().await;
-                self.join(socket, wanted.iter().cloned().collect());
-                self.gate_mut().every_topic -= 1;
-                socket.leave(EVERY_TOPIC_ROOM);
-            }
-            Delivery::Topics {
-                topics: current, ..
-            } => {
-                // An emit may target a room the socket is about to join, or
-                // skip one it is about to leave; topics it keeps are untouched.
-                self.join(socket, wanted.difference(current).cloned().collect());
-                let leave: Vec<String> = current.difference(&wanted).cloned().collect();
-                if !leave.is_empty() {
-                    {
-                        let mut gate = self.gate_mut();
-                        for topic in &leave {
-                            gate.remove_reader(topic);
-                        }
-                    }
-                    socket.leave(leave);
+        // An emit may target a room the socket is about to join, or skip one
+        // it is about to leave; topics it keeps are untouched.
+        self.join(socket, wanted.difference(current).cloned().collect());
+        let leave: Vec<String> = current.difference(&wanted).cloned().collect();
+        if !leave.is_empty() {
+            {
+                let mut gate = self.gate_mut();
+                for topic in &leave {
+                    gate.remove_reader(topic);
                 }
             }
+            socket.leave(leave);
         }
-        *delivery = Delivery::Topics {
-            topics: wanted,
-            seq: list.seq,
-        };
+        *current = wanted;
+        *seq = list.seq;
         SubscriptionAck {
-            count,
+            count: current.len(),
             seq: list.seq,
         }
     }
@@ -321,7 +292,6 @@ impl Subscriptions {
         io: &SocketIo,
         client_data: &ClientData,
     ) -> Result<(), socketioxide::BroadcastError> {
-        let _exit = self.every_topic_exit.read().await;
         let Some(rooms) = self.rooms_for(&client_data.name) else {
             return Ok(());
         };
@@ -389,6 +359,7 @@ mod tests {
     use super::*;
     use engineioxide::Packet;
     use serde_json::json;
+    use socketioxide::handler::ConnectHandler;
     use std::time::Duration;
     use tokio::sync::mpsc::{Receiver, Sender};
 
@@ -424,23 +395,38 @@ mod tests {
     }
 
     impl Server {
-        /// Registers sockets the way `socket_handler_with_metadata` does.
         fn new() -> Self {
-            Self::with_builder(SocketIo::builder())
+            Self::with(SocketIo::builder(), Duration::ZERO)
         }
 
-        fn with_builder(builder: socketioxide::SocketIoBuilder) -> Self {
+        /// Registers sockets the way `socket_handler_with_metadata` does: in
+        /// connect middleware, with a connect handler that takes
+        /// `handler_delay` to run. Dummy sockets carry no query string, so
+        /// the flag comes in the auth payload, `{"subscriptions": 1}`.
+        fn with(builder: socketioxide::SocketIoBuilder, handler_delay: Duration) -> Self {
             let (_svc, io) = builder.build_svc();
             let subs = Arc::new(Subscriptions::default());
+            let mw_subs = subs.clone();
+            let register = move |socket: SocketRef, TryData(auth): TryData<serde_json::Value>| {
+                let subs = mw_subs.clone();
+                async move {
+                    let flag = auth
+                        .ok()
+                        .and_then(|auth| auth.get(SUBSCRIPTIONS_QUERY_KEY).cloned());
+                    subs.register(&socket, flag == Some(json!(1))).await;
+                    Ok::<(), Infallible>(())
+                }
+            };
             let ns_subs = subs.clone();
             io.ns(
                 "/",
-                async move |socket: SocketRef, HandshakeTopics(topics): HandshakeTopics| {
-                    ns_subs.register(&socket, topics).await;
+                (async move |socket: SocketRef| {
+                    tokio::time::sleep(handler_delay).await;
                     socket.on_disconnect(async move |socket: SocketRef| {
                         ns_subs.unregister(socket.id).await;
                     });
-                },
+                })
+                .with(register),
             );
             Server { io, subs }
         }
@@ -451,9 +437,14 @@ mod tests {
             (tx, rx)
         }
 
-        /// Connects without an auth payload, like an old client.
+        /// Connects without the flag, like an old client.
         async fn connect_old(&self) -> (Sender<Packet>, Receiver<Packet>) {
             self.connect(json!({})).await
+        }
+
+        /// Connects with the flag, like a client that sends its topics.
+        async fn connect_subscriber(&self) -> (Sender<Packet>, Receiver<Packet>) {
+            self.connect(json!({ SUBSCRIPTIONS_QUERY_KEY: 1 })).await
         }
 
         async fn emit(&self, topic: &str) {
@@ -493,14 +484,25 @@ mod tests {
         topics: &str,
     ) -> String {
         tx.send(set_packet(seq, topics)).await.unwrap();
-        match rx.recv().await.unwrap() {
-            Packet::Message(msg) if msg.starts_with("30") => msg.to_string(),
+        match tokio::time::timeout(Duration::from_secs(1), rx.recv()).await {
+            Ok(Some(Packet::Message(msg))) if msg.starts_with("30") => msg.to_string(),
             other => panic!("expected an ack, got {other:?}"),
         }
     }
 
+    #[test]
+    fn flag_is_read_from_the_query_string() {
+        assert!(subscribes_topics(Some("clientId=abc&subscriptions=1")));
+        assert!(subscribes_topics(Some("subscriptions=1&EIO=4")));
+        assert!(!subscribes_topics(None));
+        assert!(!subscribes_topics(Some("clientId=abc")));
+        assert!(!subscribes_topics(Some("subscriptions=0")));
+        assert!(!subscribes_topics(Some("subscriptions")));
+        assert!(!subscribes_topics(Some("xsubscriptions=1")));
+    }
+
     #[tokio::test]
-    async fn socket_without_topics_gets_every_topic() {
+    async fn socket_without_flag_gets_every_topic() {
         let srv = Server::new();
         let (_tx, mut rx) = srv.connect_old().await;
         srv.emit("BMS/Pack/SOC").await;
@@ -512,40 +514,53 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn handshake_topics_get_only_those_topics() {
+    async fn socket_with_flag_gets_nothing_until_its_first_list() {
         let srv = Server::new();
-        let (_tx, mut rx) = srv.connect(json!({ "topics": ["VCU/Speed"] })).await;
+        let (tx, mut rx) = srv.connect_subscriber().await;
         let (_peer_tx, mut peer_rx) = srv.connect_old().await;
+        srv.emit("VCU/Speed").await;
+        assert!(received_topics(&mut rx).await.is_empty());
+        assert_eq!(srv.rooms().await, [EVERY_TOPIC_ROOM]);
+
+        send_set(&tx, &mut rx, 1, r#"["VCU/Speed"]"#).await;
         srv.emit("BMS/Pack/SOC").await;
         srv.emit("VCU/Speed").await;
         assert_eq!(received_topics(&mut rx).await, ["VCU/Speed"]);
         assert_eq!(
             received_topics(&mut peer_rx).await,
-            ["BMS/Pack/SOC", "VCU/Speed"]
+            ["VCU/Speed", "BMS/Pack/SOC", "VCU/Speed"]
         );
     }
 
+    /// A client sends its first list as soon as the connection is acked, while
+    /// the connect handler may still be running; registering in middleware
+    /// means the list still finds its handler.
     #[tokio::test]
-    async fn empty_handshake_topics_get_nothing() {
-        let srv = Server::new();
-        let (_tx, mut rx) = srv.connect(json!({ "topics": [] })).await;
-        srv.emit("VCU/Speed").await;
-        assert!(received_topics(&mut rx).await.is_empty());
-        assert_eq!(srv.rooms().await, Vec::<String>::new());
+    async fn list_sent_right_after_connecting_is_applied() {
+        let srv = Server::with(SocketIo::builder(), Duration::from_millis(100));
+        let (tx, mut rx) = srv.connect_subscriber().await;
+        let ack = send_set(&tx, &mut rx, 1, r#"["VCU/Speed"]"#).await;
+        assert_eq!(ack, r#"30[{"count":1,"seq":1}]"#);
+        assert_eq!(srv.rooms().await, ["VCU/Speed"]);
     }
 
     #[tokio::test]
-    async fn malformed_handshake_topics_get_every_topic() {
+    async fn socket_without_flag_ignores_lists() {
         let srv = Server::new();
-        let (_tx, mut rx) = srv.connect(json!({ "topics": "VCU/Speed" })).await;
+        let (tx, mut rx) = srv.connect_old().await;
+        assert_eq!(
+            send_set(&tx, &mut rx, 1, r#"["VCU/Speed"]"#).await,
+            r#"30[{"count":0,"seq":0}]"#
+        );
         srv.emit("BMS/Pack/SOC").await;
         assert_eq!(received_topics(&mut rx).await, ["BMS/Pack/SOC"]);
+        assert_eq!(srv.rooms().await, [EVERY_TOPIC_ROOM]);
     }
 
     #[tokio::test]
     async fn subscribed_socket_gets_only_its_topics_once() {
         let srv = Server::new();
-        let (tx, mut rx) = srv.connect_old().await;
+        let (tx, mut rx) = srv.connect_subscriber().await;
         let ack = send_set(&tx, &mut rx, 1, r#"["BMS/Pack/SOC","BMS/Pack/SOC"]"#).await;
         assert_eq!(ack, r#"30[{"count":1,"seq":1}]"#);
         srv.emit("BMS/Pack/SOC").await;
@@ -556,8 +571,9 @@ mod tests {
     #[tokio::test]
     async fn second_set_replaces_the_first() {
         let srv = Server::new();
-        let (tx, mut rx) = srv.connect(json!({ "topics": ["BMS/Pack/SOC"] })).await;
-        send_set(&tx, &mut rx, 1, r#"["VCU/Speed"]"#).await;
+        let (tx, mut rx) = srv.connect_subscriber().await;
+        send_set(&tx, &mut rx, 1, r#"["BMS/Pack/SOC"]"#).await;
+        send_set(&tx, &mut rx, 2, r#"["VCU/Speed"]"#).await;
         srv.emit("BMS/Pack/SOC").await;
         srv.emit("VCU/Speed").await;
         assert_eq!(received_topics(&mut rx).await, ["VCU/Speed"]);
@@ -565,9 +581,9 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn empty_set_never_returns_to_every_topic() {
+    async fn empty_list_gets_nothing() {
         let srv = Server::new();
-        let (tx, mut rx) = srv.connect_old().await;
+        let (tx, mut rx) = srv.connect_subscriber().await;
         let (_peer_tx, mut peer_rx) = srv.connect_old().await;
         send_set(&tx, &mut rx, 1, r#"["VCU/Speed"]"#).await;
         assert_eq!(
@@ -581,13 +597,14 @@ mod tests {
             received_topics(&mut peer_rx).await,
             ["BMS/Pack/SOC", "VCU/Speed"]
         );
+        assert_eq!(srv.rooms().await, [EVERY_TOPIC_ROOM]);
     }
 
     #[tokio::test]
     async fn overlapping_sets_keep_shared_topics() {
         let srv = Server::new();
-        let (tx, mut rx) = srv.connect_old().await;
-        let (peer_tx, mut peer_rx) = srv.connect_old().await;
+        let (tx, mut rx) = srv.connect_subscriber().await;
+        let (peer_tx, mut peer_rx) = srv.connect_subscriber().await;
         send_set(&tx, &mut rx, 1, r#"["A","B"]"#).await;
         send_set(&peer_tx, &mut peer_rx, 1, r#"["B"]"#).await;
         send_set(&tx, &mut rx, 2, r#"["B","C"]"#).await;
@@ -606,7 +623,7 @@ mod tests {
     #[tokio::test]
     async fn older_or_repeated_list_is_dropped() {
         let srv = Server::new();
-        let (tx, mut rx) = srv.connect_old().await;
+        let (tx, mut rx) = srv.connect_subscriber().await;
         send_set(&tx, &mut rx, 2, r#"["B"]"#).await;
         assert_eq!(
             send_set(&tx, &mut rx, 1, r#"["A","C"]"#).await,
@@ -620,20 +637,21 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn handshake_list_counts_as_zero() {
+    async fn list_numbered_zero_is_dropped() {
         let srv = Server::new();
-        let (tx, mut rx) = srv.connect(json!({ "topics": ["A"] })).await;
+        let (tx, mut rx) = srv.connect_subscriber().await;
         assert_eq!(
             send_set(&tx, &mut rx, 0, r#"["B"]"#).await,
-            r#"30[{"count":1,"seq":0}]"#
+            r#"30[{"count":0,"seq":0}]"#
         );
-        assert_eq!(srv.rooms().await, ["A"]);
+        assert_eq!(srv.rooms().await, Vec::<String>::new());
     }
 
     #[tokio::test]
     async fn list_without_seq_is_ignored() {
         let srv = Server::new();
-        let (tx, mut rx) = srv.connect(json!({ "topics": ["A"] })).await;
+        let (tx, mut rx) = srv.connect_subscriber().await;
+        send_set(&tx, &mut rx, 1, r#"["A"]"#).await;
         tx.send(Packet::Message(
             format!("20[\"{SET_SUBSCRIPTIONS_EVENT}\",[\"B\"]]").into(),
         ))
@@ -652,9 +670,9 @@ mod tests {
     #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
     async fn lists_sent_at_once_end_on_the_latest() {
         const LISTS: u64 = 300;
-        let srv = Server::with_builder(SocketIo::builder().max_buffer_size(4096));
-        let (tx, mut rx) = srv.connect_old().await;
-        let (peer_tx, mut peer_rx) = srv.connect_old().await;
+        let srv = Server::with(SocketIo::builder().max_buffer_size(4096), Duration::ZERO);
+        let (tx, mut rx) = srv.connect_subscriber().await;
+        let (peer_tx, mut peer_rx) = srv.connect_subscriber().await;
         send_set(&peer_tx, &mut peer_rx, 1, r#"["T0"]"#).await;
         for seq in 1..=LISTS {
             // each list one topic shorter: list LISTS keeps only T0
@@ -678,7 +696,8 @@ mod tests {
     #[tokio::test]
     async fn unread_topics_are_not_serialized_or_given_a_room() {
         let srv = Server::new();
-        let (_tx, _rx) = srv.connect(json!({ "topics": ["VCU/Speed"] })).await;
+        let (tx, mut rx) = srv.connect_subscriber().await;
+        send_set(&tx, &mut rx, 1, r#"["VCU/Speed"]"#).await;
         assert_eq!(srv.subs.rooms_for("BMS/Pack/SOC"), None);
         assert_eq!(
             srv.subs.rooms_for("VCU/Speed"),
@@ -698,8 +717,8 @@ mod tests {
     async fn disconnect_forgets_the_socket() {
         let srv = Server::new();
         let (_tx, _rx) = srv.connect_old().await;
-        let (_hs_tx, _hs_rx) = srv.connect(json!({ "topics": ["A"] })).await;
-        let (tx, mut rx) = srv.connect_old().await;
+        let (_idle_tx, _idle_rx) = srv.connect_subscriber().await;
+        let (tx, mut rx) = srv.connect_subscriber().await;
         send_set(&tx, &mut rx, 1, r#"["VCU/Speed"]"#).await;
         assert_eq!(srv.subs.socket_count().await, 3);
         for socket in srv.io.sockets() {
@@ -714,82 +733,15 @@ mod tests {
     #[tokio::test]
     async fn wildcards_and_empty_topics_are_dropped() {
         let srv = Server::new();
-        let (tx, mut rx) = srv.connect(json!({ "topics": ["#", "+/Speed", ""] })).await;
-        assert_eq!(srv.rooms().await, Vec::<String>::new());
-        let ack = send_set(&tx, &mut rx, 1, r#"["BMS/#","+/Speed","","VCU/Speed"]"#).await;
+        let (tx, mut rx) = srv.connect_subscriber().await;
+        let ack = send_set(
+            &tx,
+            &mut rx,
+            1,
+            r##"["#","BMS/#","+/Speed","","VCU/Speed"]"##,
+        )
+        .await;
         assert_eq!(ack, r#"30[{"count":1,"seq":1}]"#);
         assert_eq!(srv.rooms().await, ["VCU/Speed"]);
-    }
-
-    /// A socket's move out of the every-topic room waits for emits in flight,
-    /// so no emit sees it in both rooms (a duplicate) or in neither (a drop).
-    #[tokio::test]
-    async fn leaving_every_topic_waits_for_emits_in_flight() {
-        let srv = Server::new();
-        let (tx, mut rx) = srv.connect_old().await;
-        let emit_in_flight = srv.subs.every_topic_exit.read().await;
-        tx.send(set_packet(1, r#"["Kept"]"#)).await.unwrap();
-        tokio::time::sleep(Duration::from_millis(20)).await;
-        assert_eq!(srv.rooms().await, [EVERY_TOPIC_ROOM]);
-        drop(emit_in_flight);
-        assert!(matches!(rx.recv().await, Some(Packet::Message(m)) if m.starts_with("30")));
-        assert_eq!(srv.rooms().await, ["Kept"]);
-    }
-
-    /// Sockets leave the every-topic room while a kept topic is being
-    /// emitted: each must get every message exactly once, in order.
-    #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
-    async fn leaving_every_topic_neither_drops_nor_duplicates() {
-        const SOCKETS: usize = 16;
-        const MESSAGES: usize = 1000;
-        let srv = Server::with_builder(SocketIo::builder().max_buffer_size(4096));
-
-        // many rooms, so each switch takes a while
-        let mut set: Vec<String> = (0..2000).map(|i| format!("Other/{i}")).collect();
-        set.push("Kept".to_string());
-        let set = serde_json::to_string(&set).unwrap();
-
-        let mut receivers = vec![];
-        let mut senders = vec![];
-        for _ in 0..SOCKETS {
-            let (tx, mut rx) = srv.connect_old().await;
-            senders.push(tx);
-            receivers.push(tokio::spawn(async move {
-                let mut values = vec![];
-                while values.len() < MESSAGES {
-                    let Ok(Some(Packet::Message(msg))) =
-                        tokio::time::timeout(Duration::from_secs(5), rx.recv()).await
-                    else {
-                        break;
-                    };
-                    // ack packets carry no "values"
-                    if let Some(rest) = msg.split("\\\"values\\\":[").nth(1) {
-                        let value = rest.split(']').next().unwrap();
-                        values.push(value.parse::<f32>().unwrap() as usize);
-                    }
-                }
-                values
-            }));
-        }
-
-        let emitter = {
-            let (io, subs) = (srv.io.clone(), srv.subs.clone());
-            tokio::spawn(async move {
-                for i in 0..MESSAGES {
-                    let mut data = client_data("Kept");
-                    data.values = vec![i as f32];
-                    subs.emit_data(&io, &data).await.unwrap();
-                    tokio::task::yield_now().await;
-                }
-            })
-        };
-        tokio::time::sleep(Duration::from_millis(2)).await;
-        for tx in &senders {
-            tx.send(set_packet(1, &set)).await.unwrap();
-        }
-        emitter.await.unwrap();
-        for receiver in receivers {
-            assert_eq!(receiver.await.unwrap(), (0..MESSAGES).collect::<Vec<_>>());
-        }
     }
 }
