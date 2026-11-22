@@ -29,16 +29,16 @@ describe('computeLoopStatus', () => {
     const { readings, seen } = allClosed();
     const status = run(readings, seen);
     expect(status.verdict).toBe('closed');
-    expect(status.airsEnergized).toBeTrue();
-    expect(status.nodes.every((n) => n.state === 'closed')).toBeTrue();
+    expect(status.airsEnergized).toBe(true);
+    expect(status.nodes.every((n) => n.state === 'closed')).toBe(true);
   });
 
   it('unknown when no readings', () => {
     const status = run(new Map(), {});
     expect(status.verdict).toBe('unknown');
     expect(status.silentBoards).toEqual(['VCU', 'BMS']);
-    expect(status.nodes.every((n) => n.state === 'no-data')).toBeTrue();
-    expect(status.airsEnergized).toBeFalse();
+    expect(status.nodes.every((n) => n.state === 'no-data')).toBe(true);
+    expect(status.airsEnergized).toBe(false);
   });
 
   it('unknown when BMS stale', () => {
@@ -72,7 +72,7 @@ describe('computeLoopStatus', () => {
     expect(status.verdict).toBe('open');
     expect(suspectIds(status)).toEqual(['tsms']);
     for (const id of ['hvd', 'em-interlock', 'acc-sense', 'tsip-sense', 'ts-minus', 'ts-plus', 'airs']) {
-      expect(stateOf(status, id)).withContext(id).toBe('downstream-open');
+      expect(stateOf(status, id), id).toBe('downstream-open');
     }
     expect(stateOf(status, 'cockpit-brb')).toBe('closed');
   });
@@ -133,9 +133,9 @@ describe('computeLoopStatus', () => {
     readings.set(VCU.TSMS, { value: 1, receivedAt: NOW, changedAt: NOW - 1000 });
     const status = run(readings, seen);
     const tsms = status.nodes.find((n) => n.node.id === 'tsms')!;
-    expect(tsms.mismatch).toBeTrue();
+    expect(tsms.mismatch).toBe(true);
     expect(tsms.state).toBe('downstream-open');
-    expect(status.mismatch).toBeTrue();
+    expect(status.mismatch).toBe(true);
     expect(status.verdict).toBe('open');
   });
 
@@ -144,8 +144,8 @@ describe('computeLoopStatus', () => {
     readings.set(VCU.BOTS, { value: 0, receivedAt: NOW, changedAt: NOW - 499 });
     readings.set(VCU.TSMS, { value: 1, receivedAt: NOW, changedAt: NOW - 1000 });
     const status = run(readings, seen);
-    expect(status.nodes.find((n) => n.node.id === 'tsms')!.mismatch).toBeFalse();
-    expect(status.mismatch).toBeFalse();
+    expect(status.nodes.find((n) => n.node.id === 'tsms')!.mismatch).toBe(false);
+    expect(status.mismatch).toBe(false);
   });
 
   it('non-zero counts as closed', () => {

@@ -28,9 +28,7 @@ describe('SHUTDOWN_LOOP', () => {
 
   it('measured nodes have a board', () => {
     for (const node of SHUTDOWN_LOOP) {
-      expect(node.topic === undefined)
-        .withContext(node.id)
-        .toBe(node.board === undefined);
+      expect(node.topic === undefined, node.id).toBe(node.board === undefined);
     }
   });
 
@@ -46,9 +44,7 @@ describe('SHUTDOWN_LOOP', () => {
 
   it('car coords within 0-100', () => {
     for (const { id, car } of SHUTDOWN_LOOP) {
-      expect(car.x >= 0 && car.x <= 100 && car.y >= 0 && car.y <= 100)
-        .withContext(id)
-        .toBeTrue();
+      expect(car.x >= 0 && car.x <= 100 && car.y >= 0 && car.y <= 100, id).toBe(true);
     }
   });
 });

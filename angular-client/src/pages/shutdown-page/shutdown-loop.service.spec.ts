@@ -21,8 +21,8 @@ describe('ShutdownLoopService', () => {
   const canLatch = () => service.status().nodes.find((n) => n.node.id === 'can-latch')!;
 
   beforeEach(() => {
-    jasmine.clock().install();
-    jasmine.clock().mockDate(new Date(1_000_000));
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(1_000_000));
     TestBed.configureTestingModule({ providers: [ShutdownLoopService] });
     service = TestBed.inject(ShutdownLoopService);
     storage = TestBed.inject(Storage);
@@ -30,7 +30,7 @@ describe('ShutdownLoopService', () => {
 
   afterEach(() => {
     service.ngOnDestroy();
-    jasmine.clock().uninstall();
+    vi.useRealTimers();
   });
 
   it('starts unknown', () => {
@@ -45,7 +45,7 @@ describe('ShutdownLoopService', () => {
 
   it('goes stale after 60s', () => {
     pushAll('1');
-    jasmine.clock().tick(61_000);
+    vi.advanceTimersByTime(61_000);
     expect(service.status().verdict).toBe('unknown');
   });
 
@@ -61,14 +61,14 @@ describe('ShutdownLoopService', () => {
   it('tracks when a value changed, not when it was re-sent', () => {
     pushAll('1');
     push(SHUTDOWN_TOPICS.VCU.BOTS, ['0']);
-    jasmine.clock().tick(400);
+    vi.advanceTimersByTime(400);
     pushAll('1');
     push(SHUTDOWN_TOPICS.VCU.BOTS, ['0']);
     // BOTS has been 0 for 400 ms (< 500 ms grace), TSMS closed the whole time: no mismatch yet.
-    expect(service.status().mismatch).toBeFalse();
+    expect(service.status().mismatch).toBe(false);
     // No new messages; the 1 s clock tick alone must let the grace window expire.
-    jasmine.clock().tick(700);
-    expect(service.status().mismatch).toBeTrue();
+    vi.advanceTimersByTime(700);
+    expect(service.status().mismatch).toBe(true);
   });
 
   it('ignores blank values', () => {
@@ -80,16 +80,16 @@ describe('ShutdownLoopService', () => {
 
   it('tsOn goes stale with the BMS', () => {
     push(SHUTDOWN_TOPICS.BMS.State, ['1']);
-    expect(service.tsOn()).toBeFalse();
-    jasmine.clock().tick(61_000);
+    expect(service.tsOn()).toBe(false);
+    vi.advanceTimersByTime(61_000);
     expect(service.tsOn()).toBeUndefined();
   });
 
   it('tsOn maps inverted state', () => {
     push(SHUTDOWN_TOPICS.BMS.State, ['0']);
-    expect(service.tsOn()).toBeTrue();
+    expect(service.tsOn()).toBe(true);
     push(SHUTDOWN_TOPICS.BMS.State, ['1']);
-    expect(service.tsOn()).toBeFalse();
+    expect(service.tsOn()).toBe(false);
   });
 
   it('CAN latch closed only while every critical fault is 0', () => {
@@ -110,7 +110,7 @@ describe('ShutdownLoopService', () => {
 
   it('unsubscribes on destroy', () => {
     service.ngOnDestroy();
-    expect(storage.get(SHUTDOWN_TOPICS.VCU.TSMS).observed).toBeFalse();
-    expect(storage.get(SHUTDOWN_TOPICS.BMS.State).observed).toBeFalse();
+    expect(storage.get(SHUTDOWN_TOPICS.VCU.TSMS).observed).toBe(false);
+    expect(storage.get(SHUTDOWN_TOPICS.BMS.State).observed).toBe(false);
   });
 });
