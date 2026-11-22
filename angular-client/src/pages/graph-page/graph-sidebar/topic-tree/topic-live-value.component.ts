@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, Component, effect, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, input, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Storage from 'src/services/storage.service';
-import { DataValue } from 'src/utils/socket.utils';
 import { formatLiveValue } from 'src/utils/tree.utils';
 
 /**
@@ -13,22 +13,18 @@ import { formatLiveValue } from 'src/utils/tree.utils';
   templateUrl: './topic-live-value.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class TopicLiveValueComponent {
+export class TopicLiveValueComponent implements OnInit {
+  /** Fixed for the row's life: the tree tracks rows by topic. */
   topic = input.required<string>();
-  precision = input(3);
 
   private storage = inject(Storage);
+  private destroyRef = inject(DestroyRef);
   protected value = signal('N/A');
 
-  constructor() {
-    // A plain subscription per row rather than a toObservable/switchMap chain: flat mode renders ~900 of these.
-    effect((onCleanup) => {
-      const topic = this.topic();
-      const precision = this.precision();
-      const show = (value: DataValue) => this.value.set(formatLiveValue(value, precision));
-      // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- the effect's cleanup unsubscribes on topic change and on destroy
-      const subscription = this.storage.get(topic).subscribe(show);
-      onCleanup(() => subscription.unsubscribe());
-    });
+  ngOnInit(): void {
+    this.storage
+      .get(this.topic())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => this.value.set(formatLiveValue(value)));
   }
 }
