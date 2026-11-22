@@ -40,6 +40,16 @@ describe('TopicLiveValueComponent', () => {
     expect(text()).toBe('1.235V');
   });
 
+  it('shows the precision it is given', async () => {
+    fixture = TestBed.createComponent(TopicLiveValueComponent);
+    fixture.componentRef.setInput('topic', topic);
+    fixture.componentRef.setInput('precision', 1);
+    fixture.autoDetectChanges();
+    storage.addValue(topic, value('1.23456'));
+    await fixture.whenStable();
+    expect(text()).toBe('1.2V');
+  });
+
   it("starts from the topic's latest value when something else already reads it", async () => {
     const graph = storage.get(topic).subscribe();
     storage.addValue(topic, value('4'));
