@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, OnDestroy, signal } from '@angular/core';
 import Storage from 'src/services/storage.service';
+import { UiButtonDirective } from 'src/ui/button/button.directive';
 import { Board, SHUTDOWN_LOOP } from '../../shutdown-loop.model';
 import { SHUTDOWN_TOPICS, VCU_CRITICAL_FAULT_TOPICS } from '../../shutdown-page.topics';
 
@@ -18,8 +19,8 @@ const MEASURED = SHUTDOWN_LOOP.filter((n) => n.topic && n.board) as {
 @Component({
   selector: 'shutdown-mock-panel',
   templateUrl: './mock-panel.component.html',
-  styleUrls: ['./mock-panel.component.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [UiButtonDirective]
 })
 export class MockPanelComponent implements OnDestroy {
   private storage = inject(Storage);
@@ -52,8 +53,25 @@ export class MockPanelComponent implements OnDestroy {
     this.setOpenFrom(undefined);
   }
 
+  /** A single culprit: TSMS reads 0 right after the cockpit BRB reads 1. */
   breakAtTsms(): void {
     this.setOpenFrom(SHUTDOWN_TOPICS.VCU.TSMS);
+  }
+
+  /** A suspect stretch: the side BRBs have no reading, so they share the blame with the BMS latch. */
+  breakAtBmsLatch(): void {
+    this.setOpenFrom(SHUTDOWN_TOPICS.VCU.BMS);
+  }
+
+  /** A suspect stretch with the energy-meter placeholder in it. */
+  breakAtAccSense(): void {
+    this.setOpenFrom(SHUTDOWN_TOPICS.BMS.Acc);
+  }
+
+  /** Break at TSMS, but HVD downstream still reads closed: flagged once it persists past the grace window. */
+  mismatchAtHvd(): void {
+    this.setOpenFrom(SHUTDOWN_TOPICS.VCU.TSMS);
+    this.values.update((v) => ({ ...v, [SHUTDOWN_TOPICS.VCU.HVD]: 1 }));
   }
 
   /** Opens `topic` and everything after it in loop order; undefined closes all. */

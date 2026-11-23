@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { SHUTDOWN_LOOP } from '../../shutdown-loop.model';
 import { NodeStatus } from '../../shutdown-loop.utils';
+import { expectLoopViewContract } from '../../loop-view/loop-view.contract';
 import { CarViewComponent } from './car-view.component';
 
 const TSMS = SHUTDOWN_LOOP.findIndex((n) => n.id === 'tsms');
@@ -15,7 +16,8 @@ const NODES: NodeStatus[] = SHUTDOWN_LOOP.map((node, i) => ({
 describe('CarViewComponent', () => {
   let el: HTMLElement;
   let fixture: ComponentFixture<CarViewComponent>;
-  const marker = (id: string) => el.querySelector<SVGGElement>(`[data-node-id="${id}"]`)!;
+  const marker = (id: string) => el.querySelector<HTMLElement>(`[role="option"][data-node-id="${id}"]`)!;
+  const callout = () => el.querySelector<HTMLElement>('[data-callout]')?.textContent?.replace(/\s+/g, ' ').trim();
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({ imports: [CarViewComponent] }).compileComponents();
@@ -25,26 +27,44 @@ describe('CarViewComponent', () => {
     el = fixture.nativeElement;
   });
 
-  it('renders a marker per node and a segment between each pair', () => {
-    expect(el.querySelectorAll('[data-node-id]').length).toBe(19);
-    expect(el.querySelectorAll('line.segment').length).toBe(18);
+  it('renders a marker per node and a wiring segment between each pair, coloured by the upstream node', () => {
+    expect(el.querySelectorAll('[role="option"]').length).toBe(19);
+    const segments = el.querySelectorAll<SVGLineElement>('line[data-state]');
+    expect(segments.length).toBe(18);
+    expect(segments[TSMS].dataset['state']).toBe('suspect');
+    expect(segments[TSMS - 1].dataset['state']).toBe('closed');
+    expect(segments[TSMS + 1].dataset['state']).toBe('downstream-open');
   });
 
   it('labels markers with their state', () => {
     expect(marker('tsms').getAttribute('aria-label')).toBe('TSMS: Open — cause');
+    expect(marker('glvms').getAttribute('aria-label')).toBe('GLV master switch: Closed (no sensor)');
   });
 
-  it('shows topic, value and age in the tooltip', () => {
-    expect(marker('tsms').querySelector('title')!.textContent!.trim()).toBe('TSMS · VCU/Shutdown/TSMS_GPIO = 0 · 3 s ago');
-    expect(marker('glvms').querySelector('title')!.textContent!.trim()).toBe('GLV master switch · no sensor');
-  });
-
-  it('shows no data in the tooltip for a silent measured node', () => {
-    const silent = NODES.map((n) =>
-      n.node.id === 'hvd' ? { ...n, state: 'no-data' as const, value: undefined, ageMs: undefined } : n
-    );
-    fixture.componentRef.setInput('nodes', silent);
+  it('calls out the break node until another node is highlighted', () => {
+    expect(callout()).toBe('12 · TSMS · Open — cause');
+    fixture.componentRef.setInput('previewId', 'hvd');
     fixture.detectChanges();
-    expect(marker('hvd').querySelector('title')!.textContent!.trim()).toBe('HVD · VCU/Shutdown/HVD_GPIO · no data');
+    expect(callout()).toBe('13 · HVD · Open — after the break');
+    expect(marker('hvd').dataset['highlighted']).toBe('true');
+  });
+
+  it('marks a mismatched marker, in its name and with a badge', () => {
+    const mismatched = NODES.map((n) => (n.node.id === 'hvd' ? { ...n, value: 1, mismatch: true } : n));
+    fixture.componentRef.setInput('nodes', mismatched);
+    fixture.detectChanges();
+    expect(marker('hvd').getAttribute('aria-label')).toBe('HVD: Open — after the break, mismatch');
+    expect(marker('hvd').textContent).toContain('!');
+    expect(marker('bots').textContent).not.toContain('!');
+  });
+
+  expectLoopViewContract(() => TestBed.createComponent(CarViewComponent));
+
+  it('moves focus in loop order with arrow keys', () => {
+    marker('tsms').focus();
+    marker('tsms').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    expect(document.activeElement).toBe(marker('hvd'));
+    marker('hvd').dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true }));
+    expect(document.activeElement).toBe(marker('glvms'));
   });
 });

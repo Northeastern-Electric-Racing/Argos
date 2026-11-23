@@ -1,13 +1,46 @@
-<div class="page">
-  <h1 class="title">Shutdown Loop</h1>
-  <loop-banner [status]="status()" [tsOn]="tsOn()" />
-  <section class="panel" aria-label="Car view">
-    <car-view-switcher [nodes]="status().nodes" />
-  </section>
-  <section class="panel" aria-label="Loop in series order">
-    <h2 class="section-title">Loop order</h2>
-    <loop-strip [nodes]="status().nodes" />
-  </section>
+<div class="flex flex-col gap-4 p-5 max-md:gap-3 max-md:p-3">
+  <header class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+    <typography variant="x-large-title" content="Shutdown Loop" textClass="max-md:text-title" />
+    <loop-meta [nodes]="status().nodes" [tsOn]="tsOn()" />
+  </header>
+
+  <loop-banner [status]="status()" (nodeSelect)="selection.select($event)" />
+
+  <!-- Phones: car, strip, details. Wide: car beside the details, the strip full width below. -->
+  <div class="grid gap-4 max-md:gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,22rem)]">
+    <section
+      aria-label="Car side view"
+      class="min-w-0 rounded-md border border-solid border-border bg-surface-1 p-3 max-md:p-1.5 lg:col-start-1 lg:row-start-1"
+    >
+      <car-view
+        [nodes]="status().nodes"
+        [selectedId]="selection.selectedId()"
+        [previewId]="selection.previewId()"
+        (nodeSelect)="selection.select($event)"
+        (nodePreview)="selection.preview($event)"
+      />
+    </section>
+
+    <section
+      aria-labelledby="loop-order-title"
+      class="flex min-w-0 flex-col gap-1 rounded-md border border-solid border-border bg-surface-1 p-3 lg:col-span-2 lg:row-start-2"
+    >
+      <h2 id="loop-order-title" class="m-0 flex flex-wrap items-baseline gap-x-2 text-base font-bold text-fg">
+        Loop order
+        <span class="text-xs font-normal text-fg-muted">GLV source → AIR coils · arrow keys move between loop nodes</span>
+      </h2>
+      <loop-strip
+        [nodes]="status().nodes"
+        [selectedId]="selection.selectedId()"
+        [previewId]="selection.previewId()"
+        (nodeSelect)="selection.select($event)"
+        (nodePreview)="selection.preview($event)"
+      />
+    </section>
+
+    <loop-node-detail class="min-w-0 lg:col-start-2 lg:row-start-1" [status]="status()" [nodeId]="selection.activeId()" />
+  </div>
+
   @if (devMode) {
     <shutdown-mock-panel />
   }

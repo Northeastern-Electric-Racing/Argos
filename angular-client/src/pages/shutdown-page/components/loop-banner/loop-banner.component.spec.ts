@@ -17,54 +17,105 @@ const status = (overrides: Partial<LoopStatus>): LoopStatus => ({
 
 describe('LoopBannerComponent', () => {
   let fixture: ComponentFixture<LoopBannerComponent>;
+  let el: HTMLElement;
 
-  const render = (s: LoopStatus, tsOn?: boolean): string => {
+  const render = (s: LoopStatus): string => {
     fixture.componentRef.setInput('status', s);
-    fixture.componentRef.setInput('tsOn', tsOn);
     fixture.detectChanges();
-    return (fixture.nativeElement as HTMLElement).textContent!.replace(/\s+/g, ' ');
+    return el.textContent!.replace(/\s+/g, ' ');
   };
+  const live = () => el.querySelector<HTMLElement>('[aria-live="polite"]')!;
+  const verdictText = () => el.querySelector<HTMLElement>('[data-verdict]')!.textContent!.replace(/\s+/g, ' ').trim();
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({ imports: [LoopBannerComponent] }).compileComponents();
     fixture = TestBed.createComponent(LoopBannerComponent);
+    el = fixture.nativeElement;
   });
 
-  it('names a single cause', () => {
-    expect(render(status({ verdict: 'open', suspects: [node('tsms')] }))).toContain('LOOP OPEN — cause: TSMS');
+  describe('verdict', () => {
+    it('names a single cause', () => {
+      render(status({ verdict: 'open', suspects: [node('tsms')] }));
+      expect(verdictText()).toBe('LOOP OPEN Cause: TSMS');
+      expect(el.querySelector('[data-verdict]')!.getAttribute('data-verdict')).toBe('open');
+    });
+
+    it('lists several possible causes', () => {
+      render(status({ verdict: 'open', suspects: [node('side-brb-r'), node('side-brb-l'), node('bms-latch')] }));
+      expect(verdictText()).toBe('LOOP OPEN Cause is one of: Side BRB R Side BRB L BMS latch');
+    });
+
+    it('names no-data nodes inside the stretch', () => {
+      render(
+        status({ verdict: 'open', suspects: [node('em-interlock'), node('acc-sense')], noDataInStretch: [node('hvd')] })
+      );
+      expect(verdictText()).toBe('LOOP OPEN Cause is one of: Energy meter interlock Accumulator sense HVD · no data');
+    });
+
+    it('shows closed', () => {
+      render(status({ verdict: 'closed', airsEnergized: true }));
+      expect(verdictText()).toBe('LOOP CLOSED · AIRs on Every reading is live and closed.');
+    });
+
+    it('shows unknown with silent boards', () => {
+      render(status({ verdict: 'unknown', silentBoards: ['VCU', 'BMS'] }));
+      expect(verdictText()).toBe('UNKNOWN No data from VCU and BMS. Waiting for live readings.');
+    });
   });
 
-  it('lists several possible causes', () => {
-    const text = render(status({ verdict: 'open', suspects: [node('side-brb-r'), node('side-brb-l'), node('bms-latch')] }));
-    expect(text).toContain('LOOP OPEN — cause is one of: Side BRB R, Side BRB L, BMS latch');
+  describe('suspect buttons', () => {
+    it('selects a suspect when its name is pressed', () => {
+      const picked: (string | null)[] = [];
+      fixture.componentInstance.nodeSelect.subscribe((id) => picked.push(id));
+      render(status({ verdict: 'open', suspects: [node('side-brb-r'), node('bms-latch')] }));
+      const buttons = el.querySelectorAll<HTMLButtonElement>('button[data-node-id]');
+      expect(buttons.length).toBe(2);
+      buttons[1].click();
+      expect(picked).toEqual(['bms-latch']);
+      expect(buttons[1].getAttribute('aria-label')).toBe('Show BMS latch');
+    });
   });
 
-  it('names no-data nodes inside the stretch', () => {
-    const text = render(
-      status({ verdict: 'open', suspects: [node('em-interlock'), node('acc-sense')], noDataInStretch: [node('hvd')] })
-    );
-    expect(text).toContain('LOOP OPEN — cause is one of: Energy meter interlock, Accumulator sense, or HVD (no data)');
+  describe('announcement', () => {
+    it('announces the verdict politely in one sentence', () => {
+      render(status({ verdict: 'open', suspects: [node('tsms')] }));
+      expect(live().getAttribute('role')).toBe('status');
+      expect(live().textContent!.trim()).toBe('LOOP OPEN — cause: TSMS');
+    });
+
+    it('updates the announcement when the verdict changes, and only then', () => {
+      render(status({ verdict: 'unknown', silentBoards: ['VCU', 'BMS'] }));
+      expect(live().textContent!.trim()).toBe('UNKNOWN — no data from VCU and BMS');
+      const textNode = live().firstChild;
+      render(status({ verdict: 'unknown', silentBoards: ['VCU', 'BMS'] }));
+      expect(live().firstChild).toBe(textNode);
+      expect(live().textContent!.trim()).toBe('UNKNOWN — no data from VCU and BMS');
+      render(status({ verdict: 'closed', airsEnergized: true }));
+      expect(live().textContent!.trim()).toBe('LOOP CLOSED · AIRs on');
+    });
+
+    it('includes a mismatch in the announcement', () => {
+      const mismatched: NodeStatus = { node: node('tsms'), state: 'downstream-open', mismatch: true };
+      render(status({ verdict: 'open', suspects: [node('bots')], mismatch: true, nodes: [mismatched] }));
+      expect(live().textContent!.trim()).toBe('LOOP OPEN — cause: BOTS. Sensor mismatch: TSMS read closed after the break.');
+    });
   });
 
-  it('shows closed', () => {
-    expect(render(status({ verdict: 'closed', airsEnergized: true }))).toContain('LOOP CLOSED · AIRs on');
-  });
+  describe('warnings', () => {
+    it('shows a mismatch warning', () => {
+      const mismatched: NodeStatus = { node: node('tsms'), state: 'downstream-open', mismatch: true };
+      const text = render(status({ verdict: 'open', suspects: [node('bots')], mismatch: true, nodes: [mismatched] }));
+      expect(text).toContain('Sensor mismatch: TSMS read closed after the break');
+    });
 
-  it('shows unknown with silent boards', () => {
-    expect(render(status({ verdict: 'unknown', silentBoards: ['VCU', 'BMS'] }))).toContain(
-      'UNKNOWN — no data from VCU and BMS'
-    );
-  });
+    it('warns about a silent board while the loop is open', () => {
+      const text = render(status({ verdict: 'open', suspects: [node('tsms')], silentBoards: ['BMS'] }));
+      expect(text).toContain('No data from BMS for over 60 s');
+    });
 
-  it('shows mismatch warning', () => {
-    const mismatched: NodeStatus = { node: node('tsms'), state: 'downstream-open', mismatch: true };
-    const text = render(status({ verdict: 'open', suspects: [node('bots')], mismatch: true, nodes: [mismatched] }));
-    expect(text).toContain('Sensor mismatch: TSMS read closed after the break');
-  });
-
-  it('shows TS chip states', () => {
-    expect(render(status({}), true)).toContain('BMS: TS ON');
-    expect(render(status({}), false)).toContain('BMS: TS OFF');
-    expect(render(status({}), undefined)).toContain('BMS: TS —');
+    it('does not repeat the silent boards under an UNKNOWN verdict', () => {
+      const text = render(status({ verdict: 'unknown', silentBoards: ['BMS'] }));
+      expect(text).not.toContain('for over 60 s');
+    });
   });
 });

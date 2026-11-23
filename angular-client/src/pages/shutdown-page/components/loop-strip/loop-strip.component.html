@@ -1,27 +1,69 @@
-<ol class="strip" aria-label="Shutdown loop in series order">
-  @for (s of nodes(); track s.node.id; let last = $last, i = $index) {
-    <li
-      class="item"
-      [class]="display[s.state].cssClass"
-      [class.unmeasured]="!s.node.topic"
-      [class.mismatch]="s.mismatch"
-      [attr.data-node-id]="s.node.id"
-      [attr.aria-label]="s.node.label + ': ' + display[s.state].label + (s.node.topic ? '' : ' (no sensor)')"
-    >
-      <span class="marker"><status-glyph [state]="s.state" /></span>
-      <span class="label"
-        ><span class="order">{{ i + 1 }}</span> {{ s.node.label }}</span
+<div #scroller class="relative overflow-x-auto overscroll-x-contain pb-1">
+  <ul
+    role="listbox"
+    aria-label="Shutdown loop in series order"
+    aria-orientation="horizontal"
+    class="m-0 flex w-max list-none px-1 pt-9 pb-0"
+  >
+    @for (it of items(); track it.s.node.id; let i = $index, last = $last) {
+      <li
+        #item
+        role="option"
+        class="relative flex w-18 shrink-0 cursor-pointer flex-col items-center gap-0.5 rounded-md border-2 border-solid border-transparent px-0.5 pt-1.5 pb-2 text-center hover:bg-surface-2 focus-visible:focus-ring focus-visible:-outline-offset-2 aria-selected:border-fg-muted aria-selected:bg-surface-3 data-[highlighted=true]:bg-surface-3"
+        [attr.data-node-id]="it.s.node.id"
+        [attr.data-state]="it.s.state"
+        [attr.data-zone]="it.z.zone"
+        [attr.data-measured]="!!it.s.node.topic"
+        [attr.data-highlighted]="highlightId() === it.s.node.id"
+        [attr.aria-selected]="selectedId() === it.s.node.id"
+        [attr.aria-label]="it.ariaLabel"
+        [tabindex]="tabStopId() === it.s.node.id ? 0 : -1"
+        (click)="toggle(it.s.node.id)"
+        (focus)="nodePreview.emit(it.s.node.id)"
+        (blur)="nodePreview.emit(null)"
+        (keydown)="onKeydown($event, i)"
+        (mouseenter)="nodePreview.emit(it.s.node.id)"
+        (mouseleave)="nodePreview.emit(null)"
       >
-      <span class="state">{{ display[s.state].label }}</span>
-      @if (s.node.placeholder) {
-        <span class="tag">{{ placeholderTag }}</span>
-      }
-      @if (s.mismatch) {
-        <span class="tag mismatch-tag">mismatch</span>
-      }
-      @if (!last) {
-        <span class="connector" aria-hidden="true"></span>
-      }
-    </li>
-  }
-</ol>
+        @if (it.z.zone) {
+          <span aria-hidden="true" [class]="bracketClass(it.z)"></span>
+          @if (it.z.zone === 'stretch' ? it.z.start : it.z.end) {
+            <span aria-hidden="true" [class]="bracketLabelClass(it.z)">{{ bracketLabel(it.z) }}</span>
+          }
+        }
+        @if (!last) {
+          <span
+            aria-hidden="true"
+            class="pointer-events-none absolute top-[22px] left-1/2 z-1 h-0 w-[calc(100%+4px)] border-t-3"
+            [class]="it.d.connector"
+          ></span>
+        }
+        <span
+          aria-hidden="true"
+          class="relative z-10 grid size-9 place-items-center rounded-full border-3"
+          [class]="it.s.node.topic ? it.d.marker.measured : it.d.marker.unmeasured"
+        >
+          <status-glyph [state]="it.s.state" size="md" />
+        </span>
+        <span aria-hidden="true" class="text-xs leading-none text-fg-muted tabular-nums">{{ i + 1 }}</span>
+        <span
+          aria-hidden="true"
+          class="text-sm leading-tight font-medium"
+          [class]="it.s.state === 'downstream-open' || it.s.state === 'no-data' ? 'text-fg-muted' : 'text-fg'"
+          >{{ short[it.s.node.id] }}</span
+        >
+        <span aria-hidden="true" class="text-xs leading-tight font-bold" [class]="it.d.text">{{ it.stateShort }}</span>
+        @if (it.s.node.placeholder) {
+          <span aria-hidden="true" class="text-badge leading-tight text-fg-muted italic">placeholder</span>
+        }
+        @if (it.s.mismatch) {
+          <span
+            aria-hidden="true"
+            class="rounded-xs bg-warn px-1 text-badge leading-tight font-bold text-on-status uppercase"
+            >mismatch</span
+          >
+        }
+      </li>
+    }
+  </ul>
+</div>

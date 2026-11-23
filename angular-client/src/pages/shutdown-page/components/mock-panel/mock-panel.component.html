@@ -1,15 +1,32 @@
-<section class="mock" aria-label="Mock readings (dev mode only)">
-  <h2 class="title">Mock readings <span class="hint">dev mode only · stale after 60 s without publishing</span></h2>
-  <div class="row">
-    <button type="button" class="btn primary" [attr.aria-pressed]="publishing()" (click)="togglePublishing()">
+<section
+  aria-labelledby="shutdown-mock-title"
+  class="flex flex-col gap-3 rounded-md border border-dashed border-border-strong p-4 max-md:p-3"
+>
+  <h2 id="shutdown-mock-title" class="m-0 flex flex-wrap items-baseline gap-x-2 text-base font-bold text-fg-label">
+    Mock readings
+    <span class="text-xs font-normal text-fg-muted">dev mode only · stale after 60 s without publishing</span>
+  </h2>
+  <div class="flex flex-wrap gap-2">
+    <button type="button" uiButton variant="tonal" size="sm" [attr.aria-pressed]="publishing()" (click)="togglePublishing()">
       {{ publishing() ? 'Stop publishing' : 'Publish' }}
     </button>
-    <button type="button" class="btn" (click)="allClosed()">All closed</button>
-    <button type="button" class="btn" (click)="breakAtTsms()">Break at TSMS</button>
+    <button type="button" uiButton variant="neutral" size="sm" (click)="allClosed()">All closed</button>
+    <button type="button" uiButton variant="neutral" size="sm" (click)="breakAtTsms()">Break at TSMS</button>
+    <button type="button" uiButton variant="neutral" size="sm" (click)="breakAtBmsLatch()">Break at BMS latch</button>
+    <button type="button" uiButton variant="neutral" size="sm" (click)="breakAtAccSense()">Break at Acc sense</button>
+    <button type="button" uiButton variant="neutral" size="sm" (click)="mismatchAtHvd()">Mismatch at HVD</button>
   </div>
-  <div class="row">
+  <div class="flex flex-wrap gap-1.5" role="group" aria-label="Reading per node: pressed = 1 (closed)">
     @for (n of nodes; track n.topic) {
-      <button type="button" class="btn small" [attr.aria-pressed]="values()[n.topic] === 1" (click)="toggle(n.topic)">
+      <button
+        type="button"
+        uiButton
+        variant="tonal"
+        size="sm"
+        class="tabular-nums"
+        [attr.aria-pressed]="values()[n.topic] === 1"
+        (click)="toggle(n.topic)"
+      >
         {{ n.label }} = {{ values()[n.topic] }}
       </button>
     }
