@@ -1,12 +1,14 @@
 import { TestBed } from '@angular/core/testing';
 import Storage from 'src/services/storage.service';
 import { SHUTDOWN_LOOP } from './shutdown-loop.model';
+import { NODE_STATE_CODE } from './shutdown-loop.server';
 import { ShutdownLoopService } from './shutdown-loop.service';
-import { SHUTDOWN_TOPICS, VCU_CRITICAL_FAULT_TOPICS } from './shutdown-page.topics';
+import { SHUTDOWN_SERVER_TOPICS, SHUTDOWN_TOPICS, VCU_CRITICAL_FAULT_TOPICS } from './shutdown-page.topics';
 
 const MEASURED_TOPICS = SHUTDOWN_LOOP.filter((n) => n.topic && n.topic !== SHUTDOWN_TOPICS.VCU.CAN_LATCH).map(
   (n) => n.topic!
 );
+const VCU_PIN_TOPICS = Object.values(SHUTDOWN_TOPICS.VCU).filter((t) => t !== SHUTDOWN_TOPICS.VCU.CAN_LATCH);
 
 describe('ShutdownLoopService', () => {
   let service: ShutdownLoopService;
@@ -18,7 +20,16 @@ describe('ShutdownLoopService', () => {
     MEASURED_TOPICS.forEach((t) => push(t, [value]));
     VCU_CRITICAL_FAULT_TOPICS.forEach((t) => push(t, [value === '1' ? '0' : '1']));
   };
-  const canLatch = () => service.status().nodes.find((n) => n.node.id === 'can-latch')!;
+  const faultsClear = () => VCU_CRITICAL_FAULT_TOPICS.forEach((t) => push(t, ['0']));
+  const node = (id: string) => service.status().nodes.find((n) => n.node.id === id)!;
+  const canLatch = () => node('can-latch');
+  /** Pushes `send` every 250 ms for `ms`. */
+  const keepSending = (ms: number, send: () => void) => {
+    for (let t = 0; t < ms; t += 250) {
+      vi.advanceTimersByTime(250);
+      send();
+    }
+  };
 
   beforeEach(() => {
     vi.useFakeTimers();
@@ -43,9 +54,17 @@ describe('ShutdownLoopService', () => {
     expect(service.status().verdict).toBe('closed');
   });
 
-  it('goes stale after 60s', () => {
+  it('goes stale after 60s before the message rate is known', () => {
     pushAll('1');
     vi.advanceTimersByTime(61_000);
+    expect(service.status().verdict).toBe('unknown');
+  });
+
+  it('goes stale within seconds at trackside message rates', () => {
+    pushAll('1');
+    keepSending(500, () => pushAll('1'));
+    expect(service.status().verdict).toBe('closed');
+    vi.advanceTimersByTime(3_100);
     expect(service.status().verdict).toBe('unknown');
   });
 
@@ -78,7 +97,7 @@ describe('ShutdownLoopService', () => {
     expect(service.status().verdict).toBe('closed');
   });
 
-  it('tsOn goes stale with the BMS', () => {
+  it('tsOn goes stale with BMS/Shutdown/State', () => {
     push(SHUTDOWN_TOPICS.BMS.State, ['1']);
     expect(service.tsOn()).toBe(false);
     vi.advanceTimersByTime(61_000);
@@ -108,9 +127,57 @@ describe('ShutdownLoopService', () => {
     expect(canLatch().state).toBe('no-data');
   });
 
+  it('CAN latch does not stay tripped once its faults go stale', () => {
+    pushAll('1');
+    push(VCU_CRITICAL_FAULT_TOPICS[0], ['1']);
+    // 0x123 keeps arriving, 0x502 (the faults) stops.
+    keepSending(61_000, () => MEASURED_TOPICS.forEach((t) => push(t, ['1'])));
+    expect(canLatch().state).toBe('no-data');
+    expect(service.status().verdict).toBe('unknown');
+  });
+
+  it('messages on one VCU frame do not keep the other frame live', () => {
+    pushAll('1');
+    keepSending(61_000, faultsClear);
+    expect(node('tsms').state).toBe('no-data');
+    expect(canLatch().state).toBe('closed');
+  });
+
+  it('BMS/Shutdown/State does not keep the BMS sense readings live', () => {
+    pushAll('1');
+    keepSending(61_000, () => {
+      VCU_PIN_TOPICS.forEach((t) => push(t, ['1']));
+      faultsClear();
+      push(SHUTDOWN_TOPICS.BMS.State, ['1']);
+    });
+    expect(node('acc-sense').state).toBe('no-data');
+    expect(service.tsOn()).toBe(false);
+  });
+
+  it('keeps the same status object until something changes', () => {
+    pushAll('1');
+    const first = service.status();
+    expect(service.status()).toBe(first);
+    push(SHUTDOWN_TOPICS.VCU.TSMS, ['0']);
+    expect(service.status()).not.toBe(first);
+    expect(service.status().suspects.map((n) => n.id)).toEqual(['tsms']);
+  });
+
+  it('prefers fresh scylla-server node states, then falls back to its own', () => {
+    pushAll('1');
+    const codes = SHUTDOWN_LOOP.map((n) => (n.id === 'tsms' ? NODE_STATE_CODE.suspect : NODE_STATE_CODE.closed));
+    push(SHUTDOWN_SERVER_TOPICS.NodeStates, codes.map(String));
+    expect(service.status().source).toBe('server');
+    expect(service.status().suspects.map((n) => n.id)).toEqual(['tsms']);
+    keepSending(3_500, () => pushAll('1'));
+    expect(service.status().source).toBe('local');
+    expect(service.status().verdict).toBe('closed');
+  });
+
   it('unsubscribes on destroy', () => {
     service.ngOnDestroy();
     expect(storage.get(SHUTDOWN_TOPICS.VCU.TSMS).observed).toBe(false);
     expect(storage.get(SHUTDOWN_TOPICS.BMS.State).observed).toBe(false);
+    expect(storage.get(SHUTDOWN_SERVER_TOPICS.NodeStates).observed).toBe(false);
   });
 });
