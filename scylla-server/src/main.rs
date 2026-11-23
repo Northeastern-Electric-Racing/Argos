@@ -309,7 +309,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         token.clone(),
         mqtt_send_socket.subscribe(),
         mqtt_send_socket.clone(),
-        mqtt_send_db.clone(),
+        argos_inserter.clone(),
     );
     task_tracker.spawn(async move {
         let res = tokio::spawn(fut).await;
