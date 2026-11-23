@@ -5,6 +5,7 @@ import {
   readStateColours,
   segmentState,
   SHORT_LABEL,
+  WIRE_WIDTH,
   WireEmphasis
 } from '../../shutdown-loop.display';
 import { Vec3 } from '../../shutdown-loop.positions-3d';
@@ -24,8 +25,15 @@ export const MARKER_SHAPE: Record<NodeState, MarkerShape> = {
   'no-data': 'box'
 };
 
-/** Loop wire tube radius (metres) per emphasis: the cause twice the closed wire, dead wires thinner. */
-export const WIRE_RADIUS: Record<WireEmphasis, number> = { strong: 0.02, normal: 0.01, muted: 0.007 };
+/** Metres of 3D wire diameter per px of 2D wire width, so the closed wire is a 1 cm tube. */
+const WIRE_METRES_PER_PX = 0.0067;
+/**
+ * Loop wire tube radius (metres) per emphasis, in proportion to the 2D wire's core width (WIRE_WIDTH), so 3D and
+ * 2D weigh the cause, closed and dead wires the same way. The 2D casing has no 3D counterpart: a tube has depth.
+ */
+export const WIRE_RADIUS = Object.fromEntries(
+  (Object.keys(WIRE_WIDTH) as WireEmphasis[]).map((e) => [e, (WIRE_WIDTH[e].core * WIRE_METRES_PER_PX) / 2])
+) as Record<WireEmphasis, number>;
 
 /** Metres per SVG user unit when a StateDisplay dash pattern (in px) becomes 3D dashes. */
 const DASH_SCALE = 0.007;

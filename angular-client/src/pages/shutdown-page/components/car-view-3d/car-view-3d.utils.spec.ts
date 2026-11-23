@@ -1,4 +1,4 @@
-import { NODE_STATE_DISPLAY, segmentState } from '../../shutdown-loop.display';
+import { NODE_STATE_DISPLAY, segmentState, WIRE_WIDTH } from '../../shutdown-loop.display';
 import { SHUTDOWN_LOOP } from '../../shutdown-loop.model';
 import { NODE_POSITIONS_3D } from '../../shutdown-loop.positions-3d';
 import { CssVarReader } from '../../shutdown-loop.theme';
@@ -65,8 +65,11 @@ describe('buildLoopSegments', () => {
     expect(segmentFrom(nodes, 'bspd-latch').state).toBe('downstream-open');
   });
 
-  it('draws the cause wire at twice the normal radius and muted wires thinner', () => {
-    expect(WIRE_RADIUS.strong).toBeCloseTo(WIRE_RADIUS.normal * 2);
+  it('weighs wires as the 2D view does (WIRE_WIDTH): the cause heaviest, dead wires thinnest', () => {
+    for (const e of ['strong', 'muted'] as const) {
+      expect(WIRE_RADIUS[e] / WIRE_RADIUS.normal, e).toBeCloseTo(WIRE_WIDTH[e].core / WIRE_WIDTH.normal.core);
+    }
+    expect(WIRE_RADIUS.strong).toBeGreaterThan(WIRE_RADIUS.normal);
     expect(WIRE_RADIUS.muted).toBeLessThan(WIRE_RADIUS.normal);
   });
 
