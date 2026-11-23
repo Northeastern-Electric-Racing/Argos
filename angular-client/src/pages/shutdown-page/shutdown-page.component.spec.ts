@@ -1,4 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { CarScene, CarSceneFactory } from './components/car-view-3d/car-scene.types';
+import { CAR_SCENE_LOADER, WEBGL_SUPPORT } from './components/car-view-3d/car-view-3d.tokens';
+import { CAR_VIEW_STORAGE_KEY } from './components/car-view-mode/car-view-mode.component';
 import ShutdownPageComponent from './shutdown-page.component';
 
 describe('ShutdownPageComponent', () => {
@@ -65,5 +68,67 @@ describe('ShutdownPageComponent', () => {
     fixture.detectChanges();
     expect(stripItem('bots').getAttribute('aria-selected')).toBe('false');
     expect(carMarker('bots').getAttribute('aria-selected')).toBe('false');
+  });
+});
+
+describe('ShutdownPageComponent car view mode', () => {
+  let fixture: ComponentFixture<ShutdownPageComponent>;
+  let el: HTMLElement;
+  const scene: CarScene = {
+    setStatuses: vi.fn(),
+    setHighlight: vi.fn(),
+    focus: vi.fn(),
+    setView: vi.fn(),
+    setInteractive: vi.fn(),
+    dispose: vi.fn()
+  };
+  const button = (label: string) =>
+    [...el.querySelectorAll<HTMLButtonElement>('car-view-mode button')].find((b) => b.textContent!.trim() === label)!;
+  const stripItem = (id: string) => el.querySelector<HTMLElement>(`loop-strip [data-node-id="${id}"]`)!;
+
+  const create = async (webgl: boolean) => {
+    localStorage.setItem(CAR_VIEW_STORAGE_KEY, '3d');
+    const factory: CarSceneFactory = () => scene;
+    await TestBed.configureTestingModule({
+      imports: [ShutdownPageComponent],
+      providers: [
+        { provide: WEBGL_SUPPORT, useValue: () => webgl },
+        { provide: CAR_SCENE_LOADER, useValue: () => Promise.resolve(factory) }
+      ]
+    }).compileComponents();
+    fixture = TestBed.createComponent(ShutdownPageComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    el = fixture.nativeElement;
+  };
+
+  afterEach(() => {
+    fixture.destroy();
+    localStorage.removeItem(CAR_VIEW_STORAGE_KEY);
+  });
+
+  it('starts in the stored 3D view and keeps the selection across a 2D / 3D round trip', async () => {
+    await create(true);
+    expect(el.querySelector('car-view-3d')).toBeTruthy();
+    stripItem('bots').click();
+    fixture.detectChanges();
+    button('2D').click();
+    fixture.detectChanges();
+    expect(el.querySelector('car-view [data-node-id="bots"]')!.getAttribute('aria-selected')).toBe('true');
+    button('3D').click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(scene.focus).toHaveBeenLastCalledWith('bots');
+  });
+
+  it('falls back to the 2D car with a notice when 3D is unavailable, without remembering 2D', async () => {
+    await create(false);
+    expect(el.querySelector('car-view-3d')).toBeNull();
+    expect(el.querySelector('car-view')).toBeTruthy();
+    expect(el.querySelector('car-view-mode [role="status"]')!.textContent).toContain('no WebGL');
+    expect(button('3D').getAttribute('aria-pressed')).toBe('false');
+    expect(localStorage.getItem(CAR_VIEW_STORAGE_KEY)).toBe('3d');
   });
 });

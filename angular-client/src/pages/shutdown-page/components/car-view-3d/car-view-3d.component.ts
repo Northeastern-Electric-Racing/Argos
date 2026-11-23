@@ -82,8 +82,9 @@ export class CarView3dComponent implements CarLoopView {
         .at(-1)?.node.id ?? null
   );
 
-  /** Each marker on screen after the last rendered frame. */
+  /** Each marker on screen after the last rendered frame, and the stage's size then. */
   private readonly points = signal<ScreenPoint[]>([]);
+  private readonly stageSize = signal({ width: 0, height: 0 });
   protected readonly badges = computed(() => {
     const all = badgeModels(this.nodes(), this.highlightId());
     if (this.interactive()) return all;
@@ -94,11 +95,20 @@ export class CarView3dComponent implements CarLoopView {
   private readonly placements = linkedSignal<BadgePoint[], BadgePlacement[]>({
     source: () => {
       const at = new Map(this.points().map((p) => [p.id, p]));
-      return this.badges()
+      const shown = this.badges()
         .filter((b) => at.has(b.id))
         .map((b) => ({ ...at.get(b.id)!, suspect: b.suspect, width: b.width }));
+      // Suspects without a badge (the overview) still keep the shown badge off their halos.
+      const ids = new Set(shown.map((p) => p.id));
+      const haloOnly = this.nodes()
+        .filter((s) => s.state === 'suspect' && !ids.has(s.node.id) && at.has(s.node.id))
+        .map((s) => ({ ...at.get(s.node.id)!, suspect: true, unlabelled: true }));
+      return [...shown, ...haloOnly];
     },
-    computation: (points, previous) => placeBadges(points, previous?.value)
+    computation: (points, previous) => {
+      const size = this.stageSize();
+      return placeBadges(points, previous?.value, size.width ? size : undefined);
+    }
   });
   protected readonly overlay = computed(() => {
     const placed = new Map(this.placements().map((p) => [p.id, p]));
@@ -183,7 +193,10 @@ export class CarView3dComponent implements CarLoopView {
         colours: readSceneColours(cssVarReader(this.doc.documentElement)),
         reducedMotion: this.matches('(prefers-reduced-motion: reduce)'),
         coarsePointer: this.matches('(pointer: coarse)'),
-        onFrame: (points) => this.points.set(points),
+        onFrame: (points) => {
+          this.stageSize.set({ width: container.clientWidth, height: container.clientHeight });
+          this.points.set(points);
+        },
         onPick: (id) => this.toggle(id),
         onHover: (id) => this.preview(id),
         onContextLost: () => this.fallBack('context-lost')

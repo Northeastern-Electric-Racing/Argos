@@ -8,6 +8,9 @@ import {
   signal,
   viewChild
 } from '@angular/core';
+import { BreakpointObserver } from '@angular/cdk/layout';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs';
 import { injectFocusAfterRender } from 'src/ui/focus/focus-after-render';
 import TypographyComponent from 'src/components/typography/typography.component';
 import { CarViewComponent } from './components/car-view/car-view.component';
@@ -52,6 +55,13 @@ export default class ShutdownPageComponent {
   readonly tsOn = this.loop.tsOn;
   readonly devMode = isDevMode();
 
+  /** Car views are a control from Tailwind's `sm` (640px) up, an overview below it (the strip is the control). */
+  readonly carInteractive = toSignal(
+    inject(BreakpointObserver)
+      .observe('(min-width: 640px)')
+      .pipe(map((state) => state.matches)),
+    { requireSync: true }
+  );
   /** 2D or 3D car view: the stored choice, else 3D on a wide screen with a fine pointer. */
   readonly carMode = signal(readCarViewMode());
   /** Why the 3D view fell back to 2D, until 3D is chosen again. */

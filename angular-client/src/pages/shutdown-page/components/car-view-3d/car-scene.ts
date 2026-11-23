@@ -109,6 +109,18 @@ export function createCarScene(options: CarSceneOptions): CarScene {
     // The view fits the car and every marker.
     const bounds = new Box3().setFromObject(car.group);
     Object.values(NODE_POSITIONS_3D).forEach((p) => bounds.expandByPoint(toVec(p)));
+    // The car's own vertices (a sample), which frame it more tightly than its box from oblique views.
+    const fitPoints: Vec3[] = [];
+    const vertex = new Vector3();
+    car.group.traverse((obj) => {
+      if (!(obj instanceof Mesh)) return;
+      const position = obj.geometry.getAttribute('position');
+      const step = Math.max(1, Math.floor(position.count / 60));
+      for (let i = 0; i < position.count; i += step) {
+        fitPoints.push(toVec3(vertex.fromBufferAttribute(position, i).applyMatrix4(obj.matrixWorld)));
+      }
+    });
+    Object.values(NODE_POSITIONS_3D).forEach((p) => fitPoints.push(p));
     const size = bounds.getSize(new Vector3());
     const grid = new GridHelper(
       Math.ceil(Math.max(size.x, size.z) + 1),
@@ -224,7 +236,7 @@ export function createCarScene(options: CarSceneOptions): CarScene {
     function setView(next: ViewPreset, animate = true): void {
       preset = next;
       orbited = false;
-      const pose = viewPose(toVec3(bounds.min), toVec3(bounds.max), next, camera.aspect, VIEW_FOV_DEG);
+      const pose = viewPose(toVec3(bounds.min), toVec3(bounds.max), next, camera.aspect, VIEW_FOV_DEG, 1.06, fitPoints);
       fitDistance = pose.distance;
       controls.minDistance = pose.distance * MIN_DISTANCE;
       controls.maxDistance = pose.distance * MAX_DISTANCE;

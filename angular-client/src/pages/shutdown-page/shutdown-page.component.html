@@ -25,6 +25,7 @@
           [previewId]="selection.previewId()"
           (nodeSelect)="selection.select($event)"
           (nodePreview)="selection.preview($event)"
+          [interactive]="carInteractive()"
           (unavailable)="onCarUnavailable($event)"
         />
       } @else {

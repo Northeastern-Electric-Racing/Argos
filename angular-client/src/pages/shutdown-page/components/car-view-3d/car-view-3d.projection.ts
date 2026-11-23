@@ -62,28 +62,35 @@ export interface ViewPose {
   distance: number;
 }
 
-/** Where the camera goes so that the box from `min` to `max` fills the view from `preset`'s direction. */
+/**
+ * Where the camera goes so that the box from `min` to `max` fills the view from `preset`'s direction, aimed at the
+ * box's centre. With `points` (e.g. the car's vertices) it fits those instead of the box's corners, which frames
+ * the car more tightly from oblique directions.
+ */
 export function viewPose(
   min: Vec3,
   max: Vec3,
   preset: ViewPreset,
   aspect: number,
   verticalFovDeg = VIEW_FOV_DEG,
-  margin = 1.1
+  margin = 1.1,
+  points?: readonly Vec3[]
 ): ViewPose {
   const target: Vec3 = [(min[0] + max[0]) / 2, (min[1] + max[1]) / 2, (min[2] + max[2]) / 2];
   // Camera axes for this direction: z towards the camera, x right, y up.
   const z = unit(VIEW_DIRECTIONS[preset]);
   const x = unit(cross([0, 1, 0], z));
   const y = cross(z, x);
-  const corners: Vec3[] = [];
-  for (const cx of [min[0], max[0]])
-    for (const cy of [min[1], max[1]])
-      for (const cz of [min[2], max[2]]) {
-        const rel = sub([cx, cy, cz], target);
-        corners.push([dot(rel, x), dot(rel, y), dot(rel, z)]);
-      }
-  const distance = fitDistanceToPoints(corners, verticalFovDeg, aspect, margin);
+  const fit: Vec3[] = [];
+  if (points?.length) fit.push(...points);
+  else
+    for (const cx of [min[0], max[0]])
+      for (const cy of [min[1], max[1]]) for (const cz of [min[2], max[2]]) fit.push([cx, cy, cz]);
+  const inCamera = fit.map((p): Vec3 => {
+    const rel = sub(p, target);
+    return [dot(rel, x), dot(rel, y), dot(rel, z)];
+  });
+  const distance = fitDistanceToPoints(inCamera, verticalFovDeg, aspect, margin);
   const position: Vec3 = [target[0] + z[0] * distance, target[1] + z[1] * distance, target[2] + z[2] * distance];
   return { target, position, distance };
 }
@@ -121,6 +128,8 @@ export interface BadgePoint extends ScreenPoint {
   suspect?: boolean;
   /** Badge width in px; BADGE_SIZE when omitted. */
   width?: number;
+  /** A suspect shown without a badge: nothing is placed for it, but badges keep off its halo. */
+  unlabelled?: boolean;
 }
 
 export interface BadgePlacement {
@@ -138,7 +147,7 @@ export interface BadgePlacement {
 }
 
 /** A suspect's halo ring has this radius (px); no badge may cover any of it. */
-export const HALO_RADIUS_PX = 14;
+export const HALO_RADIUS_PX = 16;
 
 /**
  * Candidate spots, in order of preference: a direction from the marker (up-right first, then the other corners,
@@ -172,19 +181,41 @@ const reaches = (r: Rect, x: number, y: number, radius: number) => {
   return Math.hypot(dx, dy) < radius;
 };
 
-/** Cost of covering a suspect's halo: more than any overlap between badges can add up to. */
+/** Cost of covering a suspect's halo: more than any overlap between badges, or leaving the canvas, can add up to. */
 const COVER_SUSPECT = 1e9;
+/** Cost per px² of badge outside the canvas: worse than any overlap between badges. */
+const OUTSIDE = 1e4;
+
+/** The canvas size, so badges stay on it. */
+export interface BadgeBounds {
+  width: number;
+  height: number;
+}
+
+/** Area (px²) of the rectangle outside the canvas. */
+const outsideArea = (r: Rect, b: BadgeBounds | undefined) => {
+  if (!b) return 0;
+  const w = Math.max(0, Math.min(r.left + r.width, b.width) - Math.max(r.left, 0));
+  const h = Math.max(0, Math.min(r.top + BADGE_SIZE, b.height) - Math.max(r.top, 0));
+  return r.width * BADGE_SIZE - w * h;
+};
 
 /**
  * Places a fixed-size badge beside each point. Suspects go first (in loop order) so the culprit gets its preferred
  * spot and the top of the stack; then the rest in loop order. Each badge takes the first spot that overlaps no
- * badge already placed and covers no suspect's halo (its own included); in a crowd, the least bad one. A badge keeps its
+ * badge already placed, covers no suspect's halo (its own included) and stays inside `bounds`; in a crowd, the
+ * least bad one. Unlabelled points get no badge and are left out of the result. A badge keeps its
  * `previous` spot while that is still clear, so badges don't hop as the camera moves. Results are in input order.
  */
-export function placeBadges(points: readonly BadgePoint[], previous?: readonly BadgePlacement[]): BadgePlacement[] {
+export function placeBadges(
+  points: readonly BadgePoint[],
+  previous?: readonly BadgePlacement[],
+  bounds?: BadgeBounds
+): BadgePlacement[] {
   const before = new Map(previous?.map((p) => [p.id, p.spot]));
   const suspects = points.filter((p) => p.visible && p.suspect);
-  const order = [...points.filter((p) => p.suspect), ...points.filter((p) => !p.suspect)];
+  const labelled = points.filter((p) => !p.unlabelled);
+  const order = [...labelled.filter((p) => p.suspect), ...labelled.filter((p) => !p.suspect)];
   const taken: Rect[] = [];
   const placed = new Map<string, BadgePlacement>();
 
@@ -199,7 +230,8 @@ export function placeBadges(points: readonly BadgePoint[], previous?: readonly B
     const cost = (i: number) => {
       const r = rectAt(i);
       const covered = suspects.filter((s) => reaches(r, s.x, s.y, HALO_RADIUS_PX)).length;
-      return covered * COVER_SUSPECT + taken.reduce((sum, t) => sum + overlapArea(r, t), 0);
+      const outside = outsideArea(r, bounds) * OUTSIDE;
+      return covered * COVER_SUSPECT + outside + taken.reduce((sum, t) => sum + overlapArea(r, t), 0);
     };
     let spot = 0;
     if (p.visible) {
@@ -229,5 +261,5 @@ export function placeBadges(points: readonly BadgePoint[], previous?: readonly B
       y: Math.round(p.y)
     });
   }
-  return points.map((p) => placed.get(p.id)!);
+  return labelled.map((p) => placed.get(p.id)!);
 }

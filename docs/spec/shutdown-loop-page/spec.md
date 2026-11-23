@@ -135,6 +135,7 @@ Pure function `computeLoopStatus(readings) → NodeStatus[]`, no Angular depende
 - **A. Own simplified SVG car side view + loop strip (chosen).** Fits Argos theme, scales, coordinates easy to tweak; art is simpler than netmap's.
 - B. Reuse netmap's car drawing. Closest match, but another project's code: needs author OK and ongoing sync.
 - C. Photo/render with overlaid markers. Most realistic, but blurs when scaled, ignores light/dark theme, redo when car changes.
+- **D. 3D car view: optional, 2D stays the primary and accessible fallback** (proposed, ADR 0010). A three.js view of the car with each loop node in place, loaded on demand. The 2D car (A) and the loop strip stay: the strip is the keyboard path, the 2D car is the default on phones and the fallback without WebGL. Both car views share the page's selection and detail panel. Car source (procedural or glTF) is under evaluation.
 
 ## Constraints
 

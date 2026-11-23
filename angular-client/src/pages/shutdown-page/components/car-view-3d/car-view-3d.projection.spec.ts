@@ -166,6 +166,12 @@ describe('placeBadges', () => {
     }
   });
 
+  it('keeps badges off an unlabelled suspect’s halo and places nothing for it', () => {
+    const placed = placeBadges([point('a', 100, 100), point('s', 104, 100, { suspect: true, unlabelled: true })]);
+    expect(placed.map((b) => b.id)).toEqual(['a']);
+    expect(distanceTo(placed[0], 104, 100)).toBeGreaterThanOrEqual(HALO_RADIUS_PX);
+  });
+
   it('fans a 5-node cluster spaced 4 px apart out without overlap', () => {
     const placed = placeBadges([0, 1, 2, 3, 4].map((i) => point(`n${i}`, 300 + i * 4, 300)));
     placed.forEach((a, i) => placed.slice(i + 1).forEach((b) => expect(overlaps(a, b), `${a.id}/${b.id}`).toBe(false)));
@@ -186,6 +192,21 @@ describe('placeBadges', () => {
     const placed = placeBadges([0, 1, 2, 3, 4, 5, 6, 7, 8].map((i) => point(`n${i}`, 300, 300 + i)));
     expect(placed[0].leader).toBe(false);
     expect(placed.some((b) => b.leader)).toBe(true);
+  });
+
+  it('keeps badges on the canvas when there is room, even at its edge', () => {
+    const bounds = { width: 200, height: 100 };
+    const placed = placeBadges(
+      [point('corner', 195, 5, { suspect: true, width: 70 }), point('b', 5, 95)],
+      undefined,
+      bounds
+    );
+    for (const b of placed) {
+      expect(b.left, b.id).toBeGreaterThanOrEqual(0);
+      expect(b.top, b.id).toBeGreaterThanOrEqual(0);
+      expect(b.left + b.width, b.id).toBeLessThanOrEqual(200);
+      expect(b.top + BADGE_SIZE, b.id).toBeLessThanOrEqual(100);
+    }
   });
 
   it('returns placements in input order and leaves hidden points unplaced', () => {
