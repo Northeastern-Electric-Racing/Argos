@@ -1,4 +1,6 @@
 import { Board, SHUTDOWN_LOOP } from './shutdown-loop.model';
+import { NODE_STATE_CODE } from './shutdown-loop.scylla';
+import GOLDEN from './shutdown-loop.vectors.json';
 import { SHUTDOWN_TOPICS, VCU_CRITICAL_FAULT_TOPICS } from './shutdown-page.topics';
 import {
   computeLoopStatus,
@@ -432,4 +434,26 @@ describe('deriveCanLatch', () => {
     expect(readings.has(VCU.CAN_LATCH)).toBe(false);
     expect(withDerivedReadings(new Map(), NOW).has(VCU.CAN_LATCH)).toBe(false);
   });
+});
+
+// The same vectors run in scylla-server's `cargo test` (shutdown_loop/status.rs), so the two copies
+// of the algorithm can't drift apart.
+describe('golden vectors shared with scylla-server', () => {
+  const code = (s: { state: NodeState; mismatch: boolean }): number =>
+    s.mismatch ? NODE_STATE_CODE.mismatch : NODE_STATE_CODE[s.state];
+
+  it('has at least 20 vectors covering every code and verdict', () => {
+    expect(GOLDEN.vectors.length).toBeGreaterThanOrEqual(20);
+    expect(new Set(GOLDEN.vectors.flatMap((v) => v.codes))).toEqual(new Set(Object.values(NODE_STATE_CODE)));
+    expect(new Set(GOLDEN.vectors.map((v) => v.verdict))).toEqual(new Set(['open', 'closed', 'unknown']));
+  });
+
+  for (const v of GOLDEN.vectors) {
+    it(v.name, () => {
+      const readings = new Map<string, Reading>(Object.entries(v.readings as Record<string, Reading>));
+      const status = computeLoopStatus(SHUTDOWN_LOOP, withDerivedReadings(readings, v.now), v.now);
+      expect(status.nodes.map(code)).toEqual(v.codes);
+      expect(status.verdict).toBe(v.verdict);
+    });
+  }
 });
