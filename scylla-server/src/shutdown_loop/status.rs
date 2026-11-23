@@ -131,8 +131,8 @@ pub struct NodeStatus {
 }
 
 impl NodeStatus {
-    /// Code published per node on `Argos/Shutdown/NodeStates`; keep in step with `NODE_STATE_CODE`
-    /// in the angular-client's `shutdown-loop.server.ts`
+    /// Code published per node on `Argos/Shutdown/Node_States`; keep in step with `NODE_STATE_CODE`
+    /// in the angular-client's `shutdown-loop.scylla.ts`
     #[must_use]
     pub const fn code(self) -> f32 {
         match (self.state, self.mismatch) {
