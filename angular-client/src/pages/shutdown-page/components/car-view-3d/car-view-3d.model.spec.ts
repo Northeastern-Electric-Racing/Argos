@@ -56,7 +56,7 @@ describe('buildLoopSegments', () => {
   });
 
   it('skips a segment whose end has no position', () => {
-    const { hvd: _, ...withoutHvd } = NODE_POSITIONS_3D;
+    const withoutHvd = Object.fromEntries(Object.entries(NODE_POSITIONS_3D).filter(([id]) => id !== 'hvd'));
     expect(buildLoopSegments(NODES, withoutHvd).map((s) => s.key)).not.toContain('tsms-hvd');
     expect(buildLoopSegments(NODES, withoutHvd).map((s) => s.key)).not.toContain('hvd-em-interlock');
   });

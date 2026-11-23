@@ -1,0 +1,14 @@
+<div class="flex flex-col gap-2">
+  <div [class]="segmented.list" class="self-end" role="group" aria-label="Car view">
+    @for (m of modes; track m.id) {
+      <button type="button" [class]="segmented.item" [attr.aria-pressed]="mode() === m.id" (click)="setMode(m.id)">
+        {{ m.label }}
+      </button>
+    }
+  </div>
+  @if (mode() === '3d') {
+    <car-view-3d [nodes]="nodes()" />
+  } @else {
+    <car-view [nodes]="nodes()" />
+  }
+</div>

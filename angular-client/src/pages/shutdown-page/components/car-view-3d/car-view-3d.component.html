@@ -1,0 +1,72 @@
+@if (mode() === 'fallback') {
+  <p class="note">3D view unavailable on this device, showing the 2D side view.</p>
+  <car-view [nodes]="nodes()" />
+} @else {
+  <div class="view">
+    <div
+      #stage
+      class="stage"
+      role="img"
+      aria-label="3D view of the car with the shutdown loop wired through each node. Drag to orbit, scroll to zoom, right-drag to pan. Pick a node with the buttons below."
+    >
+      <canvas #canvas class="canvas" aria-hidden="true"></canvas>
+    </div>
+    @if (mode() === 'loading') {
+      <p class="loading">Loading 3D view…</p>
+    }
+    <div class="presets" role="group" aria-label="Camera view">
+      @for (p of presets; track p.id) {
+        <button type="button" class="btn" [attr.data-view]="p.id" (click)="setView(p.id)">{{ p.label }}</button>
+      }
+    </div>
+    <div class="info-slot" aria-live="polite">
+      @if (selected(); as s) {
+        <div data-node-info [class]="'info ' + s.cssClass">
+          <div class="info-head">
+            <span class="glyph"><status-glyph [state]="s.stateId" /></span>
+            <span class="info-title">{{ s.order }}. {{ s.label }}</span>
+            <button type="button" class="close" aria-label="Close node details" (click)="selectedId.set(null)">
+              <ui-icon name="close" />
+            </button>
+          </div>
+          <dl>
+            <dt>State</dt>
+            <dd>{{ s.state }}</dd>
+            <dt>Topic</dt>
+            <dd>{{ s.topic }}</dd>
+            <dt>Value</dt>
+            <dd>{{ s.value }}</dd>
+            <dt>Age</dt>
+            <dd>{{ s.age }}</dd>
+          </dl>
+          @for (note of s.notes; track note) {
+            <p class="tag">{{ note }}</p>
+          }
+        </div>
+      }
+    </div>
+  </div>
+  <div class="nodes" role="toolbar" aria-label="Shutdown nodes in loop order">
+    @for (b of buttons(); track b.id; let i = $index) {
+      <button
+        #nodeButton
+        type="button"
+        data-node-button
+        [class]="'node ' + b.cssClass"
+        [class.unmeasured]="b.unmeasured"
+        [attr.aria-pressed]="selectedId() === b.id"
+        [attr.aria-label]="b.ariaLabel"
+        [tabIndex]="tabStop(i)"
+        (click)="toggle(b.id)"
+        (keydown)="onToolbarKey($event, i)"
+      >
+        {{ b.order }}
+      </button>
+    }
+  </div>
+}
+<span class="probes" aria-hidden="true">
+  @for (s of states; track s) {
+    <span #probe [class]="display[s].cssClass"></span>
+  }
+</span>

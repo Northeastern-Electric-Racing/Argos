@@ -155,3 +155,68 @@ export function isWebGLAvailable(doc: Document = document): boolean {
     return false;
   }
 }
+
+/** Colours the scene draws with, as CSS colour strings read from the theme at runtime. */
+export interface SceneColors {
+  frame: string;
+  body: string;
+  tyre: string;
+  rim: string;
+  hv: string;
+  edge: string;
+  grid: string;
+  label: string;
+  labelBg: string;
+  focus: string;
+  states: Record<NodeState, string>;
+}
+
+/** Used when a theme token can't be read (as in jsdom); the same values as src/styles/theme.css and shutdown-states.css. */
+export const DEFAULT_SCENE_COLORS: SceneColors = {
+  frame: '#5a5a5a',
+  body: '#555555',
+  tyre: '#1c1c1c',
+  rim: '#737373',
+  hv: '#fb923c',
+  edge: '#a3a3a3',
+  grid: '#414141',
+  label: '#efefef',
+  labelBg: '#1c1c1c',
+  focus: '#d4d4d4',
+  states: { closed: '#2fd35a', suspect: '#ff4d4d', 'downstream-open': '#8a8a8a', 'no-data': '#8b93a1' }
+};
+
+/** Theme token per scene colour (src/styles/theme.css). */
+export const SCENE_COLOR_TOKENS: Record<Exclude<keyof SceneColors, 'states'>, string> = {
+  frame: '--color-border-strong',
+  body: '--color-control-off',
+  tyre: '--color-surface-1',
+  rim: '--color-indicator-off',
+  hv: '--color-danger',
+  edge: '--color-fg-muted',
+  grid: '--color-border',
+  label: '--color-fg',
+  labelBg: '--color-surface-1',
+  focus: '--color-focus'
+};
+
+export interface CarSceneOptions {
+  canvas: HTMLCanvasElement;
+  /** Element whose size the canvas follows. */
+  container: HTMLElement;
+  colors: SceneColors;
+  reducedMotion: boolean;
+  /** A marker was clicked (its node id), or empty space was (null). */
+  onPick: (id: string | null) => void;
+  /** The WebGL context was lost; the view should fall back to 2D. */
+  onContextLost: () => void;
+}
+
+/** The three.js scene behind the 3D view (car-scene.ts), seen through this interface so three stays lazy. */
+export interface CarScene {
+  update(nodes: readonly NodeStatus[]): void;
+  setSelected(id: string | null): void;
+  setView(preset: ViewPreset): void;
+  dispose(): void;
+}
+export type CarSceneFactory = (options: CarSceneOptions) => CarScene;
