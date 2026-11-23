@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { CAR_SCENE_LOADER, WEBGL_SUPPORT } from './components/car-view-3d/car-view-3d.tokens';
 import { FALLBACK_NOTICES } from './components/car-view-3d/car-view-3d.utils';
-import { CAR_VIEW_MODE_KEY } from './components/car-view-mode/car-view-mode.component';
+import { CAR_VIEW_STORAGE_KEY as CAR_VIEW_MODE_KEY } from './components/car-view-mode/car-view-mode.component';
 import ShutdownPageComponent from './shutdown-page.component';
 
 // The page's 2D/3D switch (car-view-mode) and the 2D fallback it owns when the 3D view is unavailable.
@@ -14,7 +14,7 @@ describe('ShutdownPageComponent car view mode', () => {
   const carMarker = (id: string) => el.querySelector<HTMLElement>(`car-view [role="option"][data-node-id="${id}"]`)!;
 
   let webgl = true;
-  const notice = () => el.querySelector('section[aria-labelledby="car-view-title"] [role="status"]');
+  const notice = () => el.querySelector('car-view-mode [role="status"]');
 
   async function create(supported: boolean) {
     webgl = supported;
@@ -51,7 +51,7 @@ describe('ShutdownPageComponent car view mode', () => {
     expect(el.querySelectorAll('car-view').length).toBe(1);
     expect(notice()?.textContent).toContain(FALLBACK_NOTICES.webgl);
     expect(modeButton('2D').getAttribute('aria-pressed')).toBe('true');
-    expect(modeButton('3D').getAttribute('aria-description')).toBe(FALLBACK_NOTICES.webgl);
+    expect(modeButton('3D').getAttribute('aria-description')).toContain('unavailable');
     // A fallback is not a choice: the stored 3D stays, so the next visit tries 3D again.
     expect(localStorage.getItem(CAR_VIEW_MODE_KEY)).toBe('3d');
 

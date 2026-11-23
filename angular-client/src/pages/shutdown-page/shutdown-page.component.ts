@@ -1,10 +1,12 @@
 import { ChangeDetectionStrategy, Component, inject, isDevMode, signal } from '@angular/core';
-import { UiIconComponent } from 'src/ui/icon/icon.component';
+import { BreakpointObserver } from '@angular/cdk/layout';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs';
 import TypographyComponent from 'src/components/typography/typography.component';
 import { CarViewComponent } from './components/car-view/car-view.component';
 import { CarView3dComponent } from './components/car-view-3d/car-view-3d.component';
 import { FALLBACK_NOTICES, FallbackReason } from './components/car-view-3d/car-view-3d.utils';
-import { CarViewMode, CarViewModeComponent, injectCarViewMode } from './components/car-view-mode/car-view-mode.component';
+import { CarViewModeComponent, readCarViewMode } from './components/car-view-mode/car-view-mode.component';
 import { LoopBannerComponent } from './components/loop-banner/loop-banner.component';
 import { LoopMetaComponent } from './components/loop-meta/loop-meta.component';
 import { LoopStripComponent } from './components/loop-strip/loop-strip.component';
@@ -31,7 +33,6 @@ import { ShutdownSelectionStore } from './shutdown-selection.store';
     CarViewComponent,
     CarView3dComponent,
     CarViewModeComponent,
-    UiIconComponent,
     LoopStripComponent,
     LoopNodeDetailComponent,
     MockPanelComponent
@@ -45,15 +46,19 @@ export default class ShutdownPageComponent {
   readonly tsOn = this.loop.tsOn;
   readonly devMode = isDevMode();
 
-  readonly carMode = injectCarViewMode();
-  /** Why the 3D view gave up, shown above the 2D fallback until 3D is chosen again. */
-  readonly carNotice = signal('');
+  /** Car views are a control from Tailwind's `sm` (640px) up, an overview below it (the strip is the control). */
+  readonly carInteractive = toSignal(
+    inject(BreakpointObserver)
+      .observe('(min-width: 640px)')
+      .pipe(map((state) => state.matches)),
+    { requireSync: true }
+  );
+  /** 2D or 3D car view: the stored choice, else 3D on a wide screen with a fine pointer. */
+  readonly carMode = signal(readCarViewMode());
+  /** Why the 3D view fell back to 2D, until 3D is chosen again. */
+  readonly carNotice = signal<string | null>(null);
 
-  setCarMode(mode: CarViewMode): void {
-    this.carMode.set(mode);
-    if (mode === '3d') this.carNotice.set('');
-  }
-
+  /** The 3D view can't draw: show the 2D car with a notice (not remembered). */
   onCarUnavailable(reason: FallbackReason): void {
     this.carNotice.set(FALLBACK_NOTICES[reason]);
     this.carMode.set('2d');

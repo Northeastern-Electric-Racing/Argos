@@ -1,71 +1,76 @@
-import { BreakpointObserver } from '@angular/cdk/layout';
-import { ChangeDetectionStrategy, Component, inject, input, model, signal, WritableSignal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, model } from '@angular/core';
+import { UiIconComponent } from 'src/ui/icon/icon.component';
 import { segmentedClasses } from 'src/ui/recipes/segmented';
-import { cx, tw } from 'src/ui/recipes/tw';
 
 export type CarViewMode = '2d' | '3d';
+export const CAR_VIEW_STORAGE_KEY = 'argos.shutdown.carView';
+/** With no stored choice, 3D only on a wide screen with a fine pointer (a laptop or desktop); 2D on phones and tablets. */
+export const CAR_VIEW_3D_QUERY = '(min-width: 1024px) and (pointer: fine)';
 
-/** Where the 2D/3D choice is remembered, per browser. */
-export const CAR_VIEW_MODE_KEY = 'argos.shutdown.carView';
-/** With nothing stored, 3D is the default only on a wide screen with a fine pointer (a laptop, not a phone). */
-export const WIDE_FINE_POINTER = '(min-width: 1024px) and (pointer: fine)';
+type MatchMedia = (query: string) => Pick<MediaQueryList, 'matches'>;
 
-/** The stored choice; otherwise 3D when `matches(WIDE_FINE_POINTER)`, else 2D. Blocked storage counts as empty. */
-export function readCarViewMode(storage: () => Pick<Storage, 'getItem'>, matches: (query: string) => boolean): CarViewMode {
-  let stored: string | null = null;
+/** The default when nothing is stored: CAR_VIEW_3D_QUERY decides. */
+export function defaultCarViewMode(
+  matchMedia: MatchMedia | undefined = globalThis.matchMedia?.bind(globalThis)
+): CarViewMode {
   try {
-    stored = storage().getItem(CAR_VIEW_MODE_KEY);
-  } catch {
-    // Private mode or blocked storage: fall through to the default.
-  }
-  if (stored === '2d' || stored === '3d') return stored;
-  try {
-    return matches(WIDE_FINE_POINTER) ? '3d' : '2d';
+    return matchMedia?.(CAR_VIEW_3D_QUERY).matches ? '3d' : '2d';
   } catch {
     return '2d';
   }
 }
 
-export function writeCarViewMode(storage: () => Pick<Storage, 'setItem'>, mode: CarViewMode): void {
+/** The stored view; with none stored (or storage blocked), the default for this screen. A stored choice always wins. */
+export function readCarViewMode(
+  storage: Pick<globalThis.Storage, 'getItem'> | undefined = globalThis.localStorage,
+  matchMedia?: MatchMedia
+): CarViewMode {
+  let stored: string | null | undefined;
   try {
-    storage().setItem(CAR_VIEW_MODE_KEY, mode);
+    stored = storage?.getItem(CAR_VIEW_STORAGE_KEY);
   } catch {
-    // Private mode or blocked storage: the choice just isn't remembered.
+    stored = undefined;
+  }
+  if (stored === '2d' || stored === '3d') return stored;
+  return matchMedia ? defaultCarViewMode(matchMedia) : defaultCarViewMode();
+}
+
+export function writeCarViewMode(
+  mode: CarViewMode,
+  storage: Pick<globalThis.Storage, 'setItem'> | undefined = globalThis.localStorage
+): void {
+  try {
+    storage?.setItem(CAR_VIEW_STORAGE_KEY, mode);
+  } catch {
+    // Not remembered this time; the toggle still works.
   }
 }
 
-const browserStorage = (): Storage => localStorage;
-
-/** The page's 2D/3D mode, starting from the stored choice or the default. Call in an injection context. */
-export function injectCarViewMode(): WritableSignal<CarViewMode> {
-  const breakpoints = inject(BreakpointObserver);
-  return signal(readCarViewMode(browserStorage, (query) => breakpoints.isMatched(query)));
-}
-
 /**
- * The 2D / 3D toggle for the car section. The page owns the mode (`[(mode)]`) and renders the matching view; a
- * choice made here is remembered in this browser. A fallback to 2D (the 3D view's `unavailable`) is not a choice,
- * so it is not stored: the next visit tries 3D again.
+ * The 2D / 3D toggle in the car section's header. The page owns the mode (`[(mode)]`) and renders the view; a
+ * choice made here is remembered in this browser. `notice` says why 3D is showing as 2D (it fell back); choosing
+ * 3D again retries it.
  */
 @Component({
   selector: 'car-view-mode',
   templateUrl: './car-view-mode.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'flex flex-wrap items-center justify-end gap-x-3 gap-y-1' },
+  imports: [UiIconComponent]
 })
 export class CarViewModeComponent {
-  readonly mode = model<CarViewMode>('3d');
-  /** Why 3D is not showing (the fallback notice), or empty; describes the 3D button. */
-  readonly unavailable = input('');
+  readonly mode = model.required<CarViewMode>();
+  /** Why the 3D view is unavailable right now, or null. */
+  readonly notice = input<string | null>(null);
 
-  readonly modes: { id: CarViewMode; label: string }[] = [
-    { id: '2d', label: '2D' },
-    { id: '3d', label: '3D' }
+  protected readonly modes: readonly { id: CarViewMode; label: string }[] = [
+    { id: '3d', label: '3D' },
+    { id: '2d', label: '2D' }
   ];
-  readonly listClass = cx(segmentedClasses.list, tw('w-28'));
-  readonly itemClass = segmentedClasses.item;
+  protected readonly segmented = segmentedClasses;
 
-  choose(mode: CarViewMode): void {
+  protected choose(mode: CarViewMode): void {
     this.mode.set(mode);
-    writeCarViewMode(browserStorage, mode);
+    writeCarViewMode(mode);
   }
 }

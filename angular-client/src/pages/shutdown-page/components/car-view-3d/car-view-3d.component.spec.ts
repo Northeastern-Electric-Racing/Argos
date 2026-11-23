@@ -2,9 +2,10 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { expectLoopViewContract, LOOP_VIEW_CONTRACT_NODES } from '../../loop-view/loop-view.contract';
 import { loopOf, loopSummary } from '../../shutdown-loop.display';
 import { SHUTDOWN_LOOP } from '../../shutdown-loop.model';
-import { CarModelResult, CarScene, CarSceneModule, CarSceneOptions } from './car-scene.types';
+import { CarModelResult, CarScene, CarSceneFactory, CarSceneOptions } from './car-scene.types';
 import { CarView3dComponent } from './car-view-3d.component';
-import { CAR_MODEL_URL, CAR_SCENE_LOADER, WEBGL_SUPPORT } from './car-view-3d.tokens';
+import { CAR_MODEL_URL } from './car-model-url.token';
+import { CAR_SCENE_LOADER, WEBGL_SUPPORT } from './car-view-3d.tokens';
 import { ABSENT_MODEL_NOTICE, CarSceneError, FallbackReason, MATERIAL_MODE_KEY } from './car-view-3d.utils';
 
 const NODES = LOOP_VIEW_CONTRACT_NODES;
@@ -37,7 +38,7 @@ describe('CarView3dComponent', () => {
   let options: CarSceneOptions;
   let unavailable: FallbackReason[];
 
-  function configure(opts: { webgl?: boolean; module?: () => Promise<CarSceneModule>; modelUrl?: string | null } = {}) {
+  function configure(opts: { webgl?: boolean; module?: () => Promise<CarSceneFactory>; modelUrl?: string | null } = {}) {
     TestBed.configureTestingModule({
       imports: [CarView3dComponent],
       providers: [
@@ -47,11 +48,9 @@ describe('CarView3dComponent', () => {
           useValue:
             opts.module ??
             (() =>
-              Promise.resolve({
-                createCarScene: (o: CarSceneOptions) => {
-                  options = o;
-                  return Promise.resolve(scene);
-                }
+              Promise.resolve((o: CarSceneOptions) => {
+                options = o;
+                return Promise.resolve(scene as CarScene);
               }))
         },
         ...(opts.modelUrl !== undefined ? [{ provide: CAR_MODEL_URL, useValue: opts.modelUrl }] : [])
@@ -117,7 +116,7 @@ describe('CarView3dComponent', () => {
     });
 
     it('reports the scene’s own reason when it can’t be built', async () => {
-      configure({ module: () => Promise.resolve({ createCarScene: () => Promise.reject(new CarSceneError('init')) }) });
+      configure({ module: () => Promise.resolve(() => Promise.reject(new CarSceneError('init'))) });
       await create();
       expect(unavailable).toEqual(['init']);
     });
@@ -141,7 +140,7 @@ describe('CarView3dComponent', () => {
 
     it('disposes a scene that finishes building after the view is gone', async () => {
       let resolve!: (s: CarScene) => void;
-      configure({ module: () => Promise.resolve({ createCarScene: () => new Promise<CarScene>((r) => (resolve = r)) }) });
+      configure({ module: () => Promise.resolve(() => new Promise<CarScene>((r) => (resolve = r))) });
       await create();
       fixture.destroy();
       resolve(scene);

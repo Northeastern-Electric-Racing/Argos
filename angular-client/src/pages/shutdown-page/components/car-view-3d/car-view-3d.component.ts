@@ -23,11 +23,12 @@ import { cssVarReader, readThemeColour } from '../../shutdown-loop.theme';
 import { NodeStatus } from '../../shutdown-loop.utils';
 import { CarLoopView } from '../../loop-view/loop-view';
 import { CarScene, ScreenPoint } from './car-scene.types';
-import { BadgePlacement, placeBadges, ViewPreset } from './car-view-3d.projection';
-import { CAR_MODEL_URL, CAR_SCENE_LOADER, WEBGL_SUPPORT } from './car-view-3d.tokens';
+import { BADGE_SIZE, BadgePlacement, placeBadges, ViewPreset } from './car-view-3d.projection';
+import { CAR_SCENE_LOADER, WEBGL_SUPPORT } from './car-view-3d.tokens';
+import { CAR_MODEL_URL } from './car-model-url.token';
 import {
   ABSENT_MODEL_NOTICE,
-  BADGE_FALLBACK_SIZE,
+  BADGE_FALLBACK_WIDTH,
   BadgeModel,
   badgeModels,
   FallbackReason,
@@ -59,7 +60,7 @@ const storage = (): Storage => localStorage;
 const BADGE_BASE = tw(
   'pointer-events-auto invisible absolute top-0 left-0 inline-flex cursor-pointer items-center gap-0.5 rounded-full border-2 font-mono font-bold whitespace-nowrap select-none'
 );
-const BADGE_SIZE = { normal: tw('h-6 px-1 text-xs'), suspect: tw('h-8 px-2 text-sm') };
+const BADGE_TEXT = { normal: tw('h-6 px-1 text-xs'), suspect: tw('h-6 px-1.5 text-sm') };
 const BADGE_HIGHLIGHT = tw('z-10 ring-2 ring-fg ring-offset-1 ring-offset-page');
 
 /**
@@ -100,8 +101,8 @@ export class CarView3dComponent implements CarLoopView {
   private destroyed = false;
   private pointerDown?: { x: number; y: number; id: number };
   private hoverId: string | null = null;
-  private placements = new Map<string, BadgePlacement>();
-  private badgeSizes = new Map<string, { width: number; height: number }>();
+  private placements: BadgePlacement[] = [];
+  private badgeWidths = new Map<string, number>();
 
   readonly phase = signal<Phase>('starting');
   readonly progress = signal<number | null>(null);
@@ -113,7 +114,7 @@ export class CarView3dComponent implements CarLoopView {
   readonly materialModes = MATERIAL_MODES;
   readonly presetClass = buttonClass('neutral', 'sm');
   readonly modelListClass = segmentedClasses.list;
-  readonly modelItemClass = segmentedClasses.item;
+  readonly modelItemClass = cx(segmentedClasses.item, tw('whitespace-nowrap'));
 
   /** previewId ?? selectedId: the loop node every view highlights. */
   readonly active = computed(() => this.previewId() ?? this.selectedId());
@@ -147,7 +148,7 @@ export class CarView3dComponent implements CarLoopView {
     effect(() => {
       // A new set of badges is laid out again before its first placement.
       this.badgeEls();
-      this.badgeSizes.clear();
+      this.badgeWidths.clear();
     });
 
     inject(DestroyRef).onDestroy(() => {
@@ -160,7 +161,7 @@ export class CarView3dComponent implements CarLoopView {
     const active = this.active() === b.id;
     return cx(
       BADGE_BASE,
-      b.suspect ? BADGE_SIZE.suspect : BADGE_SIZE.normal,
+      b.suspect ? BADGE_TEXT.suspect : BADGE_TEXT.normal,
       b.classes,
       active && BADGE_HIGHLIGHT,
       !this.interactive() && (active ? tw('pointer-events-none') : tw('hidden'))
@@ -208,16 +209,16 @@ export class CarView3dComponent implements CarLoopView {
 
   private async start(): Promise<void> {
     if (!this.webglSupported()) return this.fail('webgl');
-    let module;
+    let createCarScene;
     try {
-      module = await this.loadScene();
+      createCarScene = await this.loadScene();
     } catch (error) {
       return this.fail('init', error);
     }
     if (this.destroyed) return;
     let scene: CarScene;
     try {
-      scene = await module.createCarScene({
+      scene = await createCarScene({
         container: this.stage().nativeElement,
         canvas: this.canvas().nativeElement,
         nodes: this.nodes().map((s) => s.node),
@@ -264,31 +265,32 @@ export class CarView3dComponent implements CarLoopView {
   private placeBadges(points: ScreenPoint[]): void {
     const els = new Map(this.badgeEls().map((r) => [r.nativeElement.dataset['nodeId']!, r.nativeElement]));
     const leaders = new Map(this.leaderEls().map((r) => [r.nativeElement.dataset['nodeId']!, r.nativeElement]));
-    const models = new Map(this.badges().map((b) => [b.id, b]));
-    if (!this.badgeSizes.size) {
-      for (const [id, el] of els) {
-        const width = el.offsetWidth || BADGE_FALLBACK_SIZE.width;
-        const height = el.offsetHeight || BADGE_FALLBACK_SIZE.height;
-        this.badgeSizes.set(id, { width, height });
-      }
+    const suspects = new Set(
+      this.badges()
+        .filter((b) => b.suspect)
+        .map((b) => b.id)
+    );
+    if (!this.badgeWidths.size) {
+      for (const [id, el] of els) this.badgeWidths.set(id, el.offsetWidth || BADGE_FALLBACK_WIDTH);
     }
+    const stage = this.stage().nativeElement;
     const input = points
       .filter((p) => els.has(p.id))
-      .map((p) => ({ ...p, suspect: !!models.get(p.id)?.suspect, ...(this.badgeSizes.get(p.id) ?? BADGE_FALLBACK_SIZE) }));
-    const placed = placeBadges(input, this.placements);
-    this.placements = new Map(placed.map((b) => [b.id, b]));
-    for (const b of placed) {
+      .map((p) => ({ ...p, suspect: suspects.has(p.id), width: this.badgeWidths.get(p.id) ?? BADGE_FALLBACK_WIDTH }));
+    const bounds = stage.clientWidth ? { width: stage.clientWidth, height: stage.clientHeight } : undefined;
+    this.placements = placeBadges(input, this.placements, bounds);
+    for (const b of this.placements) {
       const el = els.get(b.id)!;
       el.style.transform = `translate(${b.left}px, ${b.top}px)`;
       el.style.visibility = b.visible ? 'visible' : 'hidden';
       const line = leaders.get(b.id);
       if (!line) continue;
-      const p = points.find((q) => q.id === b.id)!;
-      line.style.visibility = b.leader && !el.classList.contains('hidden') ? 'visible' : 'hidden';
-      line.setAttribute('x1', String(p.x));
-      line.setAttribute('y1', String(p.y));
-      line.setAttribute('x2', String(b.leaderTo.x));
-      line.setAttribute('y2', String(b.leaderTo.y));
+      line.style.visibility = b.leader && b.visible && !el.classList.contains('hidden') ? 'visible' : 'hidden';
+      line.setAttribute('x1', String(b.x));
+      line.setAttribute('y1', String(b.y));
+      // To the nearest point of the badge.
+      line.setAttribute('x2', String(Math.min(Math.max(b.x, b.left), b.left + b.width)));
+      line.setAttribute('y2', String(Math.min(Math.max(b.y, b.top), b.top + BADGE_SIZE)));
     }
   }
 

@@ -1,171 +1,221 @@
-import { Box3, PerspectiveCamera, Vector3 } from 'three';
+import { PerspectiveCamera, Vector3 } from 'three';
 import { NODE_POSITIONS_3D, Vec3 } from '../../shutdown-loop.positions-3d';
 import {
+  BADGE_SIZE,
   BadgePlacement,
   BadgePoint,
   fitDistanceToPoints,
-  LEADER_MIN_GAP,
+  HALO_RADIUS_PX,
   nearestPoint,
   placeBadges,
-  ProjectedPoint,
-  VIEW_DIRECTIONS,
+  ScreenPoint,
+  VIEW_FOV_DEG,
+  viewPose,
   ViewPreset
 } from './car-view-3d.projection';
 
-const pt = (id: string, x: number, y: number, extra: Partial<BadgePoint> = {}): BadgePoint => ({
+/** The box every 3D car fits in (see shutdown-loop.positions-3d.spec.ts), and the canvas the checks use. */
+const ENVELOPE_MIN: Vec3 = [-0.75, 0, -0.5];
+const ENVELOPE_MAX: Vec3 = [0.75, 1.3, 2.6];
+const W = 1000;
+const H = 560;
+const PRESETS: ViewPreset[] = ['iso', 'side', 'top'];
+
+/** Every loop node's marker on a W x H canvas, through a real three.js camera posed by viewPose. */
+function project(preset: ViewPreset, w = W, h = H): ScreenPoint[] {
+  const pose = viewPose(ENVELOPE_MIN, ENVELOPE_MAX, preset, w / h);
+  const camera = new PerspectiveCamera(VIEW_FOV_DEG, w / h, pose.distance / 100, pose.distance * 10);
+  camera.position.set(...pose.position);
+  camera.lookAt(new Vector3(...pose.target));
+  camera.updateMatrixWorld();
+  return Object.entries(NODE_POSITIONS_3D).map(([id, p]) => {
+    const v = new Vector3(...p).project(camera);
+    const x = ((v.x + 1) / 2) * w;
+    const y = ((1 - v.y) / 2) * h;
+    return { id, x, y, z: v.z, visible: v.z > -1 && v.z < 1 && x >= 0 && x <= w && y >= 0 && y <= h };
+  });
+}
+
+const point = (id: string, x: number, y: number, extra: Partial<BadgePoint> = {}): BadgePoint => ({
   id,
   x,
   y,
   z: 0,
   visible: true,
-  suspect: false,
-  width: 24,
-  height: 24,
   ...extra
 });
 
-type Rect = Pick<BadgePlacement, 'left' | 'top' | 'width' | 'height'>;
-const overlaps = (a: Rect, b: Rect) =>
-  a.left < b.left + b.width && b.left < a.left + a.width && a.top < b.top + b.height && b.top < a.top + a.height;
-const covers = (r: Rect, x: number, y: number) =>
-  x >= r.left && x <= r.left + r.width && y >= r.top && y <= r.top + r.height;
+const overlaps = (a: BadgePlacement, b: BadgePlacement) =>
+  a.left < b.left + b.width && b.left < a.left + a.width && a.top < b.top + BADGE_SIZE && b.top < a.top + BADGE_SIZE;
 
-/** Projects the table through a preset as the scenes do: camera fitted to the table's bounds at 1000×560. */
-function projectTable(preset: ViewPreset, w = 1000, h = 560): ProjectedPoint[] {
-  const bounds = new Box3();
-  for (const p of Object.values(NODE_POSITIONS_3D)) bounds.expandByPoint(new Vector3(...p));
-  const centre = bounds.getCenter(new Vector3());
-  const camera = new PerspectiveCamera(40, w / h, 0.01, 100);
-  const z = new Vector3(...VIEW_DIRECTIONS[preset]).normalize();
-  const x = new Vector3().crossVectors(new Vector3(0, 1, 0), z).normalize();
-  const y = new Vector3().crossVectors(z, x);
-  const corners: Vec3[] = [];
-  for (const cx of [bounds.min.x, bounds.max.x])
-    for (const cy of [bounds.min.y, bounds.max.y])
-      for (const cz of [bounds.min.z, bounds.max.z]) {
-        const rel = new Vector3(cx, cy, cz).sub(centre);
-        corners.push([rel.dot(x), rel.dot(y), rel.dot(z)]);
-      }
-  camera.position.copy(centre).addScaledVector(z, fitDistanceToPoints(corners, 40, w / h));
-  camera.lookAt(centre);
-  camera.updateMatrixWorld();
-  return Object.entries(NODE_POSITIONS_3D).map(([id, p]) => {
-    const v = new Vector3(...p).project(camera);
-    return { id, x: ((v.x + 1) / 2) * w, y: ((1 - v.y) / 2) * h, z: v.z, visible: true };
-  });
-}
+const distanceTo = (r: BadgePlacement, x: number, y: number) =>
+  Math.hypot(Math.max(r.left - x, 0, x - (r.left + r.width)), Math.max(r.top - y, 0, y - (r.top + BADGE_SIZE)));
 
-describe('VIEW_DIRECTIONS', () => {
-  it('shows the nose on the left in the Side view, as in 2D', () => {
-    const points = projectTable('side');
-    const at = (id: string) => points.find((p) => p.id === id)!;
-    expect(at('bots').x).toBeLessThan(at('airs').x);
+describe('fitDistanceToPoints', () => {
+  it('backs off until the widest point fits the narrower of the two fields of view', () => {
+    const tan20 = Math.tan((20 * Math.PI) / 180);
+    expect(fitDistanceToPoints([[0, 1, 0]], 40, 1, 1)).toBeCloseTo(1 / tan20);
+    expect(fitDistanceToPoints([[2, 0, 0]], 40, 2, 1)).toBeCloseTo(2 / (tan20 * 2));
+    // A point nearer the camera needs that much more distance.
+    expect(fitDistanceToPoints([[0, 1, 0.5]], 40, 1, 1)).toBeCloseTo(0.5 + 1 / tan20);
   });
 });
 
-describe('fitDistanceToPoints', () => {
-  it('fits the widest extent for the aspect ratio', () => {
-    const tan20 = Math.tan((20 * Math.PI) / 180);
-    expect(fitDistanceToPoints([[0, 1, 0]], 40, 1, 1)).toBeCloseTo(1 / tan20);
-    expect(fitDistanceToPoints([[2, 0, 0]], 40, 2, 1)).toBeCloseTo(1 / tan20);
+describe('viewPose', () => {
+  it('aims at the centre of the box from the preset direction', () => {
+    const pose = viewPose(ENVELOPE_MIN, ENVELOPE_MAX, 'side', 1.6);
+    expect(pose.target).toEqual([0, 0.65, 1.05]);
+    expect(pose.position[0]).toBeGreaterThan(pose.distance * 0.99);
   });
 
-  it('moves back by a point’s depth towards the camera', () => {
-    const flat = fitDistanceToPoints([[0, 1, 0]], 40, 1, 1);
-    expect(fitDistanceToPoints([[0, 1, 0.5]], 40, 1, 1)).toBeCloseTo(flat + 0.5);
+  it('shows the nose to the left in Side and Top, as in the 2D view', () => {
+    for (const preset of ['side', 'top'] as const) {
+      const byId = new Map(project(preset).map((p) => [p.id, p]));
+      expect(byId.get('bots')!.x, preset).toBeLessThan(byId.get('airs')!.x);
+    }
+  });
+
+  it('keeps every marker on a 1000 x 560 canvas and on a phone-shaped one', () => {
+    for (const preset of PRESETS) {
+      for (const [w, h] of [
+        [W, H],
+        [360, 280]
+      ]) {
+        expect(
+          project(preset, w, h)
+            .filter((p) => !p.visible)
+            .map((p) => p.id),
+          `${preset} ${w}x${h}`
+        ).toEqual([]);
+      }
+    }
   });
 });
 
 describe('nearestPoint', () => {
-  const points: ProjectedPoint[] = [
+  const points: ScreenPoint[] = [
     { id: 'a', x: 10, y: 10, z: 0.5, visible: true },
     { id: 'b', x: 30, y: 10, z: 0.5, visible: true },
-    { id: 'hidden', x: 12, y: 10, z: 0, visible: false }
+    { id: 'hidden', x: 50, y: 10, z: 0.5, visible: false }
   ];
 
-  it('picks the nearest visible point within reach', () => {
-    expect(nearestPoint(points, 13, 10, 16)).toBe('a');
-    expect(nearestPoint(points, 25, 12, 16)).toBe('b');
+  it('returns the nearest visible point within reach', () => {
+    expect(nearestPoint(points, 12, 11, 16)).toBe('a');
+    expect(nearestPoint(points, 27, 10, 16)).toBe('b');
   });
 
-  it('picks nothing beyond reach', () => {
-    expect(nearestPoint(points, 100, 100, 16)).toBeNull();
+  it('returns null when nothing visible is within reach', () => {
+    expect(nearestPoint(points, 10, 40, 16)).toBeNull();
+    expect(nearestPoint(points, 50, 10, 16)).toBeNull();
   });
 
-  it('breaks a tie (within 1 px) in favour of the point nearer the camera', () => {
-    const near: ProjectedPoint[] = [
+  it('breaks a tie (within 1 px) towards the point nearer the camera', () => {
+    const tie: ScreenPoint[] = [
       { id: 'far', x: 10, y: 10, z: 0.9, visible: true },
       { id: 'near', x: 10.5, y: 10, z: 0.2, visible: true }
     ];
-    expect(nearestPoint(near, 10, 10, 16)).toBe('near');
-    expect(nearestPoint([...near].reverse(), 10, 10, 16)).toBe('near');
+    expect(nearestPoint(tie, 10, 10, 16)).toBe('near');
+    expect(nearestPoint([...tie].reverse(), 10, 10, 16)).toBe('near');
   });
 
-  it.each(['iso', 'side', 'top'] as const)('picks every loop node at its own marker in the %s view', (preset) => {
-    const projected = projectTable(preset);
-    const crowded = (p: ProjectedPoint) =>
-      preset === 'top' && projected.some((q) => q.id !== p.id && Math.hypot(q.x - p.x, q.y - p.y) < 12);
-    for (const p of projected) if (!crowded(p)) expect(nearestPoint(projected, p.x, p.y, 16), p.id).toBe(p.id);
+  it('picks each marker at its own centre in every preset, AIRs/HVD and Cockpit BRB/Inertia included', () => {
+    for (const preset of PRESETS) {
+      const points3d = project(preset);
+      const wrong = points3d.filter((p) => nearestPoint(points3d, p.x, p.y) !== p.id).map((p) => p.id);
+      expect(wrong, preset).toEqual([]);
+    }
+  });
+
+  it('keeps every pair of markers at least 12 px apart in every preset (latch and sense rows apart)', () => {
+    for (const preset of PRESETS) {
+      const pts = project(preset);
+      const close: string[] = [];
+      pts.forEach((a, i) =>
+        pts.slice(i + 1).forEach((b) => {
+          const d = Math.hypot(a.x - b.x, a.y - b.y);
+          if (d < 12) close.push(`${a.id}/${b.id} ${d.toFixed(1)}px`);
+        })
+      );
+      expect(close, preset).toEqual([]);
+    }
   });
 });
 
 describe('placeBadges', () => {
-  it('puts a lone badge up and to the right of its marker, with no leader', () => {
-    const [b] = placeBadges([pt('a', 100, 100)]);
-    expect(b).toMatchObject({ left: 106, top: 70, spot: 0, visible: true, leader: false });
+  it('places suspects first, so a suspect in a cluster gets its preferred spot', () => {
+    const [a, culprit] = placeBadges([point('a', 100, 100), point('culprit', 104, 100, { suspect: true })]);
+    expect(culprit.spot).toBe(0);
+    expect(a.spot).not.toBe(0);
+    expect(overlaps(a, culprit)).toBe(false);
   });
 
-  it('fans out a cluster without overlaps', () => {
-    const cluster = [0, 4, 8, 12, 16].map((dx, i) => pt(`n${i}`, 200 + dx, 200));
-    const placed = placeBadges(cluster);
-    for (let i = 0; i < placed.length; i++)
-      for (let j = i + 1; j < placed.length; j++) expect(overlaps(placed[i], placed[j]), `${i}/${j}`).toBe(false);
-  });
-
-  it('places suspects first, so a suspect in a cluster gets the preferred spot', () => {
-    const placed = placeBadges([pt('a', 100, 100), pt('b', 102, 100), pt('s', 104, 100, { suspect: true })]);
-    expect(placed.find((p) => p.id === 's')!.spot).toBe(0);
-    expect(placed.map((p) => p.id)).toEqual(['a', 'b', 's']);
-  });
-
-  it('never covers a suspect’s marker with another badge', () => {
-    const points = [
-      pt('s', 130, 100, { suspect: true, width: 64, height: 32 }),
-      ...[0, 6, 12, 18, 24, 30].map((dx, i) => pt(`n${i}`, 100 + dx, 104))
+  it('never covers a suspect’s halo, its own badge included', () => {
+    const cluster = [
+      point('a', 200, 200),
+      point('b', 204, 200),
+      point('s1', 208, 200, { suspect: true }),
+      point('c', 212, 202),
+      point('s2', 216, 198, { suspect: true, width: 70 }),
+      point('d', 220, 200, { width: 60 })
     ];
-    for (const b of placeBadges(points)) if (b.id !== 's') expect(covers(b, 130, 100), b.id).toBe(false);
-  });
-
-  it('keeps every badge where it was when nothing moved', () => {
-    const points = [0, 5, 10, 15].map((dx, i) => pt(`n${i}`, 300 + dx, 300));
-    const first = placeBadges(points);
-    const again = placeBadges(points, new Map(first.map((b) => [b.id, b])));
-    expect(again).toEqual(first);
-  });
-
-  it('keeps a clear badge’s spot after a small camera nudge (hysteresis)', () => {
-    const points = [pt('a', 100, 100), pt('b', 118, 96), pt('c', 160, 140)];
-    const first = placeBadges(points);
-    const nudged = points.map((p) => ({ ...p, x: p.x + 3, y: p.y - 2 }));
-    const again = placeBadges(nudged, new Map(first.map((b) => [b.id, b])));
-    expect(again.map((b) => b.spot)).toEqual(first.map((b) => b.spot));
-  });
-
-  it('draws a leader once a badge is pushed out of the first ring', () => {
-    const placed = placeBadges([0, 2, 4, 6, 8].map((dx, i) => pt(`n${i}`, 200 + dx, 200)));
-    const far = placed.filter((b) => b.spot >= 4);
-    expect(far.length).toBeGreaterThan(0);
-    for (const b of far) expect(b.leader, b.id).toBe(true);
-    for (const b of placed.filter((p) => p.spot < 4)) expect(b.leader).toBe(false);
-    for (const b of far) {
-      const p = placed.indexOf(b) * 2 + 200;
-      expect(Math.max(Math.abs(b.leaderTo.x - p), Math.abs(b.leaderTo.y - 200))).toBeGreaterThan(LEADER_MIN_GAP);
+    const placed = placeBadges(cluster);
+    for (const badge of placed) {
+      for (const s of cluster.filter((p) => p.suspect)) {
+        expect(distanceTo(badge, s.x, s.y), `${badge.id} over ${s.id}`).toBeGreaterThanOrEqual(HALO_RADIUS_PX);
+      }
     }
   });
 
-  it('hides the badge of a marker that is off screen, without reserving space', () => {
-    const placed = placeBadges([pt('off', 100, 100, { visible: false }), pt('on', 100, 100)]);
-    expect(placed[0].visible).toBe(false);
-    expect(placed[1]).toMatchObject({ visible: true, spot: 0 });
+  it('keeps badges off an unlabelled suspect’s halo and places nothing for it', () => {
+    const placed = placeBadges([point('a', 100, 100), point('s', 104, 100, { suspect: true, unlabelled: true })]);
+    expect(placed.map((b) => b.id)).toEqual(['a']);
+    expect(distanceTo(placed[0], 104, 100)).toBeGreaterThanOrEqual(HALO_RADIUS_PX);
+  });
+
+  it('fans a 5-node cluster spaced 4 px apart out without overlap', () => {
+    const placed = placeBadges([0, 1, 2, 3, 4].map((i) => point(`n${i}`, 300 + i * 4, 300)));
+    placed.forEach((a, i) => placed.slice(i + 1).forEach((b) => expect(overlaps(a, b), `${a.id}/${b.id}`).toBe(false)));
+  });
+
+  it('keeps badges a constant size whatever the zoom', () => {
+    const near = placeBadges([point('a', 10, 10), point('b', 500, 10, { width: 64 })]);
+    expect(near.map((b) => b.width)).toEqual([BADGE_SIZE, 64]);
+  });
+
+  it('keeps a badge’s previous spot while it is still clear, so badges don’t hop as the camera moves', () => {
+    const first = placeBadges([point('a', 100, 100), point('b', 104, 100)]);
+    const nudged = placeBadges([point('a', 103, 101), point('b', 107, 101)], first);
+    expect(nudged.map((b) => b.spot)).toEqual(first.map((b) => b.spot));
+  });
+
+  it('draws a leader only for a badge pushed out of the first ring', () => {
+    const placed = placeBadges([0, 1, 2, 3, 4, 5, 6, 7, 8].map((i) => point(`n${i}`, 300, 300 + i)));
+    expect(placed[0].leader).toBe(false);
+    expect(placed.some((b) => b.leader)).toBe(true);
+  });
+
+  it('keeps badges on the canvas when there is room, even at its edge', () => {
+    const bounds = { width: 200, height: 100 };
+    const placed = placeBadges(
+      [point('corner', 195, 5, { suspect: true, width: 70 }), point('b', 5, 95)],
+      undefined,
+      bounds
+    );
+    for (const b of placed) {
+      expect(b.left, b.id).toBeGreaterThanOrEqual(0);
+      expect(b.top, b.id).toBeGreaterThanOrEqual(0);
+      expect(b.left + b.width, b.id).toBeLessThanOrEqual(200);
+      expect(b.top + BADGE_SIZE, b.id).toBeLessThanOrEqual(100);
+    }
+  });
+
+  it('returns placements in input order and leaves hidden points unplaced', () => {
+    const placed = placeBadges([
+      point('a', 0, 0),
+      point('s', 50, 50, { suspect: true }),
+      point('h', 9, 9, { visible: false })
+    ]);
+    expect(placed.map((b) => b.id)).toEqual(['a', 's', 'h']);
+    expect(placed[2].visible).toBe(false);
   });
 });

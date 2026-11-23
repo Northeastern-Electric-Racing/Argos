@@ -29,7 +29,7 @@
         (mouseenter)="interactive() && preview(b.id)"
         (mouseleave)="interactive() && preview(null)"
       >
-        <ui-icon [name]="b.icon" class="text-[1.1em]" />
+        <ui-icon [name]="b.icon" [size]="b.suspect ? 'sm' : 'xs'" />
         <span>{{ b.order }}</span>
         @if (b.name) {
           <span class="font-sans">{{ b.name }}</span>

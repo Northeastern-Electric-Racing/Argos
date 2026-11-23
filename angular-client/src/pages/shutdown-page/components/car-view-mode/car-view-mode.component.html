@@ -1,11 +1,16 @@
-<div role="group" aria-label="Car view" [class]="listClass">
+@if (notice(); as n) {
+  <p role="status" class="m-0 flex items-center gap-1 text-xs text-fg-muted" data-notice>
+    <ui-icon name="warning" size="xs" class="text-warn" />
+    {{ n }}
+  </p>
+}
+<div [class]="segmented.list" role="group" aria-label="Car view">
   @for (m of modes; track m.id) {
     <button
       type="button"
-      [class]="itemClass"
+      [class]="segmented.item"
       [attr.aria-pressed]="mode() === m.id"
-      [attr.aria-description]="m.id === '3d' && unavailable() ? unavailable() : null"
-      [attr.title]="m.id === '3d' && unavailable() ? unavailable() : null"
+      [attr.aria-description]="m.id === '3d' && notice() ? 'unavailable; press to retry' : null"
       (click)="choose(m.id)"
     >
       {{ m.label }}

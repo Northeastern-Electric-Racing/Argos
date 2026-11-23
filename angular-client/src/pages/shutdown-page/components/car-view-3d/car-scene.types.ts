@@ -1,12 +1,11 @@
 import { LoopNode } from '../../shutdown-loop.model';
-import { ProjectedPoint, ViewPreset } from './car-view-3d.projection';
+import { ScreenPoint, ViewPreset } from './car-view-3d.projection';
 import { MaterialMode, SceneColours, SceneStatus, StateColours } from './car-view-3d.utils';
 
 // The contract between the car-view-3d component and the lazily loaded three.js scene (car-scene.ts).
 // Kept apart from car-scene.ts so the component (and its tests) never import three.
 
-/** A loop node's marker projected onto the canvas, in CSS pixels from its top-left corner. */
-export type ScreenPoint = ProjectedPoint;
+export type { ScreenPoint };
 
 export interface CarSceneOptions {
   /** Sized element the canvas fills; watched for resizes. */
@@ -47,6 +46,5 @@ export interface CarScene {
   dispose(): void;
 }
 
-export interface CarSceneModule {
-  createCarScene(options: CarSceneOptions): Promise<CarScene>;
-}
+/** Builds the scene; rejects with CarSceneError ('webgl' or 'init'). What CAR_SCENE_LOADER resolves to. */
+export type CarSceneFactory = (options: CarSceneOptions) => Promise<CarScene>;

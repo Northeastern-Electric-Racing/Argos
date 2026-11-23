@@ -7,25 +7,20 @@ describe('NODE_POSITIONS_3D', () => {
     expect(missing).toEqual([]);
   });
 
-  it('has no entries for ids that are not in the loop', () => {
+  it('has no positions for ids that are not in the loop', () => {
     const ids = new Set(SHUTDOWN_LOOP.map((n) => n.id));
     expect(Object.keys(NODE_POSITIONS_3D).filter((id) => !ids.has(id))).toEqual([]);
   });
 
-  it('gives no two loop nodes the same position', () => {
-    const seen = new Map<string, string>();
-    for (const [id, p] of Object.entries(NODE_POSITIONS_3D)) {
-      const key = p.join(',');
-      expect(seen.get(key), `${id} shares ${key}`).toBeUndefined();
-      seen.set(key, id);
-    }
+  it('gives no two loop nodes the same spot', () => {
+    const keys = Object.values(NODE_POSITIONS_3D).map((p) => p.join(','));
+    expect(new Set(keys).size).toBe(keys.length);
   });
 
-  it('places every loop node on the car, in metres around the rear axle', () => {
+  it('places every loop node on the car: x in [-0.75, 0.75], y in [0, 1.3], z in [-0.5, 2.6] metres', () => {
     for (const [id, [x, y, z]] of Object.entries(NODE_POSITIONS_3D)) {
       expect([x, y, z].every(Number.isFinite), id).toBe(true);
-      expect(x, id).toBeGreaterThanOrEqual(-0.75);
-      expect(x, id).toBeLessThanOrEqual(0.75);
+      expect(Math.abs(x), id).toBeLessThanOrEqual(0.75);
       expect(y, id).toBeGreaterThanOrEqual(0);
       expect(y, id).toBeLessThanOrEqual(1.3);
       expect(z, id).toBeGreaterThanOrEqual(-0.5);
@@ -38,7 +33,8 @@ describe('NODE_POSITIONS_3D', () => {
     expect(NODE_POSITIONS_3D['side-brb-r'][0]).toBeLessThan(0);
   });
 
-  it('puts BOTS (pedal box) ahead of the AIRs (accumulator), along +Z', () => {
-    expect(NODE_POSITIONS_3D['bots'][2]).toBeGreaterThan(NODE_POSITIONS_3D['airs'][2]);
+  it('puts BOTS (pedal box) ahead of the cockpit and the AIRs (accumulator) behind it', () => {
+    expect(NODE_POSITIONS_3D['bots'][2]).toBeGreaterThan(NODE_POSITIONS_3D['cockpit-brb'][2]);
+    expect(NODE_POSITIONS_3D['airs'][2]).toBeLessThan(NODE_POSITIONS_3D['cockpit-brb'][2]);
   });
 });

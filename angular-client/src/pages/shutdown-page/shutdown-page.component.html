@@ -14,17 +14,8 @@
     >
       <div class="flex flex-wrap items-center justify-between gap-2">
         <h2 id="car-view-title" class="m-0 text-base font-bold text-fg">Car</h2>
-        <car-view-mode [mode]="carMode()" [unavailable]="carNotice()" (modeChange)="setCarMode($event)" />
+        <car-view-mode [(mode)]="carMode" [notice]="carNotice()" (modeChange)="carNotice.set(null)" />
       </div>
-      @if (carNotice(); as notice) {
-        <p
-          class="m-0 flex items-start gap-2 rounded-md border border-solid border-warn bg-surface-1 px-3 py-2 text-sm text-warn"
-          role="status"
-        >
-          <ui-icon class="shrink-0" name="warning" size="sm" />
-          <span>{{ notice }}</span>
-        </p>
-      }
       @if (carMode() === '3d') {
         <car-view-3d
           [nodes]="status().nodes"
@@ -32,6 +23,7 @@
           [previewId]="selection.previewId()"
           (nodeSelect)="selection.select($event)"
           (nodePreview)="selection.preview($event)"
+          [interactive]="carInteractive()"
           (unavailable)="onCarUnavailable($event)"
         />
       } @else {

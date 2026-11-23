@@ -32,8 +32,15 @@ import { WireEmphasis } from '../../shutdown-loop.display';
 import { NODE_POSITIONS_3D, Vec3 } from '../../shutdown-loop.positions-3d';
 import { NodeState } from '../../shutdown-loop.utils';
 import { prepareModel } from './car-model';
-import { CarModelResult, CarScene, CarSceneOptions, ScreenPoint } from './car-scene.types';
-import { fitDistanceToPoints, nearestPoint, VIEW_DIRECTIONS, ViewPreset } from './car-view-3d.projection';
+import { CarModelResult, CarScene, CarSceneFactory, CarSceneOptions, ScreenPoint } from './car-scene.types';
+import {
+  fitDistanceToPoints,
+  nearestPoint,
+  PICK_REACH_PX,
+  VIEW_DIRECTIONS,
+  VIEW_FOV_DEG,
+  ViewPreset
+} from './car-view-3d.projection';
 import {
   CarSceneError,
   dashPieces,
@@ -56,14 +63,15 @@ import { RenderScheduler } from './render-scheduler';
 // has loaded; it renders only when something visible changes.
 
 const MAX_PIXEL_RATIO = 2;
-const FOV = 40;
+const FOV = VIEW_FOV_DEG;
 /** Folder holding the Draco decoder (wrapper + wasm), served from our own assets. */
 const DRACO_PATH = 'assets/draco/';
 /** Marker size in metres (model space). */
 const MARKER_SIZE = 0.035;
 const HIGHLIGHT_SCALE = 1.7;
 const TUBE_RADIUS: Record<WireEmphasis, number> = { strong: 0.016, normal: 0.01, muted: 0.006 };
-const PICK_REACH_PX = 18;
+/** Room left around the car when a preset frames it. */
+const FIT_MARGIN = 1.08;
 const GHOST_OPACITY = 0.18;
 /** Loop wiring and markers draw over the car body in every material mode, so the cause is never hidden. */
 const ORDER = { wire: 2, marker: 3, ring: 4 } as const;
@@ -76,7 +84,7 @@ interface Marker {
   mismatch: Mesh;
 }
 
-export async function createCarScene(options: CarSceneOptions): Promise<CarScene> {
+export const createCarScene: CarSceneFactory = async (options) => {
   let renderer: WebGLRenderer;
   try {
     renderer = new WebGLRenderer({ canvas: options.canvas, antialias: true, alpha: true, powerPreference: 'low-power' });
@@ -91,7 +99,7 @@ export async function createCarScene(options: CarSceneOptions): Promise<CarScene
     scene.dispose();
     throw new CarSceneError('init', { cause });
   }
-}
+};
 
 class ThreeCarScene implements CarScene {
   private scene = new Scene();
@@ -274,14 +282,32 @@ class ThreeCarScene implements CarScene {
           const rel = new Vector3(cx, cy, cz).sub(centre);
           corners.push([rel.dot(x), rel.dot(y), rel.dot(z)]);
         }
-    const distance = fitDistanceToPoints(corners, FOV, this.camera.aspect);
     const radius = bounds.getSize(new Vector3()).length() / 2;
-    this.camera.position.copy(centre).addScaledVector(z, distance);
-    this.camera.near = distance / 100;
-    this.camera.far = (distance + radius) * 10;
-    this.camera.updateProjectionMatrix();
+    // Start from the corner fit (which keeps the box centre in the middle), then re-centre on where the box
+    // actually lands on screen and tighten: a box seen from above-front projects lopsided, so the centred fit
+    // leaves much of a wide canvas empty.
+    const target = centre.clone();
+    let distance = fitDistanceToPoints(corners, FOV, this.camera.aspect);
+    const tanV = Math.tan((FOV * Math.PI) / 360);
+    const tanH = tanV * this.camera.aspect;
+    const world = corners.map(([a, b, c]) =>
+      centre.clone().addScaledVector(x, a).addScaledVector(y, b).addScaledVector(z, c)
+    );
+    for (let pass = 0; pass < 3; pass++) {
+      this.placeCamera(target, z, distance, radius);
+      let [minX, maxX, minY, maxY] = [Infinity, -Infinity, Infinity, -Infinity];
+      for (const p of world) {
+        const v = p.clone().project(this.camera);
+        [minX, maxX, minY, maxY] = [Math.min(minX, v.x), Math.max(maxX, v.x), Math.min(minY, v.y), Math.max(maxY, v.y)];
+      }
+      target
+        .addScaledVector(x, ((minX + maxX) / 2) * distance * tanH)
+        .addScaledVector(y, ((minY + maxY) / 2) * distance * tanV);
+      distance *= Math.max((maxX - minX) / 2, (maxY - minY) / 2) * FIT_MARGIN;
+    }
+    this.placeCamera(target, z, distance, radius);
     const controls = this.controls!;
-    controls.target.copy(centre);
+    controls.target.copy(target);
     // Keep the camera outside the car and the car on screen.
     controls.cursor.copy(centre);
     controls.maxTargetRadius = radius;
@@ -289,6 +315,15 @@ class ThreeCarScene implements CarScene {
     controls.maxDistance = distance * 2;
     controls.update();
     this.scheduler.request();
+  }
+
+  private placeCamera(target: Vector3, towardsCamera: Vector3, distance: number, radius: number): void {
+    this.camera.position.copy(target).addScaledVector(towardsCamera, distance);
+    this.camera.near = distance / 100;
+    this.camera.far = (distance + radius) * 10;
+    this.camera.updateProjectionMatrix();
+    this.camera.lookAt(target);
+    this.camera.updateMatrixWorld();
   }
 
   setHighlight(id: string | null): void {

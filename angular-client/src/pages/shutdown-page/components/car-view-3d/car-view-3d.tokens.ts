@@ -1,13 +1,17 @@
 import { DOCUMENT, inject, InjectionToken } from '@angular/core';
-import type { CarSceneModule } from './car-scene.types';
+import { CarSceneFactory } from './car-scene.types';
+import { isWebGLAvailable } from './car-view-3d.utils';
 
-/** Loads the three.js scene module on demand, so three is a lazy chunk. Overridden in tests. */
-export const CAR_SCENE_LOADER = new InjectionToken<() => Promise<CarSceneModule>>('CAR_SCENE_LOADER', {
+/** Loads the three.js scene on demand, so three.js is a lazy chunk and never in the initial bundle. */
+export const CAR_SCENE_LOADER = new InjectionToken<() => Promise<CarSceneFactory>>('CAR_SCENE_LOADER', {
   providedIn: 'root',
-  factory: () => () => import('./car-scene')
+  factory: () => () => import('./car-scene').then((m) => m.createCarScene)
 });
 
-/** Whether this browser can make a WebGL context; probed once per page load. Overridden in tests (jsdom has none). */
+/**
+ * Whether this browser can draw the 3D view; when it can't, the page shows the 2D car view. Probed once per page
+ * load (the probe context is released), however often the 3D view is mounted.
+ */
 export const WEBGL_SUPPORT = new InjectionToken<() => boolean>('WEBGL_SUPPORT', {
   providedIn: 'root',
   factory: () => {
@@ -16,24 +20,3 @@ export const WEBGL_SUPPORT = new InjectionToken<() => boolean>('WEBGL_SUPPORT', 
     return () => (supported ??= isWebGLAvailable(doc));
   }
 });
-
-/**
- * Where the car model (GLB) is served from, or null when there is none: the view then draws the loop wiring
- * alone. The file is fetched with revalidation, so saving over it shows the new model on the next load.
- */
-export const CAR_MODEL_URL = new InjectionToken<string | null>('CAR_MODEL_URL', {
-  providedIn: 'root',
-  factory: () => 'assets/models/car.glb'
-});
-
-/** Makes a throwaway WebGL context to see whether one can be made, and releases it straight away. */
-export function isWebGLAvailable(doc: Pick<Document, 'createElement'>): boolean {
-  try {
-    const canvas = doc.createElement('canvas');
-    const gl = canvas.getContext('webgl2') ?? canvas.getContext('webgl');
-    gl?.getExtension('WEBGL_lose_context')?.loseContext();
-    return !!gl;
-  } catch {
-    return false;
-  }
-}

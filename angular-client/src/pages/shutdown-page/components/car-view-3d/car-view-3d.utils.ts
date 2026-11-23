@@ -222,11 +222,23 @@ export function badgeModels(nodes: readonly NodeStatus[]): BadgeModel[] {
   });
 }
 
-/** Badge size used until the browser has laid a badge out (and in jsdom, which lays nothing out). */
-export const BADGE_FALLBACK_SIZE = { width: 36, height: 24 } as const;
+/** Badge width used until the browser has laid a badge out (and in jsdom, which lays nothing out). */
+export const BADGE_FALLBACK_WIDTH = 36;
 
 // ---------------------------------------------------------------------------------------------------------------
 // Fallbacks, notices and preferences
+
+/** Makes a throwaway WebGL context to see whether one can be made, and releases it straight away. */
+export function isWebGLAvailable(doc: Pick<Document, 'createElement'>): boolean {
+  try {
+    const canvas = doc.createElement('canvas');
+    const gl = canvas.getContext('webgl2') ?? canvas.getContext('webgl');
+    gl?.getExtension('WEBGL_lose_context')?.loseContext();
+    return !!gl;
+  } catch {
+    return false;
+  }
+}
 
 export type FallbackReason = 'webgl' | 'model' | 'init' | 'context';
 
