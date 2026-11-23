@@ -1,39 +1,45 @@
-<!-- One sentence for screen readers; its text changes only with the verdict, so it is not re-announced every tick. -->
+<!-- The verdict and the break for screen readers, debounced so a flapping loop is not read out every tick. -->
 <p class="sr-only" role="status" aria-live="polite" aria-atomic="true">{{ announcement() }}</p>
 
 <div [class]="boxClass()">
   <ui-icon class="shrink-0" [name]="verdict().icon" size="xl" />
   <div class="flex min-w-0 flex-col gap-2" [attr.data-verdict]="status().verdict">
-    <p class="m-0 text-xl leading-none font-black tracking-wide max-md:text-title" [class]="verdict().title">
+    <h2 class="m-0 text-xl leading-none font-black tracking-wide max-md:text-title" [class]="verdict().title">
       {{ verdict().label }}
-    </p>
+      @if (culprit(); as c) {
+        <span aria-hidden="true">·</span>
+        <button
+          type="button"
+          [class]="culpritClass"
+          [attr.data-node-id]="c.id"
+          [attr.aria-label]="'Cause: ' + c.label + '. Show it'"
+          (click)="nodeSelect.emit(c.id)"
+        >
+          {{ c.label }}
+        </button>
+      }
+    </h2>
     @switch (status().verdict) {
       @case ('open') {
-        <div class="flex flex-wrap items-center gap-2 text-lg max-md:text-base">
-          <span>{{ single() ? 'Cause:' : 'Cause is one of:' }}</span>
-          @for (n of status().suspects; track n.id) {
-            <button
-              type="button"
-              [class]="chipSuspect"
-              [attr.data-node-id]="n.id"
-              [attr.aria-label]="'Show ' + n.label"
-              (click)="nodeSelect.emit(n.id)"
-            >
-              {{ n.label }}
-            </button>
-          }
-          @for (n of status().noDataInStretch; track n.id) {
-            <button
-              type="button"
-              [class]="chipNoData"
-              [attr.data-node-id]="n.id"
-              [attr.aria-label]="'Show ' + n.label + ', no data'"
-              (click)="nodeSelect.emit(n.id)"
-            >
-              {{ n.label }} · no data
-            </button>
-          }
-        </div>
+        @if (culprit()) {
+          <p class="m-0 text-base">Reads 0 while the reading before it is closed: the loop is broken here.</p>
+        } @else {
+          <div class="flex flex-wrap items-center gap-2 text-lg max-md:text-base">
+            <span>Cause is one of:</span>
+            @for (c of chips(); track c.id) {
+              <button
+                type="button"
+                [class]="c.chip"
+                [attr.data-node-id]="c.id"
+                [attr.data-kind]="c.kind"
+                [attr.aria-label]="'Show ' + c.label + ', ' + c.tag"
+                (click)="nodeSelect.emit(c.id)"
+              >
+                {{ c.label }} <span class="font-normal">· {{ c.tag }}</span>
+              </button>
+            }
+          </div>
+        }
       }
       @case ('closed') {
         <p class="m-0 text-base text-fg-label">Every reading is live and closed.</p>
@@ -45,24 +51,29 @@
   </div>
 </div>
 
-@if (mismatchText() || silentText()) {
-  <ul class="m-0 flex list-none flex-col gap-2 p-0">
-    @if (mismatchText(); as text) {
-      <li class="flex items-start gap-2 rounded-md border border-solid border-warn bg-surface-1 px-3 py-2 text-sm text-warn">
-        <ui-icon class="shrink-0" name="warning" size="sm" />
-        <span
-          ><strong class="font-bold">{{ text }}.</strong> Check its wiring or sensor; the cause is still the first open
-          reading.</span
-        >
-      </li>
-    }
-    @if (silentText(); as text) {
-      <li
-        class="flex items-start gap-2 rounded-md border border-dashed border-fg-muted bg-surface-1 px-3 py-2 text-sm text-fg-label"
-      >
-        <ui-icon class="shrink-0" name="signal_wifi_off" size="sm" />
-        <span>{{ text }}</span>
-      </li>
-    }
-  </ul>
-}
+<!-- Always rendered at the same height, so the strip below never jumps when a warning comes and goes. -->
+<ul data-warnings class="m-0 flex min-h-10 list-none flex-wrap gap-2 p-0">
+  @if (mismatchText(); as text) {
+    <li data-warning="mismatch" [class]="warning.warn">
+      <ui-icon class="shrink-0" name="priority_high" size="sm" />
+      <span><strong class="font-bold">Sensor mismatch:</strong> {{ text }}. The cause is still the first open reading.</span>
+    </li>
+  }
+  @if (intermittentText(); as text) {
+    <li data-warning="intermittent" [class]="warning.warn">
+      <ui-icon class="shrink-0" name="sync_problem" size="sm" />
+      <span>{{ text }}</span>
+    </li>
+  }
+  @if (silentText(); as text) {
+    <li data-warning="silent" [class]="warning.silent">
+      <ui-icon class="shrink-0" name="signal_wifi_off" size="sm" />
+      <span>{{ text }}</span>
+    </li>
+  }
+  @if (!mismatchText() && !silentText() && !intermittentText()) {
+    <li data-warning="none" class="flex min-h-10 items-center gap-2 px-1 text-sm text-fg-muted">
+      <ui-icon class="shrink-0" name="check_circle_outline" size="sm" />No sensor warnings
+    </li>
+  }
+</ul>

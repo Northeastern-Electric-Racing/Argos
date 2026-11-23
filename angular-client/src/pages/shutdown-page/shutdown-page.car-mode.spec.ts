@@ -1,4 +1,6 @@
+import { BreakpointObserver, BreakpointState } from '@angular/cdk/layout';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { of } from 'rxjs';
 import { CAR_SCENE_LOADER, WEBGL_SUPPORT } from './components/car-view-3d/car-view-3d.tokens';
 import { FALLBACK_NOTICES } from './components/car-view-3d/car-view-3d.utils';
 import { CAR_VIEW_STORAGE_KEY as CAR_VIEW_MODE_KEY } from './components/car-view-mode/car-view-mode.component';
@@ -22,7 +24,12 @@ describe('ShutdownPageComponent car view mode', () => {
       imports: [ShutdownPageComponent],
       providers: [
         { provide: WEBGL_SUPPORT, useValue: () => webgl },
-        { provide: CAR_SCENE_LOADER, useValue: () => new Promise(() => undefined) }
+        { provide: CAR_SCENE_LOADER, useValue: () => new Promise(() => undefined) },
+        // A wide screen: the car views are a control (CAR_INTERACTIVE_QUERY matches).
+        {
+          provide: BreakpointObserver,
+          useValue: { observe: () => of<BreakpointState>({ matches: true, breakpoints: {} }) }
+        }
       ]
     });
     fixture = TestBed.createComponent(ShutdownPageComponent);

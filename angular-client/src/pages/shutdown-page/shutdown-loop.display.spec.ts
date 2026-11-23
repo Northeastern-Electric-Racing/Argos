@@ -13,6 +13,7 @@ import {
   nodeNotes,
   readStateColours,
   segmentState,
+  serverNote,
   SHORT_LABEL,
   shortStateLabel,
   stateLabel
@@ -107,6 +108,13 @@ describe('shutdown loop display', () => {
       expect(NODE_STATE_DISPLAY['no-data'].dash).toBeTruthy();
     });
 
+    it('tells every state apart by shape as well as colour: (icon, dash, emphasis) is distinct per state', () => {
+      const shapes = Object.values(NODE_STATE_DISPLAY).map((d) => JSON.stringify([d.icon, d.dash, d.emphasis]));
+      expect(new Set(shapes).size).toBe(shapes.length);
+      const icons = Object.values(NODE_STATE_DISPLAY).map((d) => d.icon);
+      expect(new Set(icons).size).toBe(icons.length);
+    });
+
     it('reads every state colour through the reader, for three.js', () => {
       const read: CssVarReader = (token) =>
         ({ '--color-success': '#00ff00', '--color-danger': '#ff8800', '--color-fg-dim': '#888888' })[token as string] ?? '';
@@ -122,7 +130,7 @@ describe('shutdown loop display', () => {
 
   describe('formatAge', () => {
     it.each([
-      [400, 'just now'],
+      [400, '<1 s ago'],
       [3000, '3 s ago'],
       [59_400, '59 s ago'],
       [75_000, '1 min 15 s ago'],
@@ -205,7 +213,10 @@ describe('shutdown loop display', () => {
       const s = tsmsOpen();
       expect(stateLabel(s.nodes[idx('hvd')], s)).toBe('Open — after the break');
       expect(shortStateLabel(s.nodes[idx('hvd')], s)).toBe('Downstream');
-      expect(nodeAriaLabel({ ...s.nodes[idx('hvd')], mismatch: true }, s)).toBe('HVD: Open — after the break, mismatch');
+      expect(nodeAriaLabel({ ...s.nodes[idx('hvd')], mismatch: true }, s)).toBe(
+        'HVD: reads closed after the break — sensor mismatch'
+      );
+      expect(shortStateLabel({ ...s.nodes[idx('hvd')], mismatch: true }, s)).toBe('Reads 1');
       expect(stateLabel(s.nodes[idx('bots')], s)).toBe('Closed');
     });
 
@@ -284,16 +295,63 @@ describe('shutdown loop display', () => {
       expect(explainNode(at(s, 'airs'), s)).toBe('Energized: every reading is live and closed.');
     });
 
-    it('explains silent readings', () => {
+    it('explains silent readings by their own timeout, never a board message or a fixed duration', () => {
       const s = loop({ 'acc-sense': 'no-data' });
       expect(explainNode({ ...at(s, 'acc-sense'), ageMs: undefined, value: undefined }, s)).toBe(
-        'No message from the BMS since the page opened, so this reading is skipped.'
+        'No reading since the page opened, so it is skipped.'
+      );
+      expect(explainNode({ ...at(s, 'acc-sense'), ageMs: 12_000, staleAfterMs: 3_000 }, s)).toBe(
+        'No new reading for 12 s (it goes stale after 3 s without one), so it is skipped.'
       );
       expect(explainNode({ ...at(s, 'acc-sense'), ageMs: 75_000 }, s)).toBe(
-        'No message from the BMS for 1 min 15 s, so this reading is skipped.'
+        'No new reading for 1 min 15 s, so it is skipped.'
       );
       const inStretch = { ...s, noDataInStretch: [node('acc-sense')] };
-      expect(explainNode(at(inStretch, 'acc-sense'), inStretch)).toContain('it could be the cause too');
+      expect(explainNode(at(inStretch, 'acc-sense'), inStretch)).toContain('no live reading, so it could be the cause too');
+      expect(explainNode(at(inStretch, 'acc-sense'), inStretch)).not.toMatch(/No message from|60 s/);
+    });
+
+    it('names no-data loop nodes in the stretch as having no live reading', () => {
+      const s = loop({ 'side-brb-r': 'suspect', 'bms-latch': 'no-data', 'imd-latch': 'suspect' });
+      s.suspects = [node('side-brb-r'), node('imd-latch')];
+      s.noDataInStretch = [node('bms-latch')];
+      expect(explainNode(at(s, 'imd-latch'), s)).toBe(
+        'Reads 0: the first open reading. The break is here or in Side BRB R or BMS latch (Side BRB R: no sensor; BMS latch: no live reading).'
+      );
+      const silentOnly = { ...s, suspects: [node('imd-latch')] };
+      expect(explainNode(at(silentOnly, 'imd-latch'), silentOnly)).toBe(
+        'Reads 0: the first open reading. The break is here or in BMS latch, which has no live reading.'
+      );
+    });
+
+    describe('when scylla-server decided the states', () => {
+      const server = (s: LoopStatus): LoopStatus => ({ ...s, source: 'server' });
+
+      it('cites the local reading when it agrees with the state', () => {
+        const s = server(tsmsOpen());
+        expect(explainNode(at(s, 'tsms'), s)).toBe(
+          'Reads 0 while the reading before it is closed: the loop is broken here.'
+        );
+        expect(serverNote(at(s, 'tsms'), s)).toBeUndefined();
+      });
+
+      it('reasons from the state, not a contradicting local reading, and notes the disagreement', () => {
+        const s = server(tsmsOpen());
+        const tsms = { ...at(s, 'tsms'), value: 1 };
+        expect(explainNode(tsms, s)).toBe('Open while the reading before it is closed: the loop is broken here.');
+        expect(serverNote(tsms, s)).toBe(
+          "Decided by scylla-server, which sees every message; this client's latest reading is 1 (closed)."
+        );
+        const bots = { ...at(s, 'bots'), value: 0 };
+        expect(explainNode(bots, s)).toBe('Closed: 24 V is present just after it.');
+        expect(serverNote(bots, s)).toContain('latest reading is 0 (open)');
+      });
+
+      it('never notes a disagreement for a locally decided loop', () => {
+        const s = tsmsOpen();
+        expect(serverNote({ ...at(s, 'tsms'), value: 1 }, s)).toBeUndefined();
+        expect(serverNote({ ...at(s, 'tsms'), value: 1 }, { ...s, source: undefined })).toBeUndefined();
+      });
     });
   });
 

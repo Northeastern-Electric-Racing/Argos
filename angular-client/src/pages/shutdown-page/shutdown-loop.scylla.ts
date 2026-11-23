@@ -2,7 +2,7 @@ import { LoopStatus, NodeState, NodeStatus, summarizeLoop } from './shutdown-loo
 
 /**
  * Codes scylla-server publishes per loop node, in SHUTDOWN_LOOP order, on
- * `Argos/Shutdown/NodeStates` (ADR 0009). `mismatch` is a downstream-open node that reads closed.
+ * `Argos/Shutdown/Node_States` (ADR 0009). `mismatch` is a downstream-open node that reads closed.
  * Keep in step with `NodeState::code` in scylla-server/src/shutdown_loop/status.rs.
  */
 export const NODE_STATE_CODE = {
@@ -13,12 +13,12 @@ export const NODE_STATE_CODE = {
   mismatch: 4
 } as const;
 
-/** scylla-server publishes its node states every second and on every change. */
-export const SERVER_FRESH_MS = 3_000;
+/** scylla-server publishes its node states every second and on every change, while any input is live. */
+export const SERVER_FRESH_MS = 2_000;
 
 export interface ServerNodeStates {
   codes: number[];
-  /** When this client received them (ms since epoch). */
+  /** When this client received them (ms, on the same clock as the local readings). */
   receivedAt: number;
 }
 

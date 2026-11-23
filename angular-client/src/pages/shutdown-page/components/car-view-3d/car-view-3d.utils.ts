@@ -1,4 +1,4 @@
-import { NODE_STATE_DISPLAY, segmentState, SHORT_LABEL, WireEmphasis } from '../../shutdown-loop.display';
+import { NODE_STATE_DISPLAY, segmentState, SHORT_LABEL, WIRE_WIDTH, WireEmphasis } from '../../shutdown-loop.display';
 import { LoopNode } from '../../shutdown-loop.model';
 import { NODE_ANCHOR_PREFIX, Vec3 } from '../../shutdown-loop.positions-3d';
 import { ThemeColourToken } from '../../shutdown-loop.theme';
@@ -149,19 +149,25 @@ export const markerKey = (n: SceneNode) =>
 
 export interface SegmentStyle {
   emphasis: WireEmphasis;
+  /** Tube radius in metres: half of the 2D core width (WIRE_WIDTH), so 3D wires weigh what 2D wires do. */
+  radius: number;
   /** [dash, gap] in metres, or null for a solid wire. */
   dash: readonly [number, number] | null;
 }
 
-/** Metres per SVG user unit when the 2D dash pattern is drawn along a 3D wire. */
-export const DASH_UNIT_M = 0.006;
+/** Metres per SVG user unit when the 2D wire language (dash pattern, WIRE_WIDTH) is drawn as 3D tubes. */
+export const SVG_UNIT_M = 0.006;
 
 /** A wire's style from its state, in the same language as 2D: NODE_STATE_DISPLAY's emphasis and dash pattern. */
 export function segmentStyle(state: NodeState): SegmentStyle {
   const { emphasis, dash } = NODE_STATE_DISPLAY[state];
   const parts = dash?.split(/[\s,]+/).map(Number) ?? [];
   const valid = parts.length >= 2 && parts.every((n) => Number.isFinite(n) && n > 0);
-  return { emphasis, dash: valid ? [parts[0] * DASH_UNIT_M, parts[1] * DASH_UNIT_M] : null };
+  return {
+    emphasis,
+    radius: (WIRE_WIDTH[emphasis].core / 2) * SVG_UNIT_M,
+    dash: valid ? [parts[0] * SVG_UNIT_M, parts[1] * SVG_UNIT_M] : null
+  };
 }
 
 /** Everything that changes a wire's look. */

@@ -28,7 +28,6 @@ import {
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { WireEmphasis } from '../../shutdown-loop.display';
 import { NODE_POSITIONS_3D, Vec3 } from '../../shutdown-loop.positions-3d';
 import { NodeState } from '../../shutdown-loop.utils';
 import { prepareModel } from './car-model';
@@ -69,7 +68,6 @@ const DRACO_PATH = 'assets/draco/';
 /** Marker size in metres (model space). */
 const MARKER_SIZE = 0.035;
 const HIGHLIGHT_SCALE = 1.7;
-const TUBE_RADIUS: Record<WireEmphasis, number> = { strong: 0.016, normal: 0.01, muted: 0.006 };
 /** Room left around the car when a preset frames it. */
 const FIT_MARGIN = 1.08;
 const GHOST_OPACITY = 0.18;
@@ -456,12 +454,11 @@ class ThreeCarScene implements CarScene {
     const colour = this.options.colours.states[state];
     entry.material.color.set(colour);
     entry.material.emissive.set(colour);
-    const { emphasis, dash } = segmentStyle(state);
+    const { radius: r, dash } = segmentStyle(state);
     const a: Vec3 = [from.x, from.y, from.z];
     const b: Vec3 = [to.x, to.y, to.z];
     const pieces = dash ? dashPieces(a, b, dash[0], dash[1]) : [[a, b] as [Vec3, Vec3]];
     entry.group.clear();
-    const r = TUBE_RADIUS[emphasis];
     for (const [p, q] of pieces) {
       const start = new Vector3(...p);
       const end = new Vector3(...q);

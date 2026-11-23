@@ -41,20 +41,26 @@ All values are booleans: **1 = closed (24 V present, energy can flow), 0 = open*
 | BMS | `BMS/Shutdown/State` | 0 = TS ON, 1 = TS OFF (note: inverted vs. the sense bits). Shown as a header summary, not part of the walk. |
 | VCU (CAN 0x502, "Faults") | `VCU/Faults/Critical/CAN_OUTGOING_FAULT`, `CAN_INCOMING_FAULT`, `BMS_CAN_MONITOR_FAULT`, `LIGHTNING_CAN_MONITOR_FAULT`, `PRECHARGE_FLOATING_FAULT` | 0 = clear. Not a loop voltage: the **CAN latch** reading is derived from them (see Status algorithm). |
 
-Topic definitions: `Odyssey-Definitions/can-messages/vcu.json` and `bms.json`.
+Topic definitions: `Odyssey-Definitions/can-messages/vcu.json` and `bms.json`. Values arrive via `Storage.get(topic)` (`DataValue { values: string[]; time; unit }`), same as the efuses page.
 
-**Published by scylla-server** (ADR 0009), from the topics above, on every change and every second. Stored with the current Run like car data, so they have history and can carry Rules. Node indexes follow the loop order below.
+**Published by scylla-server** (ADR 0009), from the topics above. scylla evaluates once per burst of input (25 ms after its first message), at the next staleness, grace or hold deadline, and every second while any input is live; the status topics go out on change and on those heartbeats, and once (Unknown) when every input has gone stale, then not until a new input arrives. Datapoints carry the car's timestamp of the newest input that produced them. Stored with the current Run like car data, so they have history and can carry Rules (Rule values are floats: write `a < 0.5`). Node indexes follow the loop order below.
 
 | Topic | Values |
 |---|---|
 | `Argos/Shutdown/Verdict` | 1 = closed, 0 = open, -1 = unknown |
-| `Argos/Shutdown/BreakNode` | index of *F* (first live measurement point reading 0), -1 if none |
-| `Argos/Shutdown/NodeStates` | one code per loop node: 0 closed, 1 suspect, 2 downstream-open, 3 no data, 4 downstream-open with mismatch |
+| `Argos/Shutdown/Break_Node` | index of *F* (first live measurement point reading 0), -1 if none |
+| `Argos/Shutdown/Node_States` | one code per loop node: 0 closed, 1 suspect, 2 downstream-open, 3 no data, 4 downstream-open with mismatch |
 | `Argos/Shutdown/Mismatch` | 1 while any mismatch is flagged |
-| `Argos/Shutdown/CAN_Latch` | derived CAN latch, 1 closed / 0 open; not sent while unknown |
+| `Argos/Shutdown/CAN_Latch` | derived CAN latch, 1 = every critical fault clear / 0 = one tripped; not sent while unknown |
 | `Argos/Shutdown/Fault/{Vcu\|Bms}/{name}` | 1 every second while a Fault is active, 0 once when it clears |
 
-Faults (glossary sense, shown on the Faults page): `Shutdown_Open_<NODE>` on the board whose reading found the break, `Shutdown_Mismatch_<NODE>` on the board of the contradicting reading, and `CAN_Latch_<FAULT>` on `Vcu` for each tripped critical fault. Values arrive via `Storage.get(topic)` (`DataValue { values: string[]; time; unit }`), same as the efuses page.
+Faults (glossary sense, shown on the Faults page), on the board whose reading saw them:
+
+- `Shutdown_Open_<A>` when the suspect stretch is the single loop node A, `Shutdown_Open_<A>_TO_<B>` when it runs from first suspect A to last suspect B (e.g. `BMS_GPIO` = 0 ⇒ `Vcu/Shutdown_Open_SIDE_BRB_R_TO_BMS_LATCH`), on the board of the break reading. None when every suspect is an operator switch (GLV master switch, TSMS, HVD): those openings are recorded in `Verdict` / `Break_Node` only. None when the stretch is just the CAN latch: its trip raises only the per-fault Faults below.
+- `Shutdown_Mismatch_<NODE>` on the board of the contradicting reading.
+- `CAN_Latch_<FAULT>` on `Vcu` for each live tripped critical fault.
+
+A Fault is raised only once it has been called for continuously for 500 ms, and a `Shutdown_Open_*` only once a message on the break reading's topic (for the CAN latch, a 0x502 message) has arrived since: a cross-board opening seen right after the other board closed waits for that board's fresh sample. So a real opening shorter than 500 ms shows in `Verdict` / `Break_Node` history and on the page but is not a Fault. A Fault clears (one 0) as soon as it is no longer called for; while the verdict is Unknown it is held instead, neither refreshed nor cleared until its board reads again.
 
 ## Loop model
 
@@ -90,7 +96,7 @@ Order of rows 1–14 follows the netmap shutdown diagram; latch order BMS → IM
 
 ## Status algorithm
 
-Pure function `computeLoopStatus(readings) → NodeStatus[]`, no Angular dependency, unit-tested.
+Pure function `computeLoopStatus(nodes, readings, now) → LoopStatus` in `shutdown-loop.utils.ts`, called with `withDerivedReadings(readings, now)`, no Angular dependency, unit-tested; scylla-server's `compute_loop_status` (`shutdown_loop/status.rs`) is a port of it, and both run the golden vectors in `shutdown-loop.vectors.json`.
 
 1. Walk nodes in order. Only nodes with a live reading are "measurement points".
 2. Find the **first measurement point reading 0**. Call it *F*. Let *P* be the last measurement point before *F* (or the loop start if none).
@@ -98,16 +104,16 @@ Pure function `computeLoopStatus(readings) → NodeStatus[]`, no Angular depende
    - Nodes up to and including *P*: **closed**.
    - Nodes after *P* up to and including *F*: **suspect** (the root-cause stretch). If *F* is the first node after *P*, it's a single culprit; otherwise the whole stretch is suspect, e.g. `BMS_GPIO` = 0 ⇒ Side BRB R, Side BRB L, BMS latch are suspects.
    - Nodes after *F*: **downstream-open** (muted, explicitly "not the cause").
-   - Unmeasured nodes before the break: closed (inferred). AIRs: energized iff no break.
-   - **CAN latch reading** (derived, not published by the car): 0 while any **live** critical VCU fault is tripped; 1 only while all five are live and 0; no data otherwise. A stale fault counts as unknown, never as tripped (the draft build kept every fault value forever).
+   - Unmeasured nodes before the break: closed (inferred). With no break, an unmeasured node is closed only if a live reading after it reads 1, or every measurement point is live; otherwise no data. AIRs: energized iff the verdict is LOOP CLOSED.
+   - **CAN latch reading** (derived, not published by the car): 0 while any **live** critical VCU fault is tripped; 1 only while all five are live and 0; none otherwise. A stale fault counts as unknown, never as tripped (the draft build kept every fault value forever). *(Amended:)* the CAN latch's reading shows only an opening: a live tripped fault makes it a measurement point reading 0; otherwise it is treated as unmeasured, never a mismatch and never "no data" of its own (it never makes a board silent, and is no evidence that the GLV master switch is closed). The faults say whether one is tripped, not whether there is loop voltage after the latch, which can stay latched after its fault clears.
 4. If no reading is 0: everything closed, AIRs energized.
-5. **Contradiction:** a measurement point after *F* reading 1 is flagged **mismatch** (sensor/wiring inconsistency), shown on that node and as a header warning. The banner verdict stays "LOOP OPEN" (decided by *F*). *(Builder's call:)* a mismatch is only flagged after both values have held for a short grace window (0.5 s). *(Amended:)* a reading from the other board must also have been **received at least the grace window after the break appeared**: VCU and BMS sample independently, so until the other board sends a fresh sample its last one may predate the break (with a BMS slower than 2 Hz the draft flashed a mismatch on every break).
+5. **Contradiction:** a measurement point after *F* reading 1 is flagged **mismatch** (sensor/wiring inconsistency), shown on that node and as a header warning. The banner verdict stays "LOOP OPEN" (decided by *F*). *(Builder's call:)* a mismatch is only flagged after both values have held for a short grace window (0.5 s). *(Amended:)* a reading from another source must also have been **received at least the grace window after the break appeared**: VCU and BMS sample independently, and so do the VCU's 0x123 GPIOs and the 0x502 faults behind the CAN latch, so until the other source sends a fresh sample its last one may predate the break (with a BMS slower than 2 Hz the draft flashed a mismatch on every break).
 6. **Staleness:** a reading whose last update is older than its timeout, or that has never arrived since page load, is **no data** (grey), and is skipped as a measurement point (it neither closes nor opens the stretch; the suspect stretch widens over it). *(Amended:)* the timeout is **per reading** (so per CAN frame), not per board: a message on one frame, the derived CAN latch or `BMS/Shutdown/State` no longer keeps another frame's readings live. It **adapts to the observed rate**: 5 × the smoothed message interval, clamped to **3–60 s**; until a second message arrives it is 60 s (the user's original value, now the cap). A message after a reading went stale starts it afresh (no change time or rate carried across the gap), so a reconnect gets its own grace window and a publisher that slowed down is relearnt instead of flapping stale.
 7. **Banner verdict** *(builder's call)*, three states:
    - **LOOP OPEN** — a live reading is 0. Names the suspect(s).
    - **LOOP CLOSED · AIRs on** — every measurement point is live and reads 1.
-   - **UNKNOWN** — no live 0, but one or more measurement points have no data (includes page load before first message). Names which board(s) are silent. Never show "closed" off stale data.
-8. **Server status** *(amended)*: while scylla-server's `Argos/Shutdown/NodeStates` is fresh (received within 3 s) and has one valid code per loop node, the page shows its node states (scylla sees every message; a client may have some discarded) with local values and ages; otherwise it computes locally. The chosen source is on `LoopStatus.source`.
+   - **UNKNOWN** — no live 0, but one or more measurement points have no data (includes page load before first message). Names which board(s) are silent (a board with a measured loop node in no data). Never show "closed" off stale data.
+8. **Server status** *(amended)*: while scylla-server's `Argos/Shutdown/Node_States` is fresh (received within 2 s) and has one valid code per loop node, the page shows its node states (scylla sees every message, and its status is exempt from the socket discard; a client may have some car data discarded) with local values and ages; otherwise, and while the dev mock panel publishes (`ShutdownLoopService.preferServer` off), it computes locally. The chosen source is on `LoopStatus.source`. Receive times, staleness and grace windows use a monotonic clock in both, never the wall clock.
 
 ## Page layout
 
@@ -138,7 +144,7 @@ Pure function `computeLoopStatus(readings) → NodeStatus[]`, no Angular depende
 
 ## Constraints
 
-- Angular 19 conventions in `angular-client/CLAUDE.md`: standalone, OnPush, signals + `computed()`, external templates/styles, `inject()`, Material icons, no emojis.
+- Angular conventions in `docs/CONTEXT.md` (Conventions) and ADR 0007: standalone, OnPush, signals + `computed()`, external templates, `inject()`, Tailwind on theme tokens, `<ui-icon>`, no emojis.
 - Follow the efuses page pattern: `shutdown-page.topics.ts` + `Storage.get()` subscriptions; new route + nav-bar entry via `app-routes.ts`.
 - Local dev: the Calypso sim randomizes each VCU shutdown bit independently (0 with 80% probability) and defines no `sim_freq` for BMS 0x95, so the sim shows near-constant breaks and mismatches and can't demo a healthy loop. *(Builder's call:)* logic is covered by unit tests on the pure function; for visual checks, add a dev-only fixture/mock-publish path inside the frontend. No changes to `Odyssey-Definitions`.
 

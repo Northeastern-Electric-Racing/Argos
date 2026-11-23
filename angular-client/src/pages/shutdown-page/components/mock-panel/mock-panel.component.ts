@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, OnDestroy, signal } from '@
 import Storage from 'src/services/storage.service';
 import { UiButtonDirective } from 'src/ui/button/button.directive';
 import { Board, SHUTDOWN_LOOP } from '../../shutdown-loop.model';
+import { ShutdownLoopService } from '../../shutdown-loop.service';
 import { SHUTDOWN_TOPICS, VCU_CRITICAL_FAULT_TOPICS } from '../../shutdown-page.topics';
 
 const PUBLISH_EVERY_MS = 1000;
@@ -24,23 +25,30 @@ const MEASURED = SHUTDOWN_LOOP.filter((n) => n.topic && n.board) as {
 })
 export class MockPanelComponent implements OnDestroy {
   private storage = inject(Storage);
+  /** While the panel publishes, the page shows this client's status: scylla never sees the mock readings. */
+  private loop = inject(ShutdownLoopService, { optional: true });
   private timer?: ReturnType<typeof setInterval>;
 
   readonly nodes = MEASURED;
   readonly values = signal<Record<string, number>>(Object.fromEntries(MEASURED.map((n) => [n.topic, 1])));
   readonly publishing = signal(false);
+  /** Published as BMS/Shutdown/State, which is inverted: 0 = TS ON. */
+  readonly tsOn = signal(false);
 
   ngOnDestroy(): void {
     clearInterval(this.timer);
+    if (this.publishing()) this.loop?.preferServer.set(true);
   }
 
   togglePublishing(): void {
     if (this.publishing()) {
       clearInterval(this.timer);
       this.publishing.set(false);
+      this.loop?.preferServer.set(true);
       return;
     }
     this.publishing.set(true);
+    this.loop?.preferServer.set(false);
     this.publish();
     this.timer = setInterval(() => this.publish(), PUBLISH_EVERY_MS);
   }
@@ -83,6 +91,7 @@ export class MockPanelComponent implements OnDestroy {
   private publish(): void {
     const values = this.values();
     const time = String(Date.now());
+    this.storage.addValue(SHUTDOWN_TOPICS.BMS.State, { values: [this.tsOn() ? '0' : '1'], time, unit: '' });
     for (const n of MEASURED) {
       if (n.topic === SHUTDOWN_TOPICS.VCU.CAN_LATCH) {
         // The CAN latch is derived from the critical faults: open = every fault tripped.

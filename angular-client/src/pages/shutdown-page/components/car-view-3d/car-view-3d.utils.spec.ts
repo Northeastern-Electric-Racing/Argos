@@ -1,4 +1,4 @@
-import { NODE_STATE_DISPLAY, segmentState } from '../../shutdown-loop.display';
+import { NODE_STATE_DISPLAY, segmentState, WIRE_WIDTH } from '../../shutdown-loop.display';
 import { LoopNode, SHUTDOWN_LOOP } from '../../shutdown-loop.model';
 import { NODE_POSITIONS_3D, Vec3 } from '../../shutdown-loop.positions-3d';
 import { NodeState, NodeStatus } from '../../shutdown-loop.utils';
@@ -166,11 +166,18 @@ describe('change keys', () => {
 
 describe('segmentStyle', () => {
   it('follows the 2D wire language: the cause strong and solid, closed solid, dead wire dashed', () => {
-    expect(segmentStyle('suspect')).toEqual({ emphasis: 'strong', dash: null });
-    expect(segmentStyle('closed')).toEqual({ emphasis: 'normal', dash: null });
+    expect(segmentStyle('suspect')).toMatchObject({ emphasis: 'strong', dash: null });
+    expect(segmentStyle('closed')).toMatchObject({ emphasis: 'normal', dash: null });
     expect(segmentStyle('downstream-open').emphasis).toBe(NODE_STATE_DISPLAY['downstream-open'].emphasis);
     expect(segmentStyle('downstream-open').dash).not.toBeNull();
     expect(segmentStyle('no-data').dash).not.toBeNull();
+  });
+
+  it('weighs wires as the 2D view does (WIRE_WIDTH): the cause thickest, dead wire thinnest', () => {
+    const r = (state: NodeState) => segmentStyle(state).radius;
+    expect(r('suspect') / r('closed')).toBeCloseTo(WIRE_WIDTH.strong.core / WIRE_WIDTH.normal.core);
+    expect(r('closed')).toBeGreaterThan(r('downstream-open'));
+    expect(r('downstream-open')).toBe(r('no-data'));
   });
 
   it('draws downstream (dashed) and no data (dotted) with different piece lengths', () => {

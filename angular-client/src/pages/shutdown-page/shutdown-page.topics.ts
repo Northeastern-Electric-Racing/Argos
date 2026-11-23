@@ -23,10 +23,11 @@ export const SHUTDOWN_TOPICS = {
     TSMS: 'VCU/Shutdown/TSMS_GPIO',
     HVD: 'VCU/Shutdown/HVD_GPIO',
     /**
-     * Not published by the car: the page derives it from VCU_CRITICAL_FAULT_TOPICS
-     * (1 = all clear, 0 = any fault tripped) so the CAN latch reads like the other nodes.
+     * Not published by the car: the key of the reading the page derives from VCU_CRITICAL_FAULT_TOPICS
+     * (1 = all clear, 0 = any fault tripped). It shows only an opening (the latch is `openOnly`).
+     * Named after the topic scylla-server publishes it on, so it can't collide with a car topic.
      */
-    CAN_LATCH: 'VCU/Faults/Critical'
+    CAN_LATCH: 'Argos/Shutdown/CAN_Latch'
   },
   BMS: {
     Acc: 'BMS/Shutdown/Acc_Sense',
@@ -46,9 +47,9 @@ export const SHUTDOWN_SERVER_TOPICS = {
   /** 1 = loop closed, 0 = open, -1 = unknown. */
   Verdict: 'Argos/Shutdown/Verdict',
   /** Index of the first live measurement point reading open, or -1 when there is no break. */
-  BreakNode: 'Argos/Shutdown/BreakNode',
+  BreakNode: 'Argos/Shutdown/Break_Node',
   /** One NODE_STATE_CODE per loop node. */
-  NodeStates: 'Argos/Shutdown/NodeStates',
+  NodeStates: 'Argos/Shutdown/Node_States',
   /** 1 while any downstream reading contradicts the break. */
   Mismatch: 'Argos/Shutdown/Mismatch',
   /** The CAN latch derived from VCU_CRITICAL_FAULT_TOPICS: 1 = closed, 0 = open; absent while unknown. */

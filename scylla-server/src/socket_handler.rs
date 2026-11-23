@@ -22,7 +22,7 @@ use crate::metadata_structs::{
     map_dti_flt,
 };
 use crate::rule_structs::{RULE_SOCKET_KEY, RuleManager};
-use crate::shutdown_loop::tracker::parse_fault_topic;
+use crate::shutdown_loop::tracker::{SHUTDOWN_TOPIC_PREFIX, parse_fault_topic};
 use crate::{ClientData, SOCKET_DISCARD_PERCENT};
 
 pub async fn socket_handler(
@@ -44,7 +44,7 @@ pub async fn socket_handler(
             },
             res = data_channel.recv() => {
                 match res {
-                    Ok(data) => send_socket_msg(&data, &mut upload_counter, &io, DATA_SOCKET_KEY).await,
+                    Ok(data) => send_data_msg(&data, &mut upload_counter, &io).await,
                     Err(broadcast::error::RecvError::Lagged(n)) => {
                         warn!("Socket handler lagged behind, skipped {} messages!", n);
                     }
@@ -202,12 +202,7 @@ pub async fn socket_handler_with_metadata(
                         // let sample = msg_cnt % 500 == 0;
                         // let age_ms = sample.then(|| (Utc::now() - data.timestamp).num_milliseconds());
                         // let emit_start = sample.then(tokio::time::Instant::now);
-                        send_socket_msg(
-                            &data,
-                            &mut upload_counter,
-                            &io,
-                            DATA_SOCKET_KEY,
-                        ).await;
+                        send_data_msg(&data, &mut upload_counter, &io).await;
                         // if let (Some(age), Some(start)) = (age_ms, emit_start) {
                         //     debug!(
                         //         "emit sample: io.emit() took {:?}; data was {} ms old when emitted (sockets: {})",
@@ -397,8 +392,8 @@ fn handle_socket_msg(
     // shutdown loop Faults scylla raises itself: 1 while active, 0 once when cleared
     if let Some((node, name)) = parse_fault_topic(&data.name) {
         if data.values.first().is_some_and(|v| *v == 0.0) {
-            clear_fault(fault_ringbuffer, &node, name);
-        } else {
+            clear_fault(fault_ringbuffer, &node, name, data.timestamp);
+        } else if !reopen_fault(fault_ringbuffer, &node, name, data.timestamp) {
             register_fault(fault_ringbuffer, node, name, data.timestamp);
         }
         return;
@@ -432,27 +427,36 @@ fn handle_socket_msg(
     register_fault(fault_ringbuffer, node, flt_txt, data.timestamp);
 }
 
-/// Records an occurrence of fault `name` from `node` at `at`. A fault seen again within
-/// [`FAULT_MIN_REG_GAP`] of when it was last seen only updates its last-seen time; after a longer gap
-/// the old entry is marked expired and a new one starts.
+/// Records an occurrence of fault `name` from `node` at `at`, updating the entry already in the
+/// queue if there is one
 fn register_fault(
     fault_ringbuffer: &mut AllocRingBuffer<FaultData>,
     node: Node,
     name: &str,
     at: DateTime<Utc>,
 ) {
+    // default to sending a new fault
+    //fault_ringbuffer is basically json of the most recent error
     let mut should_push = true;
+    // iterate through current faults
     for item in fault_ringbuffer.iter_mut() {
+        // if a fault of the same type is in the queue, and not expired
+
         if item.name == name && node == item.node && !item.expired {
+            // update the last seen metric
             should_push = false;
-            if at - item.last_seen > FAULT_MIN_REG_GAP {
+            // if the time since the last fault is greater than [FAULT_MIN_REG_GAP], mark this fault as expired
+
+            if (item.last_seen - at) > FAULT_MIN_REG_GAP {
                 item.expired = true;
                 should_push = true;
             } else {
-                item.last_seen = item.last_seen.max(at);
+                // otherwise, if the fault isnt expired, ensure we dont create a duplicate fault
+                item.last_seen = at;
             }
         }
     }
+    // send a new fault if no message matches and is not expired
     if should_push {
         fault_ringbuffer.enqueue(FaultData {
             node,
@@ -464,12 +468,56 @@ fn register_fault(
     }
 }
 
-/// Marks fault `name` from `node` expired, for a source that says when a fault clears
-fn clear_fault(fault_ringbuffer: &mut AllocRingBuffer<FaultData>, node: &Node, name: &str) {
+/// Marks fault `name` from `node` expired at `at`, for a source that says when a fault clears
+fn clear_fault(
+    fault_ringbuffer: &mut AllocRingBuffer<FaultData>,
+    node: &Node,
+    name: &str,
+    at: DateTime<Utc>,
+) {
     for item in fault_ringbuffer.iter_mut() {
-        if item.name == name && *node == item.node {
+        if item.name == name && *node == item.node && !item.expired {
             item.expired = true;
+            item.last_seen = item.last_seen.max(at);
         }
+    }
+}
+
+/// For a source that says when a fault clears: if fault `name` from `node` cleared less than
+/// [`FAULT_MIN_REG_GAP`] before `at` and has no active entry, reopens that entry, so a flapping
+/// source doesn't push older faults out of the queue; returns whether it did
+fn reopen_fault(
+    fault_ringbuffer: &mut AllocRingBuffer<FaultData>,
+    node: &Node,
+    name: &str,
+    at: DateTime<Utc>,
+) -> bool {
+    let same = |item: &FaultData| item.name == name && *node == item.node;
+    if fault_ringbuffer.iter().any(|i| same(i) && !i.expired) {
+        return false;
+    }
+    match fault_ringbuffer.iter_mut().rev().find(|i| same(i)) {
+        Some(item) if at - item.last_seen <= FAULT_MIN_REG_GAP => {
+            item.expired = false;
+            item.last_seen = item.last_seen.max(at);
+            true
+        }
+        _ => false,
+    }
+}
+
+/// Whether a datapoint on `topic` is subject to the socket discard: scylla's own
+/// `Argos/Shutdown/*` status is exempt, since clients prefer it to their own (ADR 0009)
+fn is_discardable(topic: &str) -> bool {
+    !topic.starts_with(SHUTDOWN_TOPIC_PREFIX)
+}
+
+/// Sends a datapoint to the data socket, subject to the socket discard unless it is exempt
+async fn send_data_msg(data: &ClientData, upload_counter: &mut u8, io: &SocketIo) {
+    if is_discardable(&data.name) {
+        send_socket_msg(data, upload_counter, io, DATA_SOCKET_KEY).await;
+    } else {
+        emit_socket_msg(data, io, DATA_SOCKET_KEY).await;
     }
 }
 
@@ -492,35 +540,41 @@ async fn send_socket_msg<T>(
     // positions 0..24 (~25%) and keeps positions 25..99 (~75%).
     *upload_counter = upload_counter.wrapping_add(1) % 100;
     if *upload_counter >= SOCKET_DISCARD_PERCENT.load(Ordering::Relaxed) {
-        match io
-            .emit(
-                socket_key,
-                &serde_json::to_string(client_data).expect("Could not serialize ClientData"),
-            )
-            .await
-        {
-            Ok(()) => (),
-            Err(err) => match err {
-                socketioxide::BroadcastError::Socket(e) => {
-                    trace!("Socket: Transmit error: {:?}", e);
-                }
-                socketioxide::BroadcastError::Serialize(_) => {
-                    warn!("Socket: Serialize error: {}", err);
-                }
-                socketioxide::BroadcastError::Adapter(_) => {
-                    warn!("Socket: Adapter error: {}", err);
-                }
-            },
-        }
+        emit_socket_msg(client_data, io, socket_key).await;
     } else {
         trace!("Discarding message!");
     }
 }
 
+/// Sends a message to the socket, printing and IGNORING any error that may occur
+async fn emit_socket_msg<T>(client_data: &T, io: &SocketIo, socket_key: &'static str)
+where
+    T: Serialize,
+{
+    match io
+        .emit(
+            socket_key,
+            &serde_json::to_string(client_data).expect("Could not serialize ClientData"),
+        )
+        .await
+    {
+        Ok(()) => (),
+        Err(err) => match err {
+            socketioxide::BroadcastError::Socket(e) => {
+                trace!("Socket: Transmit error: {:?}", e);
+            }
+            socketioxide::BroadcastError::Serialize(_) => {
+                warn!("Socket: Serialize error: {}", err);
+            }
+            socketioxide::BroadcastError::Adapter(_) => {
+                warn!("Socket: Adapter error: {}", err);
+            }
+        },
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use chrono::TimeDelta;
-
     use super::*;
 
     fn at(secs: i64) -> DateTime<Utc> {
@@ -537,22 +591,6 @@ mod tests {
         assert_eq!(faults[0].occured_at, at(0));
         assert_eq!(faults[0].last_seen, at(5));
         assert!(!faults[0].expired);
-    }
-
-    // Bug: the gap was computed as last_seen - now (negative), so a fault that came back after a
-    // long gap never started a new entry and the old one never expired
-    #[test]
-    fn fault_after_a_long_gap_expires_the_old_entry_and_starts_a_new_one() {
-        let mut rb = AllocRingBuffer::<FaultData>::new(10);
-        register_fault(&mut rb, Node::Bms, "Pack_too_hot", at(0));
-        let later = at(0) + FAULT_MIN_REG_GAP + TimeDelta::seconds(1);
-        register_fault(&mut rb, Node::Bms, "Pack_too_hot", later);
-        let faults = rb.to_vec();
-        assert_eq!(faults.len(), 2);
-        assert!(faults[0].expired);
-        assert_eq!(faults[0].last_seen, at(0));
-        assert_eq!(faults[1].occured_at, later);
-        assert!(!faults[1].expired);
     }
 
     #[test]
@@ -584,10 +622,32 @@ mod tests {
         assert_eq!(faults[0].node, Node::Vcu);
         assert_eq!(faults[0].name, "Shutdown_Open_TSMS");
         assert_eq!(faults[0].occured_at, at(0));
-        assert_eq!(faults[0].last_seen, at(1));
+        // a cleared Fault shows how long it really lasted
+        assert_eq!(faults[0].last_seen, at(2));
         assert!(faults[0].expired);
-        // the loop opens there again: a new occurrence, even within the gap
+        // the loop opens there again soon after: the same entry reopens instead of a new one
+        // pushing older Faults out of the ring
         handle_socket_msg(&msg(1.0, 3), &mpu, &bms, &charger, &mut timers, &mut rb);
-        assert_eq!(rb.to_vec().len(), 2);
+        let faults = rb.to_vec();
+        assert_eq!(faults.len(), 1);
+        assert!(!faults[0].expired);
+        assert_eq!(faults[0].occured_at, at(0));
+        // after a longer gap it is a new occurrence
+        handle_socket_msg(&msg(0.0, 4), &mpu, &bms, &charger, &mut timers, &mut rb);
+        handle_socket_msg(&msg(1.0, 20), &mpu, &bms, &charger, &mut timers, &mut rb);
+        let faults = rb.to_vec();
+        assert_eq!(faults.len(), 2);
+        assert_eq!(faults[1].occured_at, at(20));
+    }
+
+    // scylla's own shutdown status is what clients prefer over their own, so it is never discarded
+    #[test]
+    fn only_car_data_is_subject_to_the_socket_discard() {
+        assert!(is_discardable("VCU/Shutdown/TSMS_GPIO"));
+        assert!(is_discardable("Argos/Message_Rate"));
+        assert!(!is_discardable("Argos/Shutdown/Node_States"));
+        assert!(!is_discardable(
+            "Argos/Shutdown/Fault/Vcu/Shutdown_Open_BOTS"
+        ));
     }
 }

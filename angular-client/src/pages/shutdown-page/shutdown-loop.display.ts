@@ -101,6 +101,16 @@ export const NODE_STATE_DISPLAY: Record<NodeState, StateDisplay> = {
   }
 };
 
+/**
+ * 2D wire widths in px per emphasis (M10): the cause a 5 px core over a 9 px casing in the page colour, so it reads
+ * as heavier, not only redder; closed a solid 3 px line; downstream and no data 2 px with their dash.
+ */
+export const WIRE_WIDTH: Record<WireEmphasis, { core: number; casing?: number }> = {
+  strong: { core: 5, casing: 9 },
+  normal: { core: 3 },
+  muted: { core: 2 }
+};
+
 /** Each state's colour as `read` resolves its token, for three.js materials: `readStateColours(cssVarReader(root))`. */
 export function readStateColours(read: CssVarReader): Record<NodeState, string> {
   const entries = (Object.keys(NODE_STATE_DISPLAY) as NodeState[]).map(
@@ -137,8 +147,9 @@ export function stateLabel(s: NodeStatus, loop: LoopStretch): string {
   return NODE_STATE_DISPLAY[s.state].label;
 }
 
-/** The short state label under a strip item; see stateLabel. */
+/** The short state label under a strip item; see stateLabel. A mismatch says what it reads ("Reads 1"). */
 export function shortStateLabel(s: NodeStatus, loop: LoopStretch): string {
+  if (s.mismatch) return 'Reads 1';
   if (s.state === 'suspect') return singleCause(loop) ? 'Cause' : 'Suspect';
   return NODE_STATE_DISPLAY[s.state].short;
 }
@@ -178,15 +189,18 @@ export const KIND_LABEL: Record<NodeKind, string> = {
   load: 'Load (AIR coils)'
 };
 
-/** How long ago, for people: "just now", "3 s ago", "1 min 15 s ago". */
+/** How long ago, for people: "<1 s ago", "3 s ago", "1 min 15 s ago". */
 export function formatAge(ms: number): string {
   const s = Math.round(ms / 1000);
-  if (s < 1) return 'just now';
+  if (s < 1) return '<1 s ago';
   if (s < 60) return `${s} s ago`;
   const min = Math.floor(s / 60);
   const rest = s % 60;
   return min < 10 && rest ? `${min} min ${rest} s ago` : `${min} min ago`;
 }
+
+/** A duration, for people: "<1 s", "12 s", "1 min 15 s" (formatAge without "ago"). */
+export const formatDuration = (ms: number): string => formatAge(ms).replace(/ ago$/, '');
 
 /** A raw reading with its meaning: 1 = closed (24 V present), 0 = open. */
 export function formatValue(value: number | undefined): string {
@@ -230,29 +244,68 @@ export const breakNode = (loop: Pick<LoopStatus, 'suspects'>) => loop.suspects.a
 const joinOr = (labels: string[]): string =>
   labels.length <= 1 ? labels[0] ?? '' : `${labels.slice(0, -1).join(', ')} or ${labels.at(-1)}`;
 
-/** One sentence on why a node is in its state, in loop terms. */
+const has = (n: number) => (n === 1 ? 'has' : 'have');
+
+/** The value a reading has when it agrees with the loop node's state; undefined when the state claims none. */
+function expectedValue(s: NodeStatus): number | undefined {
+  switch (s.state) {
+    case 'closed':
+      return 1;
+    case 'suspect':
+      return 0;
+    case 'downstream-open':
+      return s.mismatch ? 1 : 0;
+    case 'no-data':
+      return undefined;
+  }
+}
+
+/**
+ * Whether this client's latest reading contradicts the state scylla-server decided (LoopStatus.source 'server').
+ * The server sees every message, so its state wins; the UI never cites the contradicting value as the reason.
+ */
+export function contradictsServer(s: NodeStatus, loop: Pick<LoopStatus, 'source'>): boolean {
+  const expected = expectedValue(s);
+  return loop.source === 'server' && s.value !== undefined && expected !== undefined && s.value !== expected;
+}
+
+/** The detail panel's note when scylla-server's state and this client's latest reading disagree. */
+export function serverNote(s: NodeStatus, loop: Pick<LoopStatus, 'source'>): string | undefined {
+  if (!contradictsServer(s, loop)) return undefined;
+  return `Decided by scylla-server, which sees every message; this client's latest reading is ${formatValue(s.value)}.`;
+}
+
+/**
+ * One sentence on why a loop node is in its state, in loop terms. It reasons from the states logic decided
+ * (computeLoopStatus or scylla-server) and cites a reading only when the reading agrees with the state.
+ */
 export function explainNode(s: NodeStatus, loop: LoopStatus): string {
   const i = loop.nodes.findIndex((n) => n.node.id === s.node.id);
   const measured = !!s.node.topic;
+  const cites = measured && !contradictsServer(s, loop);
   const brk = breakNode(loop);
   switch (s.state) {
     case 'closed': {
       if (s.node.kind === 'load') return 'Energized: every reading is live and closed.';
-      if (measured) return 'Reads 1: 24 V is present just after it.';
+      if (measured) return `${cites ? 'Reads 1' : 'Closed'}: 24 V is present just after it.`;
       const next = loop.nodes.slice(i + 1).find((n) => n.node.topic && n.state === 'closed');
-      if (next) return `No sensor of its own. Inferred closed: ${next.node.label} further along the loop reads 1.`;
+      if (next)
+        return `No sensor of its own. Inferred closed: ${next.node.label} further along the loop ${contradictsServer(next, loop) ? 'is closed' : 'reads 1'}.`;
       return 'No sensor of its own. Inferred closed: the VCU is publishing, so GLV power is on.';
     }
     case 'suspect': {
-      const single = loop.suspects.length === 1 && loop.noDataInStretch.length === 0;
-      if (measured && single) return 'Reads 0 while the reading before it is closed: the loop is broken here.';
+      const reads = cites ? 'Reads 0' : 'Open';
+      if (measured && singleCause(loop)) return `${reads} while the reading before it is closed: the loop is broken here.`;
       if (measured) {
-        const others = [
-          ...loop.suspects.filter((n) => n.id !== s.node.id).map((n) => n.label),
-          ...loop.noDataInStretch.map((n) => `${n.label} (no data)`)
-        ];
-        const which = others.length === 1 ? 'which has no reading of its own' : 'which have no reading of their own';
-        return `Reads 0: the first open reading. The break is here or in ${joinOr(others)}, ${which}.`;
+        const unmeasured = loop.suspects.filter((n) => n.id !== s.node.id).map((n) => n.label);
+        const silent = loop.noDataInStretch.map((n) => n.label);
+        const why =
+          unmeasured.length && silent.length
+            ? ` (${unmeasured.join(', ')}: no sensor; ${silent.join(', ')}: no live reading)`
+            : unmeasured.length
+              ? `, which ${has(unmeasured.length)} no reading of ${unmeasured.length === 1 ? 'its' : 'their'} own`
+              : `, which ${has(silent.length)} no live reading`;
+        return `${reads}: the first open reading. The break is here or in ${joinOr([...unmeasured, ...silent])}${why}.`;
       }
       const before = loop.nodes
         .slice(0, i)
@@ -263,17 +316,20 @@ export function explainNode(s: NodeStatus, loop: LoopStatus): string {
     }
     case 'downstream-open': {
       const at = brk?.label ?? 'the break';
-      if (s.mismatch) return `Reads 1 (closed) after the break at ${at}: a sensor or wiring mismatch.`;
+      if (s.mismatch)
+        return `${cites ? 'Reads 1 (closed)' : 'Closed'} after the break at ${at}: a sensor or wiring mismatch.`;
       if (s.node.kind === 'load') return `De-energized: the loop is open upstream at ${at}.`;
       return `Open because ${at} upstream is open. Not the cause.`;
     }
     case 'no-data': {
       if (!measured) return 'No sensor, and no live reading after it shows voltage, so its state is unknown.';
-      const since = s.ageMs === undefined ? 'since the page opened' : `for ${formatAge(s.ageMs).replace(/ ago$/, '')}`;
       const inStretch = loop.noDataInStretch.some((n) => n.id === s.node.id)
-        ? ' It sits inside the suspect stretch, so it could be the cause too.'
+        ? ' It sits inside the suspect stretch with no live reading, so it could be the cause too.'
         : '';
-      return `No message from the ${s.node.board} ${since}, so this reading is skipped.${inStretch}`;
+      if (s.ageMs === undefined) return `No reading since the page opened, so it is skipped.${inStretch}`;
+      const timeout =
+        s.staleAfterMs === undefined ? '' : ` (it goes stale after ${formatDuration(s.staleAfterMs)} without one)`;
+      return `No new reading for ${formatDuration(s.ageMs)}${timeout}, so it is skipped.${inStretch}`;
     }
   }
 }
@@ -311,9 +367,9 @@ export function boardFreshness(nodes: readonly NodeStatus[]): BoardFreshness[] {
 
 /** ARIA name for a loop node, shared by every view of the loop. */
 export function nodeAriaLabel(s: NodeStatus, loop: LoopStretch): string {
-  const mismatch = s.mismatch ? ', mismatch' : '';
+  if (s.mismatch) return `${s.node.label}: reads closed after the break — sensor mismatch`;
   const sensor = s.node.topic ? '' : ' (no sensor)';
-  return `${s.node.label}: ${stateLabel(s, loop)}${mismatch}${sensor}`;
+  return `${s.node.label}: ${stateLabel(s, loop)}${sensor}`;
 }
 
 /**
