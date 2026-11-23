@@ -1,7 +1,7 @@
 import { DIALOG_DATA } from '@angular/cdk/dialog';
-import { ChangeDetectorRef, Component, inject, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, inject, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { SelectedCellInfo } from 'src/services/heat-map.service';
-import { CellReading } from 'src/services/cell.service';
+import { CellReading, CellService } from 'src/services/cell.service';
 import { chipToString } from 'src/utils/bms.utils';
 import { ConfigTableComponent, TableRowConfig, TableColumnConfig } from 'src/components/config-table/config-table.component';
 import { tw } from 'src/ui/recipes/tw';
@@ -67,6 +67,8 @@ export class CellViewComponent implements OnDestroy {
   }
 
   constructor() {
+    // The panel stays open across navigation, so it keeps the cell topics subscribed itself.
+    inject(DestroyRef).onDestroy(inject(CellService).updateCellInfo());
     this.cellsMap = this.dialogData.cells;
     // Poll for MQTT value changes and selection array changes.
     this.refreshInterval = setInterval(() => this.cdr.detectChanges(), 50);

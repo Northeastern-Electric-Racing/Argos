@@ -1,15 +1,18 @@
 import { ToastService } from 'src/ui/toast/toast.service';
 import type { Mock } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { ActivatedRoute, ParamMap, Router, convertToParamMap } from '@angular/router';
 import { BehaviorSubject } from 'rxjs';
 import APIService from 'src/services/api.service';
 import { FaultService } from 'src/services/fault.service';
 import Storage from 'src/services/storage.service';
 import { TopicSelectionService } from 'src/services/topic-selection.service';
+import { fakeViewport } from 'src/ui/layout/viewport.testing';
 import { QueryResponse } from 'src/utils/api.utils';
 import { DataType, Run } from 'src/utils/types.utils';
 import GraphPageComponent from './graph-page.component';
+import GraphSidebarDesktopComponent from './graph-sidebar/graph-sidebar-desktop/graph-sidebar-desktop.component';
 
 describe('GraphPageComponent — URL/topic-selection sync', () => {
   let fixture: ComponentFixture<GraphPageComponent>;
@@ -23,6 +26,7 @@ describe('GraphPageComponent — URL/topic-selection sync', () => {
 
   let dataTypesData: BehaviorSubject<DataType[] | null>;
   let queryParamMap: BehaviorSubject<ParamMap>;
+  let viewport: ReturnType<typeof fakeViewport>;
 
   beforeEach(async () => {
     dataTypesData = new BehaviorSubject<DataType[] | null>(null);
@@ -66,9 +70,11 @@ describe('GraphPageComponent — URL/topic-selection sync', () => {
       navigate: routerNavigate
     };
 
+    viewport = fakeViewport(1024);
     await TestBed.configureTestingModule({
       imports: [GraphPageComponent],
       providers: [
+        viewport.provider,
         TopicSelectionService,
         FaultService,
         Storage,
@@ -121,6 +127,15 @@ describe('GraphPageComponent — URL/topic-selection sync', () => {
     expect(names).toEqual([dataTypeA.name, dataTypeC.name].sort());
   });
 
+  /** Renders the page past the loading page, as it is once the data types have loaded. */
+  async function mountLoaded() {
+    mountAndLoadDataTypes();
+    fixture.componentInstance.dataTypesIsLoading = false;
+    fixture.componentRef.changeDetectorRef.markForCheck();
+    fixture.detectChanges();
+    await fixture.whenStable();
+  }
+
   it('clears service and topics URL param when selection is explicitly cleared', () => {
     topicService.setSelectedDataTypes([dataTypeA]);
     mountAndLoadDataTypes();
@@ -135,11 +150,7 @@ describe('GraphPageComponent — URL/topic-selection sync', () => {
   describe('range input', () => {
     /** Renders the real-time toolbar (past the loading page) and returns its X range field. */
     async function rangeField(): Promise<HTMLInputElement> {
-      mountAndLoadDataTypes();
-      fixture.componentInstance.dataTypesIsLoading = false;
-      fixture.componentRef.changeDetectorRef.markForCheck();
-      fixture.detectChanges();
-      await fixture.whenStable();
+      await mountLoaded();
       return fixture.nativeElement.querySelector('#graph-range-value');
     }
     const type = async (field: HTMLInputElement, value: string) => {
@@ -181,6 +192,73 @@ describe('GraphPageComponent — URL/topic-selection sync', () => {
       await type(field, '45');
       expect(field.value).toBe('45');
       expect(fixture.componentInstance.graphConfig.timeRangeMs).toBe(45000);
+    });
+  });
+
+  describe('topic sidebar', () => {
+    const sidebars = () => [...fixture.nativeElement.querySelectorAll('graph-sidebar')] as HTMLElement[];
+    /** Each rendered sidebar's variant, in page order. */
+    const shown = () =>
+      sidebars().map((el) =>
+        el.querySelector('graph-sidebar-mobile') ? 'mobile' : el.querySelector('graph-sidebar-desktop') ? 'desktop' : 'none'
+      );
+    const resize = async (width: number) => {
+      viewport.resize(width);
+      await new Promise((resolve) => setTimeout(resolve));
+      fixture.detectChanges();
+      await fixture.whenStable();
+    };
+
+    // Tailwind's max-md is < 768px, so 768px itself is desktop.
+    it.each([
+      [1024, 'desktop'],
+      [768, 'desktop'],
+      [767, 'mobile'],
+      [375, 'mobile']
+    ])('renders only the %ipx sidebar (%s)', async (width, expected) => {
+      viewport.resize(width);
+      await mountLoaded();
+      expect(shown()).toEqual([expected]);
+    });
+
+    it('hides the desktop sidebar with Tog Sidebar, leaving none', async () => {
+      await mountLoaded();
+      fixture.componentInstance.toggleSideBar();
+      fixture.detectChanges();
+      expect(sidebars()).toEqual([]);
+    });
+
+    it('keeps the mobile sidebar when Tog Sidebar has hidden the desktop one', async () => {
+      viewport.resize(375);
+      await mountLoaded();
+      fixture.componentInstance.toggleSideBar();
+      fixture.detectChanges();
+      expect(shown()).toEqual(['mobile']);
+    });
+
+    it('switches sidebars across 768px and keeps the selected topics', async () => {
+      topicService.setSelectedDataTypes([dataTypeA, dataTypeB]);
+      await mountLoaded();
+      /** The topics each rendered sidebar shows as selected. */
+      const selected = () =>
+        fixture.debugElement
+          .queryAll(By.css('graph-sidebar-desktop, graph-sidebar-mobile'))
+          .map((el) =>
+            ((el.componentInstance as GraphSidebarDesktopComponent).selectedNodes() ?? [])
+              .map((node) => node.data?.dataType.name)
+              .sort()
+          );
+      const both = [dataTypeA.name, dataTypeB.name].sort();
+      expect(selected()).toEqual([both]);
+
+      await resize(767);
+      expect(shown()).toEqual(['mobile']);
+      expect(selected()).toEqual([both]);
+
+      await resize(768);
+      expect(shown()).toEqual(['desktop']);
+      expect(selected()).toEqual([both]);
+      expect(topicService.getSelectedDataTypes().value).toEqual([dataTypeA, dataTypeB]);
     });
   });
 });

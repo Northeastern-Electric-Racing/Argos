@@ -3,7 +3,7 @@ import { ChangeDetectorRef } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import Storage from 'src/services/storage.service';
+import Storage, { TOPIC_SWEEP_MS } from 'src/services/storage.service';
 import { CellService } from 'src/services/cell.service';
 import { HeatMapService, HeatMapView } from 'src/services/heat-map.service';
 import { DataValue } from 'src/utils/socket.utils';
@@ -54,6 +54,8 @@ describe('SegmentHeatmapComponent (storage seam)', () => {
   let heatMap: HeatMapService;
 
   beforeEach(async () => {
+    // only the topic sweep's interval and the cell teardown's timeout: Angular renders on real timers
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'setTimeout', 'clearTimeout'] });
     await TestBed.configureTestingModule({
       imports: [SegmentHeatmapComponent],
       providers: [Storage, CellService, HeatMapService, { provide: UiDialogService, useValue: { openPanel: () => null } }]
@@ -62,7 +64,6 @@ describe('SegmentHeatmapComponent (storage seam)', () => {
     storage = TestBed.inject(Storage);
     cellService = TestBed.inject(CellService);
     heatMap = TestBed.inject(HeatMapService);
-    cellService.updateCellInfo(); // wire the per-cell storage subscriptions
 
     fixture = TestBed.createComponent(SegmentHeatmapComponent);
     component = fixture.componentInstance;
@@ -70,10 +71,37 @@ describe('SegmentHeatmapComponent (storage seam)', () => {
     fixture.detectChanges(); // runs the effect (loads cells) + ngOnInit (view subscription)
   });
 
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   const alphaCell = (cellNumber: number) => component.alphaDisplayCells.find((c) => c.cellLabel === cellNumber.toString());
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it("holds only its segment's cell topics while shown, and releases them once destroyed", async () => {
+    const cellTopics = () => storage.getTopics().filter((topic) => topic.startsWith('BMS/PerCell/'));
+    await Promise.resolve();
+    expect(cellTopics()).toHaveLength(144);
+    expect(cellTopics().every((topic) => topic.includes(`/${SEGMENT}/`))).toBe(true);
+
+    fixture.destroy();
+    // the cell teardown's delay, then the sweep that drops the released topics
+    vi.advanceTimersByTime(2 * TOPIC_SWEEP_MS);
+    expect(cellTopics()).toEqual([]);
+    expect(cellService.getAlphaCellsBySegment(SEGMENT)[CELL].voltage).toBeUndefined();
+  });
+
+  it('moves its hold to the next segment when the segment page reuses it', async () => {
+    const cellTopics = () => storage.getTopics().filter((topic) => topic.startsWith('BMS/PerCell/'));
+    fixture.componentRef.setInput('segment', 1);
+    fixture.detectChanges();
+    await Promise.resolve();
+    vi.advanceTimersByTime(2 * TOPIC_SWEEP_MS);
+    expect(cellTopics()).toHaveLength(144);
+    expect(cellTopics().every((topic) => topic.includes('/1/'))).toBe(true);
   });
 
   it('fills the flag views from theme tokens, each under black text at AA', () => {

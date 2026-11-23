@@ -70,6 +70,9 @@ export class SegmentHeatmapComponent implements OnInit {
   view!: HeatMapView;
 
   constructor() {
+    // Holds its segment's cell topics while shown; the segment page reuses this component for the next segment, so the hold follows it.
+    effect((onCleanup) => onCleanup(this.cellService.updateCellInfo([this.segment()])));
+
     effect(() => {
       this.alphaCells = this.cellService.getAlphaCellsBySegment(this.segment());
       this.betaCells = this.cellService.getBetaCellsBySegment(this.segment());
