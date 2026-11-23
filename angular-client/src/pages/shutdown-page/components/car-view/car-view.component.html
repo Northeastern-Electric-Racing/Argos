@@ -1,51 +1,89 @@
-<svg
-  class="car"
-  viewBox="0 0 1000 535"
-  preserveAspectRatio="xMidYMid meet"
-  role="group"
-  aria-label="Car side view with shutdown nodes"
+<div
+  role="listbox"
+  aria-label="Car side view: each shutdown node where it sits on the car"
+  class="relative mx-auto aspect-[1000/535] w-full max-w-5xl"
 >
-  <!-- Car frame (decorative), mirrored so the nose faces left -->
-  <image
-    class="frame"
-    href="assets/images/car-frame-side.png"
-    x="0"
-    y="0"
-    width="1000"
-    height="535"
-    preserveAspectRatio="xMidYMid meet"
-    aria-hidden="true"
+  <!-- The frame drawing, dimmed so the wiring and markers read over it. Nose faces left. -->
+  <img
+    src="assets/images/car-frame-side.png"
+    alt=""
+    class="pointer-events-none absolute inset-0 size-full object-contain opacity-40 select-none"
   />
 
-  <!-- Loop wiring in series order -->
-  <g aria-hidden="true">
+  <!-- Loop wiring in series order: each segment carries the state of the node before it. -->
+  <svg
+    class="pointer-events-none absolute inset-0 size-full overflow-visible"
+    viewBox="0 0 100 100"
+    preserveAspectRatio="none"
+    aria-hidden="true"
+    focusable="false"
+  >
     @for (s of segments(); track s.key) {
       <line
-        class="segment"
-        [class]="'segment ' + s.cssClass"
+        [class]="s.stroke"
+        [attr.data-state]="s.state"
         [attr.x1]="s.x1"
         [attr.y1]="s.y1"
         [attr.x2]="s.x2"
         [attr.y2]="s.y2"
+        [attr.stroke-width]="s.width"
+        [attr.stroke-dasharray]="s.dash"
+        stroke-linecap="round"
+        vector-effect="non-scaling-stroke"
       />
     }
-  </g>
+  </svg>
 
-  <!-- Nodes -->
-  @for (m of markers(); track m.id) {
-    <g
-      class="marker"
-      [class]="'marker ' + m.cssClass"
-      [class.unmeasured]="m.unmeasured"
+  @for (m of markers(); track m.id; let i = $index) {
+    <div
+      #marker
+      role="option"
+      class="group absolute size-5 -translate-x-1/2 -translate-y-1/2 cursor-pointer rounded-full transition-transform duration-150 hover:z-20 hover:scale-125 focus-visible:z-20 focus-visible:focus-ring data-[highlighted=true]:z-20 data-[highlighted=true]:scale-125 sm:size-7"
+      [style.left.%]="m.x"
+      [style.top.%]="m.y"
       [attr.data-node-id]="m.id"
-      [attr.transform]="'translate(' + m.x + ' ' + m.y + ')'"
+      [attr.data-state]="m.status.state"
+      [attr.data-highlighted]="highlightId() === m.id"
+      [attr.aria-selected]="selectedId() === m.id"
       [attr.aria-label]="m.ariaLabel"
-      role="img"
-      tabindex="0"
+      [tabindex]="tabStopId() === m.id ? 0 : -1"
+      (click)="nodeSelect.emit(m.id)"
+      (focus)="nodeSelect.emit(m.id)"
+      (keydown)="onKeydown($event, i)"
+      (mouseenter)="nodePreview.emit(m.id)"
+      (mouseleave)="nodePreview.emit(null)"
     >
-      <title>{{ m.tooltip }}</title>
-      <circle r="14" />
-      <text dy="0.35em">{{ m.order }}</text>
-    </g>
+      @if (m.status.state === 'suspect') {
+        <span aria-hidden="true" class="absolute inset-0 rounded-full bg-danger motion-safe:animate-ping"></span>
+      }
+      <span
+        aria-hidden="true"
+        class="absolute inset-0 grid place-items-center rounded-full border-2 group-aria-selected:border-fg sm:border-3"
+        [class]="m.disc"
+      >
+        <status-glyph class="max-sm:hidden" [state]="m.status.state" size="xs" />
+      </span>
+      @if (m.status.mismatch) {
+        <!-- Mismatch: a warn badge on the marker, as in the strip (its name says so too). -->
+        <span
+          aria-hidden="true"
+          class="absolute -top-1.5 -right-1.5 grid size-3 place-items-center rounded-full border border-solid border-page bg-warn text-badge leading-none font-black text-on-status sm:size-4"
+          >!</span
+        >
+      }
+    </div>
   }
-</svg>
+
+  @if (callout(); as c) {
+    <div
+      data-callout
+      aria-hidden="true"
+      class="pointer-events-none absolute z-30 -translate-y-[calc(100%+18px)] rounded-sm border border-solid border-border-strong bg-surface-1 px-2 py-1 text-xs font-bold whitespace-nowrap text-fg shadow-overlay sm:text-sm"
+      [class]="c.align"
+      [style.left.%]="c.x"
+      [style.top.%]="c.y"
+    >
+      <span>{{ c.order }} · {{ c.label }} · </span><span [class]="c.stateText">{{ c.stateLabel }}</span>
+    </div>
+  }
+</div>

@@ -1,0 +1,49 @@
+<section
+  aria-label="Node details"
+  class="flex h-full flex-col gap-3 rounded-md border border-solid border-border bg-surface-1 p-4 max-md:p-3"
+>
+  @if (detail(); as x) {
+    <p class="m-0 text-xs font-bold tracking-wide text-fg-muted uppercase">
+      {{ x.isDefault ? 'Where the loop broke' : 'Selected node' }}
+    </p>
+    <div class="flex items-center gap-3">
+      <span aria-hidden="true" [class]="x.disc"><status-glyph [state]="x.s.state" size="md" /></span>
+      <div class="flex min-w-0 flex-col gap-0.5">
+        <h2 class="m-0 text-lg leading-tight font-bold text-fg">
+          <span class="text-fg-muted tabular-nums">{{ x.order }}</span> {{ x.s.node.label }}
+        </h2>
+        <span data-field="state" class="text-sm font-bold" [class]="x.d.text">{{ x.d.label }}</span>
+      </div>
+    </div>
+
+    <p class="m-0 text-base text-fg">{{ x.why }}</p>
+
+    <dl class="m-0 grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1.5 text-sm">
+      <dt class="text-fg-muted">Kind</dt>
+      <dd data-field="kind" class="m-0 text-fg">{{ x.kind }}</dd>
+      <dt class="text-fg-muted">Topic</dt>
+      <dd data-field="topic" class="m-0 font-mono text-xs break-all text-fg">
+        {{ x.s.node.topic ?? 'No sensor' }}
+      </dd>
+      @if (x.s.node.topic) {
+        <dt class="text-fg-muted">Board</dt>
+        <dd class="m-0 text-fg">{{ x.s.node.board }}</dd>
+        <dt class="text-fg-muted">Value</dt>
+        <dd data-field="value" class="m-0 text-fg tabular-nums">{{ x.value }}</dd>
+        <dt class="text-fg-muted">Updated</dt>
+        <dd data-field="age" class="m-0 text-fg tabular-nums">{{ x.age }}</dd>
+      }
+    </dl>
+
+    @for (note of x.notes; track note) {
+      <p class="m-0 flex items-start gap-2 text-sm text-fg-label">
+        <ui-icon class="shrink-0" name="info" size="sm" />{{ note }}
+      </p>
+    }
+  } @else {
+    <p class="m-0 flex items-start gap-2 text-sm text-fg-label">
+      <ui-icon class="shrink-0" name="touch_app" size="sm" />
+      Select a node in the loop or on the car to see its reading, age and why it is in its state.
+    </p>
+  }
+</section>
