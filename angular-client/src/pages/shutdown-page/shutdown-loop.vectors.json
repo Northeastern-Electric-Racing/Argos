@@ -1,0 +1,3315 @@
+{
+  "$comment": "Golden vectors for the shutdown loop status: angular-client computeLoopStatus(withDerivedReadings(readings, now), now) and scylla-server compute_loop_status(apply_derived_readings(...)) must both give these codes (NODE_STATE_CODE, in SHUTDOWN_LOOP order) and verdict. Times are ms.",
+  "vectors": [
+    {
+      "name": "closed: every reading live and 1, faults clear",
+      "now": 1000000,
+      "readings": {
+        "VCU/Shutdown/BMS_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/IMD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BSPD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HV_C_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BOTS_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/INERTIA_SW_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/CKPT_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/TSMS_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HVD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/Acc_Sense": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TSIP_Sense": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Minus_Sense": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Plus_Sense": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_OUTGOING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_INCOMING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/BMS_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/LIGHTNING_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/PRECHARGE_FLOATING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        }
+      },
+      "codes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "verdict": "closed"
+    },
+    {
+      "name": "unknown: no readings at all",
+      "now": 1000000,
+      "readings": {},
+      "codes": [
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3
+      ],
+      "verdict": "unknown"
+    },
+    {
+      "name": "open: single culprit at TSMS",
+      "now": 1000000,
+      "readings": {
+        "VCU/Shutdown/BMS_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/IMD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BSPD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HV_C_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BOTS_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/INERTIA_SW_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/CKPT_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/TSMS_GPIO": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HVD_GPIO": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/Acc_Sense": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TSIP_Sense": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Minus_Sense": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Plus_Sense": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_OUTGOING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_INCOMING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/BMS_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/LIGHTNING_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/PRECHARGE_FLOATING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        }
+      },
+      "codes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ],
+      "verdict": "open"
+    },
+    {
+      "name": "open: unmeasured stretch before the BMS latch",
+      "now": 1000000,
+      "readings": {
+        "VCU/Shutdown/BMS_GPIO": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/IMD_GPIO": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BSPD_GPIO": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HV_C_GPIO": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BOTS_GPIO": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/INERTIA_SW_GPIO": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/CKPT_GPIO": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/TSMS_GPIO": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HVD_GPIO": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/Acc_Sense": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TSIP_Sense": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Minus_Sense": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Plus_Sense": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_OUTGOING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_INCOMING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/BMS_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/LIGHTNING_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/PRECHARGE_FLOATING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        }
+      },
+      "codes": [
+        0,
+        1,
+        1,
+        1,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ],
+      "verdict": "open"
+    },
+    {
+      "name": "open: EM interlock placeholder and Acc sense suspect",
+      "now": 1000000,
+      "readings": {
+        "VCU/Shutdown/BMS_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/IMD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BSPD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HV_C_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BOTS_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/INERTIA_SW_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/CKPT_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/TSMS_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HVD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/Acc_Sense": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TSIP_Sense": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Minus_Sense": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Plus_Sense": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_OUTGOING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_INCOMING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/BMS_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/LIGHTNING_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/PRECHARGE_FLOATING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        }
+      },
+      "codes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        2,
+        2,
+        2,
+        2
+      ],
+      "verdict": "open"
+    },
+    {
+      "name": "open: a stale HVD reading is no data inside the suspect stretch",
+      "now": 1000000,
+      "readings": {
+        "VCU/Shutdown/BMS_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/IMD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BSPD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HV_C_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BOTS_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/INERTIA_SW_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/CKPT_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/TSMS_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/Acc_Sense": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TSIP_Sense": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Minus_Sense": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Plus_Sense": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_OUTGOING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_INCOMING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/BMS_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/LIGHTNING_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/PRECHARGE_FLOATING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        }
+      },
+      "codes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        3,
+        1,
+        1,
+        2,
+        2,
+        2,
+        2
+      ],
+      "verdict": "open"
+    },
+    {
+      "name": "open: VCU silent (both frames) blames from the loop start",
+      "now": 1000000,
+      "readings": {
+        "BMS/Shutdown/Acc_Sense": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TSIP_Sense": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Minus_Sense": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Plus_Sense": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        }
+      },
+      "codes": [
+        1,
+        1,
+        1,
+        3,
+        3,
+        3,
+        1,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        1,
+        1,
+        2,
+        2,
+        2,
+        2
+      ],
+      "verdict": "open"
+    },
+    {
+      "name": "mismatch: same board, both values held past the grace window",
+      "now": 1000000,
+      "readings": {
+        "VCU/Shutdown/BMS_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/IMD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BSPD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HV_C_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BOTS_GPIO": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 999000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/INERTIA_SW_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/CKPT_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/TSMS_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 999000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HVD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/Acc_Sense": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TSIP_Sense": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Minus_Sense": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Plus_Sense": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_OUTGOING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_INCOMING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/BMS_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/LIGHTNING_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/PRECHARGE_FLOATING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        }
+      },
+      "codes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        4,
+        4,
+        4,
+        4,
+        2,
+        4,
+        4,
+        4,
+        4,
+        2
+      ],
+      "verdict": "open"
+    },
+    {
+      "name": "no mismatch: break only 499 ms old",
+      "now": 1000000,
+      "readings": {
+        "VCU/Shutdown/BMS_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/IMD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BSPD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HV_C_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BOTS_GPIO": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 999501,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/INERTIA_SW_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/CKPT_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/TSMS_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 999000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HVD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/Acc_Sense": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TSIP_Sense": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Minus_Sense": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Plus_Sense": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_OUTGOING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_INCOMING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/BMS_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/LIGHTNING_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/PRECHARGE_FLOATING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        }
+      },
+      "codes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ],
+      "verdict": "open"
+    },
+    {
+      "name": "no mismatch: downstream reading flipped back to closed 200 ms ago",
+      "now": 1000000,
+      "readings": {
+        "VCU/Shutdown/BMS_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/IMD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BSPD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HV_C_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BOTS_GPIO": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 995000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/INERTIA_SW_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/CKPT_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/TSMS_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 999800,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HVD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/Acc_Sense": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TSIP_Sense": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Minus_Sense": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Plus_Sense": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_OUTGOING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_INCOMING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/BMS_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/LIGHTNING_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/PRECHARGE_FLOATING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        }
+      },
+      "codes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        4,
+        4,
+        2,
+        4,
+        2,
+        4,
+        4,
+        4,
+        4,
+        2
+      ],
+      "verdict": "open"
+    },
+    {
+      "name": "no mismatch: cross-board, BMS has not sampled since the break",
+      "now": 1000000,
+      "readings": {
+        "VCU/Shutdown/BMS_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/IMD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BSPD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HV_C_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BOTS_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/INERTIA_SW_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/CKPT_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/TSMS_GPIO": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 999000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HVD_GPIO": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 999000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/Acc_Sense": {
+          "value": 1,
+          "receivedAt": 998500,
+          "changedAt": 940000,
+          "intervalMs": 2000
+        },
+        "BMS/Shutdown/TSIP_Sense": {
+          "value": 1,
+          "receivedAt": 998500,
+          "changedAt": 940000,
+          "intervalMs": 2000
+        },
+        "BMS/Shutdown/TS_Minus_Sense": {
+          "value": 1,
+          "receivedAt": 998500,
+          "changedAt": 940000,
+          "intervalMs": 2000
+        },
+        "BMS/Shutdown/TS_Plus_Sense": {
+          "value": 1,
+          "receivedAt": 998500,
+          "changedAt": 940000,
+          "intervalMs": 2000
+        },
+        "VCU/Faults/Critical/CAN_OUTGOING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_INCOMING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/BMS_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/LIGHTNING_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/PRECHARGE_FLOATING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        }
+      },
+      "codes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ],
+      "verdict": "open"
+    },
+    {
+      "name": "mismatch: cross-board, a BMS sample after the break still reads closed",
+      "now": 1000000,
+      "readings": {
+        "VCU/Shutdown/BMS_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/IMD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BSPD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HV_C_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BOTS_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/INERTIA_SW_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/CKPT_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/TSMS_GPIO": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 999000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HVD_GPIO": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 999000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/Acc_Sense": {
+          "value": 1,
+          "receivedAt": 999900,
+          "changedAt": 940000,
+          "intervalMs": 2000
+        },
+        "BMS/Shutdown/TSIP_Sense": {
+          "value": 1,
+          "receivedAt": 998500,
+          "changedAt": 940000,
+          "intervalMs": 2000
+        },
+        "BMS/Shutdown/TS_Minus_Sense": {
+          "value": 1,
+          "receivedAt": 998500,
+          "changedAt": 940000,
+          "intervalMs": 2000
+        },
+        "BMS/Shutdown/TS_Plus_Sense": {
+          "value": 1,
+          "receivedAt": 998500,
+          "changedAt": 940000,
+          "intervalMs": 2000
+        },
+        "VCU/Faults/Critical/CAN_OUTGOING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_INCOMING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/BMS_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/LIGHTNING_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/PRECHARGE_FLOATING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        }
+      },
+      "codes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        2,
+        2,
+        4,
+        2,
+        2,
+        2,
+        2
+      ],
+      "verdict": "open"
+    },
+    {
+      "name": "CAN latch: every GPIO 0 for 10 s, faults clear: downstream-open, no mismatch",
+      "now": 1000000,
+      "readings": {
+        "VCU/Shutdown/BMS_GPIO": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/IMD_GPIO": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BSPD_GPIO": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HV_C_GPIO": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BOTS_GPIO": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/INERTIA_SW_GPIO": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/CKPT_GPIO": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/TSMS_GPIO": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HVD_GPIO": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/Acc_Sense": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TSIP_Sense": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Minus_Sense": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Plus_Sense": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_OUTGOING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_INCOMING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/BMS_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/LIGHTNING_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/PRECHARGE_FLOATING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        }
+      },
+      "codes": [
+        0,
+        1,
+        1,
+        1,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ],
+      "verdict": "open"
+    },
+    {
+      "name": "CAN latch: tripped, BSPD 1, GPIOs sampled before the trip: sole suspect, no mismatch",
+      "now": 1000000,
+      "readings": {
+        "VCU/Shutdown/BMS_GPIO": {
+          "value": 1,
+          "receivedAt": 999300,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/IMD_GPIO": {
+          "value": 1,
+          "receivedAt": 999300,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BSPD_GPIO": {
+          "value": 1,
+          "receivedAt": 999300,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HV_C_GPIO": {
+          "value": 1,
+          "receivedAt": 999300,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BOTS_GPIO": {
+          "value": 1,
+          "receivedAt": 999300,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/INERTIA_SW_GPIO": {
+          "value": 1,
+          "receivedAt": 999300,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/CKPT_GPIO": {
+          "value": 1,
+          "receivedAt": 999300,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/TSMS_GPIO": {
+          "value": 1,
+          "receivedAt": 999300,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HVD_GPIO": {
+          "value": 1,
+          "receivedAt": 999300,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/Acc_Sense": {
+          "value": 1,
+          "receivedAt": 999300,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TSIP_Sense": {
+          "value": 1,
+          "receivedAt": 999300,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Minus_Sense": {
+          "value": 1,
+          "receivedAt": 999300,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Plus_Sense": {
+          "value": 1,
+          "receivedAt": 999300,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_OUTGOING_FAULT": {
+          "value": 0,
+          "receivedAt": 999400,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_INCOMING_FAULT": {
+          "value": 1,
+          "receivedAt": 999400,
+          "changedAt": 999400,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/BMS_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 999400,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/LIGHTNING_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 999400,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/PRECHARGE_FLOATING_FAULT": {
+          "value": 0,
+          "receivedAt": 999400,
+          "changedAt": 990000,
+          "intervalMs": 250
+        }
+      },
+      "codes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ],
+      "verdict": "open"
+    },
+    {
+      "name": "CAN latch: tripped, and a GPIO sampled after the trip still reads closed: mismatch",
+      "now": 1000000,
+      "readings": {
+        "VCU/Shutdown/BMS_GPIO": {
+          "value": 1,
+          "receivedAt": 999300,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/IMD_GPIO": {
+          "value": 1,
+          "receivedAt": 999300,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BSPD_GPIO": {
+          "value": 1,
+          "receivedAt": 999300,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HV_C_GPIO": {
+          "value": 1,
+          "receivedAt": 999950,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BOTS_GPIO": {
+          "value": 1,
+          "receivedAt": 999300,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/INERTIA_SW_GPIO": {
+          "value": 1,
+          "receivedAt": 999300,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/CKPT_GPIO": {
+          "value": 1,
+          "receivedAt": 999300,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/TSMS_GPIO": {
+          "value": 1,
+          "receivedAt": 999300,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HVD_GPIO": {
+          "value": 1,
+          "receivedAt": 999300,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/Acc_Sense": {
+          "value": 1,
+          "receivedAt": 999300,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TSIP_Sense": {
+          "value": 1,
+          "receivedAt": 999300,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Minus_Sense": {
+          "value": 1,
+          "receivedAt": 999300,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Plus_Sense": {
+          "value": 1,
+          "receivedAt": 999300,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_OUTGOING_FAULT": {
+          "value": 0,
+          "receivedAt": 999400,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_INCOMING_FAULT": {
+          "value": 1,
+          "receivedAt": 999400,
+          "changedAt": 999400,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/BMS_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 999400,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/LIGHTNING_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 999400,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/PRECHARGE_FLOATING_FAULT": {
+          "value": 0,
+          "receivedAt": 999400,
+          "changedAt": 990000,
+          "intervalMs": 250
+        }
+      },
+      "codes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        4,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ],
+      "verdict": "open"
+    },
+    {
+      "name": "CAN latch: faults clear, MC HVIL reads 0: both suspect",
+      "now": 1000000,
+      "readings": {
+        "VCU/Shutdown/BMS_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/IMD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BSPD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HV_C_GPIO": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BOTS_GPIO": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/INERTIA_SW_GPIO": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/CKPT_GPIO": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/TSMS_GPIO": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HVD_GPIO": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/Acc_Sense": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TSIP_Sense": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Minus_Sense": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Plus_Sense": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_OUTGOING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_INCOMING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/BMS_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/LIGHTNING_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/PRECHARGE_FLOATING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        }
+      },
+      "codes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ],
+      "verdict": "open"
+    },
+    {
+      "name": "CAN latch: faults stale, everything else live and 1: closed",
+      "now": 1000000,
+      "readings": {
+        "VCU/Shutdown/BMS_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/IMD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BSPD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HV_C_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BOTS_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/INERTIA_SW_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/CKPT_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/TSMS_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HVD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/Acc_Sense": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TSIP_Sense": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Minus_Sense": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Plus_Sense": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_OUTGOING_FAULT": {
+          "value": 0,
+          "receivedAt": 939000,
+          "changedAt": 939000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_INCOMING_FAULT": {
+          "value": 0,
+          "receivedAt": 939000,
+          "changedAt": 939000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/BMS_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 939000,
+          "changedAt": 939000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/LIGHTNING_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 939000,
+          "changedAt": 939000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/PRECHARGE_FLOATING_FAULT": {
+          "value": 0,
+          "receivedAt": 939000,
+          "changedAt": 939000,
+          "intervalMs": 250
+        }
+      },
+      "codes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "verdict": "closed"
+    },
+    {
+      "name": "CAN latch: a tripped fault that went stale counts as unknown, not tripped",
+      "now": 1000000,
+      "readings": {
+        "VCU/Shutdown/BMS_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/IMD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BSPD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HV_C_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BOTS_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/INERTIA_SW_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/CKPT_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/TSMS_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HVD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/Acc_Sense": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TSIP_Sense": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Minus_Sense": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Plus_Sense": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_OUTGOING_FAULT": {
+          "value": 1,
+          "receivedAt": 996999,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_INCOMING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/BMS_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/LIGHTNING_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/PRECHARGE_FLOATING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        }
+      },
+      "codes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "verdict": "closed"
+    },
+    {
+      "name": "CAN latch: tripped while the BMS latch is already open: downstream-open, reads 0",
+      "now": 1000000,
+      "readings": {
+        "VCU/Shutdown/BMS_GPIO": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/IMD_GPIO": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BSPD_GPIO": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HV_C_GPIO": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BOTS_GPIO": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/INERTIA_SW_GPIO": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/CKPT_GPIO": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/TSMS_GPIO": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HVD_GPIO": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/Acc_Sense": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TSIP_Sense": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Minus_Sense": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Plus_Sense": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_OUTGOING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_INCOMING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/BMS_CAN_MONITOR_FAULT": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/LIGHTNING_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/PRECHARGE_FLOATING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        }
+      },
+      "codes": [
+        0,
+        1,
+        1,
+        1,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ],
+      "verdict": "open"
+    },
+    {
+      "name": "stale boundary: a 4 Hz reading exactly 3000 ms old is live",
+      "now": 1000000,
+      "readings": {
+        "VCU/Shutdown/BMS_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/IMD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BSPD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HV_C_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BOTS_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/INERTIA_SW_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/CKPT_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/TSMS_GPIO": {
+          "value": 1,
+          "receivedAt": 997000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HVD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/Acc_Sense": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TSIP_Sense": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Minus_Sense": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Plus_Sense": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_OUTGOING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_INCOMING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/BMS_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/LIGHTNING_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/PRECHARGE_FLOATING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        }
+      },
+      "codes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "verdict": "closed"
+    },
+    {
+      "name": "stale boundary: a 4 Hz reading 3001 ms old is no data",
+      "now": 1000000,
+      "readings": {
+        "VCU/Shutdown/BMS_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/IMD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BSPD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HV_C_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BOTS_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/INERTIA_SW_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/CKPT_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/TSMS_GPIO": {
+          "value": 1,
+          "receivedAt": 996999,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HVD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/Acc_Sense": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TSIP_Sense": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Minus_Sense": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Plus_Sense": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_OUTGOING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_INCOMING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/BMS_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/LIGHTNING_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/PRECHARGE_FLOATING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        }
+      },
+      "codes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        3
+      ],
+      "verdict": "unknown"
+    },
+    {
+      "name": "stale boundary: a single message exactly 60000 ms old is live",
+      "now": 1000000,
+      "readings": {
+        "VCU/Shutdown/BMS_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/IMD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BSPD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HV_C_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BOTS_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/INERTIA_SW_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/CKPT_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/TSMS_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HVD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/Acc_Sense": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TSIP_Sense": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Minus_Sense": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Plus_Sense": {
+          "value": 1,
+          "receivedAt": 940000,
+          "changedAt": 940000
+        },
+        "VCU/Faults/Critical/CAN_OUTGOING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_INCOMING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/BMS_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/LIGHTNING_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/PRECHARGE_FLOATING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        }
+      },
+      "codes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "verdict": "closed"
+    },
+    {
+      "name": "stale boundary: a single message 60001 ms old is no data",
+      "now": 1000000,
+      "readings": {
+        "VCU/Shutdown/BMS_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/IMD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BSPD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HV_C_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BOTS_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/INERTIA_SW_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/CKPT_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/TSMS_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HVD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/Acc_Sense": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TSIP_Sense": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Minus_Sense": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Plus_Sense": {
+          "value": 1,
+          "receivedAt": 939999,
+          "changedAt": 939999
+        },
+        "VCU/Faults/Critical/CAN_OUTGOING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_INCOMING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/BMS_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/LIGHTNING_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/PRECHARGE_FLOATING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        }
+      },
+      "codes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        3,
+        3
+      ],
+      "verdict": "unknown"
+    },
+    {
+      "name": "fresh start: a reading back after going stale gets its own grace window",
+      "now": 1000000,
+      "readings": {
+        "VCU/Shutdown/BMS_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/IMD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BSPD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HV_C_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BOTS_GPIO": {
+          "value": 0,
+          "receivedAt": 999800,
+          "changedAt": 999800
+        },
+        "VCU/Shutdown/INERTIA_SW_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/CKPT_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/TSMS_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 999000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HVD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/Acc_Sense": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TSIP_Sense": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Minus_Sense": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Plus_Sense": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_OUTGOING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_INCOMING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/BMS_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/LIGHTNING_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/PRECHARGE_FLOATING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        }
+      },
+      "codes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ],
+      "verdict": "open"
+    },
+    {
+      "name": "unmeasured no data: BMS silent, nothing after the EM interlock proves it closed",
+      "now": 1000000,
+      "readings": {
+        "VCU/Shutdown/BMS_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/IMD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BSPD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HV_C_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BOTS_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/INERTIA_SW_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/CKPT_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/TSMS_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HVD_GPIO": {
+          "value": 1,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_OUTGOING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_INCOMING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/BMS_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/LIGHTNING_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/PRECHARGE_FLOATING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        }
+      },
+      "codes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3
+      ],
+      "verdict": "unknown"
+    },
+    {
+      "name": "non-zero values count as closed",
+      "now": 1000000,
+      "readings": {
+        "VCU/Shutdown/BMS_GPIO": {
+          "value": 2,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/IMD_GPIO": {
+          "value": 2,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BSPD_GPIO": {
+          "value": 2,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HV_C_GPIO": {
+          "value": 2,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/BOTS_GPIO": {
+          "value": 2,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/INERTIA_SW_GPIO": {
+          "value": 2,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/CKPT_GPIO": {
+          "value": 2,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/TSMS_GPIO": {
+          "value": 2,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Shutdown/HVD_GPIO": {
+          "value": 2,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/Acc_Sense": {
+          "value": 2,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TSIP_Sense": {
+          "value": 2,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Minus_Sense": {
+          "value": 2,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "BMS/Shutdown/TS_Plus_Sense": {
+          "value": 2,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_OUTGOING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/CAN_INCOMING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/BMS_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/LIGHTNING_CAN_MONITOR_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        },
+        "VCU/Faults/Critical/PRECHARGE_FLOATING_FAULT": {
+          "value": 0,
+          "receivedAt": 1000000,
+          "changedAt": 990000,
+          "intervalMs": 250
+        }
+      },
+      "codes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "verdict": "closed"
+    }
+  ]
+}

@@ -15,6 +15,7 @@ Data that Argos stores for itself rather than from the car, starting with the ma
 ## Why this shape
 
 - **The car database stays car-only.** Charybdis, the cloud upload and Grafana never see Argos-only data.
+- **Derived telemetry is car data.** Datapoints scylla computes from a Run's car data, such as `Argos/Message` and `Argos/Shutdown/*` (ADR 0009), stay in the car database with the readings they come from. Only data that isn't a function of a Run (tracks, laps, settings) goes here.
 - **It outlasts test-day wipes.** Tracks drawn once are there next test day. Run ids restart after a wipe, so saved laps are told apart by their times.
 - **It deploys onto any test-day setup.** scylla migrates it itself, so a deploy needs no manual SQL.
 - **Telemetry never depends on it.** scylla starts without it and keeps retrying; telemetry, the car database and the cloud upload work as before.
