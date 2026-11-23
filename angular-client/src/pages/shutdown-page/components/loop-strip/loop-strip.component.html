@@ -63,11 +63,15 @@
           [class]="it.s.state === 'downstream-open' || it.s.state === 'no-data' ? 'text-fg-muted' : 'text-fg'"
           >{{ short[it.s.node.id] }}</span
         >
-        <span aria-hidden="true" class="text-xs leading-tight font-bold" [class]="it.stateText">{{ it.stateShort }}</span>
+        <span aria-hidden="true" class="text-xs leading-tight tracking-tight" [class]="it.stateText">{{
+          it.stateShort
+        }}</span>
         @if (it.s.node.placeholder) {
-          <span aria-hidden="true" class="line-clamp-2 text-badge leading-tight text-fg-muted italic">{{
-            placeholderTag
-          }}</span>
+          <span aria-hidden="true" class="flex flex-col text-badge leading-tight text-fg-muted italic">
+            @for (part of placeholderLines; track part) {
+              <span>{{ part }}</span>
+            }
+          </span>
         }
       </li>
     }

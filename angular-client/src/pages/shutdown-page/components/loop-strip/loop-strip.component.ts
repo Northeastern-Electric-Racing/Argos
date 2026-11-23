@@ -88,7 +88,8 @@ export class LoopStripComponent implements LoopView {
   readonly nodePreview = output<string | null>();
 
   protected readonly short = SHORT_LABEL;
-  protected readonly placeholderTag = PLACEHOLDER_TAG;
+  /** PLACEHOLDER_TAG on two lines, so it fits a strip column. */
+  protected readonly placeholderLines = PLACEHOLDER_TAG.split(' — ');
   /** Whether the pointer is over the scroller; set from its pointer events. */
   protected pointerOver = false;
   private userScrolledAt = -Infinity;
@@ -113,7 +114,11 @@ export class LoopStripComponent implements LoopView {
         s,
         z: zones[i],
         disc: cx(s.node.topic ? d.marker.measured : d.marker.unmeasured, s.mismatch ? mismatchRing : ''),
-        stateText: s.mismatch ? tw('text-warn') : d.text,
+        // The cause and suspects in bold; the rest quieter (and smaller where 19 columns share the width at lg).
+        stateText: cx(
+          s.mismatch ? tw('text-warn') : d.text,
+          s.state === 'suspect' || s.mismatch ? tw('font-bold') : tw('font-medium lg:text-badge')
+        ),
         wire: { state: wireState, class: cx(wireBase, w.connector, WIRE_WEIGHT[w.emphasis]) },
         ariaLabel: nodeAriaLabel(s, loop),
         stateShort: shortStateLabel(s, loop)

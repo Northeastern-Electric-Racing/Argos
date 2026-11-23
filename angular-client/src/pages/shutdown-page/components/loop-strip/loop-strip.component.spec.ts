@@ -80,7 +80,8 @@ describe('LoopStripComponent', () => {
   });
 
   it('tags the energy meter placeholder', () => {
-    expect(item('em-interlock').textContent).toContain('placeholder — no reading yet');
+    expect(item('em-interlock').textContent).toContain('placeholder');
+    expect(item('em-interlock').textContent).toContain('no reading yet');
   });
 
   it('labels unmeasured loop nodes and draws them hollow', () => {

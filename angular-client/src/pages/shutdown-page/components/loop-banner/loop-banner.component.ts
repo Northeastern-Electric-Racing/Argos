@@ -43,7 +43,7 @@ const VERDICT: Record<Verdict, { box: string; title: string; icon: string; label
 const boxBase = tw('flex items-start gap-4 rounded-md border-l-8 p-4 max-md:gap-3 max-md:p-3');
 /** The single culprit, inside the verdict line at the verdict's size: underlined, so it reads as the way in. */
 const culpritClass = tw(
-  'cursor-pointer rounded-sm border-0 bg-transparent p-0 px-1 font-black text-inherit underline decoration-2 underline-offset-4 hover:decoration-4 focus-visible:focus-ring'
+  'cursor-pointer rounded-sm border-0 bg-transparent p-0 px-1 text-xl leading-none font-black tracking-wide text-inherit underline decoration-2 underline-offset-4 hover:decoration-4 focus-visible:focus-ring max-md:text-title'
 );
 /**
  * One chip per loop node that could be the cause, in loop order, on the orange fill: the measured break solid,
