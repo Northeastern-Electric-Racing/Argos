@@ -8,8 +8,8 @@
 }
 .stage {
   position: relative;
-  height: min(60vh, 520px);
-  min-height: 280px;
+  /* Shorter on phones, where the car's width sets the zoom and the extra height would sit empty. */
+  height: clamp(280px, 75vw, min(60vh, 520px));
   overflow: hidden;
 }
 canvas {
@@ -33,13 +33,13 @@ canvas {
   pointer-events: none;
 }
 .pending {
-  visibility: hidden;
+  display: none;
 }
-/* Up and right of its marker, so the 3D shape stays visible. */
+/* Placed beside its marker by placeBadges(), so the 3D shape stays visible. */
 .badge {
   position: absolute;
-  top: -28px;
-  left: 4px;
+  top: 0;
+  left: 0;
   width: 24px;
   height: 24px;
   padding: 0;

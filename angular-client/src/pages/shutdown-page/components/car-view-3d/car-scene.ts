@@ -17,7 +17,6 @@ import {
   PerspectiveCamera,
   Quaternion,
   Scene,
-  Sphere,
   SphereGeometry,
   Texture,
   Vector3,
@@ -26,12 +25,12 @@ import {
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { NODE_POSITIONS_3D } from '../../shutdown-loop.positions-3d';
+import { NODE_POSITIONS_3D, Vec3 } from '../../shutdown-loop.positions-3d';
 import { NodeStatus } from '../../shutdown-loop.utils';
 import { CarScene, CarSceneOptions, ScreenPoint } from './car-scene.types';
 import {
   CarSceneError,
-  fitDistance,
+  fitDistanceToPoints,
   loopSegments,
   MarkerShape,
   markerStyle,
@@ -109,7 +108,8 @@ class ThreeCarScene implements CarScene {
   private segments = new Map<string, { mesh: Mesh; material: MeshStandardMaterial }>();
   private shapes: Record<MarkerShape, BufferGeometry>;
   private segmentGeometry = new CylinderGeometry(1, 1, 1, 10, 1);
-  private bounds = new Sphere();
+  /** Model plus markers, in metres: what the camera fits. */
+  private bounds = new Box3();
   private selected: string | null = null;
   private selectionColour: Color;
 
@@ -173,16 +173,13 @@ class ThreeCarScene implements CarScene {
     this.scene.add(sun);
     this.buildMarkers();
 
-    const box = new Box3().setFromObject(model);
-    for (const m of this.markers.values()) box.expandByPoint(m.position);
-    box.getBoundingSphere(this.bounds);
-    const grid = new GridHelper(
-      Math.ceil(this.bounds.radius * 3),
-      Math.ceil(this.bounds.radius * 6),
-      theme.grid,
-      theme.grid
-    );
-    grid.position.set(this.bounds.center.x, 0, this.bounds.center.z);
+    this.bounds.setFromObject(model);
+    for (const m of this.markers.values()) this.bounds.expandByPoint(m.position);
+    const size = this.bounds.getSize(new Vector3());
+    const centre = this.bounds.getCenter(new Vector3());
+    const gridSize = Math.ceil(Math.max(size.x, size.z) * 1.6);
+    const grid = new GridHelper(gridSize, gridSize * 4, theme.grid, theme.grid);
+    grid.position.set(centre.x, 0, centre.z);
     this.scene.add(grid);
 
     this.controls = new OrbitControls(this.camera, options.canvas);
@@ -238,16 +235,28 @@ class ThreeCarScene implements CarScene {
   }
 
   setView(preset: ViewPreset): void {
-    const { center, radius } = this.bounds;
-    const distance = fitDistance(radius, FOV, this.camera.aspect);
-    const dir = new Vector3(...VIEW_DIRECTIONS[preset]).normalize();
-    this.camera.position.copy(center).addScaledVector(dir, distance);
+    const centre = this.bounds.getCenter(new Vector3());
+    // Camera axes for this direction: z towards the camera, x right, y up.
+    const z = new Vector3(...VIEW_DIRECTIONS[preset]).normalize();
+    const x = new Vector3().crossVectors(Y_AXIS, z).normalize();
+    const y = new Vector3().crossVectors(z, x);
+    const { min, max } = this.bounds;
+    const corners: Vec3[] = [];
+    for (const cx of [min.x, max.x])
+      for (const cy of [min.y, max.y])
+        for (const cz of [min.z, max.z]) {
+          const rel = new Vector3(cx, cy, cz).sub(centre);
+          corners.push([rel.dot(x), rel.dot(y), rel.dot(z)]);
+        }
+    const distance = fitDistanceToPoints(corners, FOV, this.camera.aspect);
+    const radius = this.bounds.getSize(new Vector3()).length() / 2;
+    this.camera.position.copy(centre).addScaledVector(z, distance);
     this.camera.near = distance / 100;
-    this.camera.far = distance * 20;
+    this.camera.far = (distance + radius) * 10;
     this.camera.updateProjectionMatrix();
-    this.controls.target.copy(center);
+    this.controls.target.copy(centre);
     this.controls.minDistance = radius * 0.3;
-    this.controls.maxDistance = distance * 4;
+    this.controls.maxDistance = (distance + radius) * 3;
     this.controls.update();
     this.requestRender();
   }

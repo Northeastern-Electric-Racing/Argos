@@ -5,7 +5,7 @@ import {
   CarSceneError,
   FALLBACK_STATE_COLOURS,
   fallbackReasonFor,
-  fitDistance,
+  fitDistanceToPoints,
   isWebGLAvailable,
   loopSegments,
   MARKER_SHAPES,
@@ -13,6 +13,7 @@ import {
   nearestPoint,
   nodeDetail,
   parseNodeAnchorName,
+  placeBadges,
   readViewMode,
   resolveNodePositions,
   resolveStateColours,
@@ -214,16 +215,59 @@ describe('unitScaleFor', () => {
   });
 });
 
-describe('fitDistance', () => {
-  it('backs off far enough for the bounding sphere to fill the narrower field of view', () => {
-    const wide = fitDistance(1, 45, 2, 1);
-    expect(wide).toBeCloseTo(1 / Math.sin((22.5 * Math.PI) / 180), 5);
-    const tall = fitDistance(1, 45, 0.5, 1);
-    expect(tall).toBeGreaterThan(wide);
+describe('fitDistanceToPoints', () => {
+  // 90° vertical field of view: tan(45°) = 1, so a point fits when its offset is at most its depth.
+  it('backs off until every point is inside the view', () => {
+    expect(fitDistanceToPoints([[1, 0, 0]], 90, 1, 1)).toBeCloseTo(1, 6);
+    expect(fitDistanceToPoints([[0, 2, 0]], 90, 1, 1)).toBeCloseTo(2, 6);
+  });
+
+  it('allows for points nearer the camera than the target', () => {
+    expect(fitDistanceToPoints([[1, 0, 0.5]], 90, 1, 1)).toBeCloseTo(1.5, 6);
+    expect(fitDistanceToPoints([[1, 0, -0.5]], 90, 1, 1)).toBeCloseTo(0.5, 6);
+  });
+
+  it('uses the wider horizontal field of view on a wide canvas', () => {
+    expect(fitDistanceToPoints([[2, 0, 0]], 90, 2, 1)).toBeCloseTo(1, 6);
+    expect(fitDistanceToPoints([[0, 2, 0]], 90, 2, 1)).toBeCloseTo(2, 6);
   });
 
   it('adds the margin', () => {
-    expect(fitDistance(1, 45, 1, 1.2)).toBeCloseTo(fitDistance(1, 45, 1, 1) * 1.2, 5);
+    expect(fitDistanceToPoints([[1, 0, 0]], 90, 1, 1.2)).toBeCloseTo(1.2, 6);
+  });
+});
+
+describe('placeBadges', () => {
+  const at = (id: string, x: number, y: number, visible = true) => ({ id, x, y, visible });
+
+  it('puts a badge up and to the right of its marker', () => {
+    expect(placeBadges([at('a', 100, 100)])).toEqual([{ id: 'a', left: 106, top: 70, visible: true }]);
+  });
+
+  it('moves a badge that would cover an earlier one to another side of its marker', () => {
+    const [a, b] = placeBadges([at('a', 100, 100), at('b', 104, 100)]);
+    expect(a).toMatchObject({ left: 106, top: 70 });
+    const overlaps = Math.abs(a.left - b.left) < 24 && Math.abs(a.top - b.top) < 24;
+    expect(overlaps).toBe(false);
+    expect(Math.abs(b.left + 12 - 104)).toBeLessThan(60);
+  });
+
+  it('fans out a tight cluster without overlaps, and still places a badge when every spot is taken', () => {
+    const cluster = Array.from({ length: 8 }, (_, i) => at(`n${i}`, 200 + i, 200));
+    const placed = placeBadges(cluster);
+    for (let i = 0; i < placed.length; i++) {
+      for (let j = i + 1; j < placed.length; j++) {
+        const overlap = Math.abs(placed[i].left - placed[j].left) < 24 && Math.abs(placed[i].top - placed[j].top) < 24;
+        expect(overlap, `${i} vs ${j}`).toBe(false);
+      }
+    }
+    expect(placeBadges(Array.from({ length: 40 }, (_, i) => at(`m${i}`, 0, 0))).every((b) => b.visible)).toBe(true);
+  });
+
+  it('leaves badges for hidden markers hidden and out of the way', () => {
+    const [a, b] = placeBadges([at('a', 100, 100, false), at('b', 100, 100)]);
+    expect(a.visible).toBe(false);
+    expect(b).toMatchObject({ left: 106, top: 70, visible: true });
   });
 });
 

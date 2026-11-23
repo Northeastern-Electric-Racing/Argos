@@ -119,7 +119,7 @@ describe('CarView3dComponent', () => {
         { id: 'tsms', x: 120, y: 80, visible: true },
         { id: 'hvd', x: 0, y: 0, visible: false }
       ]);
-      expect(badge('tsms').style.transform).toBe('translate(120px, 80px)');
+      expect(badge('tsms').style.transform).toBe('translate(126px, 50px)');
       expect(badge('tsms').style.visibility).toBe('visible');
       expect(badge('hvd').style.visibility).toBe('hidden');
     });

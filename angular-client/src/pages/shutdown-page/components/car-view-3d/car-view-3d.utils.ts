@@ -184,11 +184,84 @@ export function unitScaleFor(maxDimension: number): number {
   return 1;
 }
 
-/** Camera distance at which a sphere of `radius` fits the narrower of the vertical and horizontal fields of view. */
-export function fitDistance(radius: number, verticalFovDeg: number, aspect: number, margin = 1.15): number {
-  const vHalf = (verticalFovDeg * Math.PI) / 360;
-  const hHalf = Math.atan(Math.tan(vHalf) * aspect);
-  return (radius / Math.sin(Math.min(vHalf, hHalf))) * margin;
+/**
+ * Camera distance from the target at which every point is in view. Points are relative to the target, in
+ * camera axes: x right, y up, z towards the camera. Fitting the box's corners rather than its bounding
+ * sphere fills a wide canvas properly.
+ */
+export function fitDistanceToPoints(points: readonly Vec3[], verticalFovDeg: number, aspect: number, margin = 1.1): number {
+  const tanV = Math.tan((verticalFovDeg * Math.PI) / 360);
+  const tanH = tanV * aspect;
+  let distance = 0;
+  for (const [x, y, z] of points) {
+    distance = Math.max(distance, z + Math.max((Math.abs(x) * margin) / tanH, (Math.abs(y) * margin) / tanV));
+  }
+  return distance;
+}
+
+/** Node buttons are this many CSS pixels square (the AA minimum target). */
+export const BADGE_SIZE = 24;
+const BADGE_GAP = 2;
+/**
+ * Where a badge's top-left corner may go relative to its marker, in order of preference: up-right first,
+ * then the other corners, then a ring further out.
+ */
+const BADGE_OFFSETS: readonly (readonly [number, number])[] = [
+  [6, -30],
+  [-30, -30],
+  [6, 6],
+  [-30, 6],
+  [6, -56],
+  [-30, -56],
+  [32, -30],
+  [-56, -30],
+  [32, 6],
+  [-56, 6],
+  [6, 32],
+  [-30, 32],
+  [32, -56],
+  [-56, -56],
+  [32, 32],
+  [-56, 32]
+];
+
+export interface BadgePlacement {
+  id: string;
+  left: number;
+  top: number;
+  visible: boolean;
+}
+
+/**
+ * Places each node's button next to its projected marker, in loop order, taking the first spot around the
+ * marker that doesn't cover a button already placed (clustered nodes, like the latches, fan out).
+ */
+export function placeBadges(points: readonly { id: string; x: number; y: number; visible: boolean }[]): BadgePlacement[] {
+  const taken: { left: number; top: number }[] = [];
+  const reach = BADGE_SIZE + BADGE_GAP;
+  // Total overlap (px²) of a badge at (left, top) with those already placed; 0 = clear.
+  const overlap = (left: number, top: number) =>
+    taken.reduce(
+      (sum, t) => sum + Math.max(0, reach - Math.abs(t.left - left)) * Math.max(0, reach - Math.abs(t.top - top)),
+      0
+    );
+  return points.map((p) => {
+    const spots = BADGE_OFFSETS.map(([dx, dy]) => ({ left: Math.round(p.x + dx), top: Math.round(p.y + dy) }));
+    if (!p.visible) return { id: p.id, ...spots[0], visible: false };
+    // The first clear spot, or, in a crowd, the least covered one.
+    let [spot] = spots;
+    let best = Infinity;
+    for (const s of spots) {
+      const o = overlap(s.left, s.top);
+      if (o < best) {
+        best = o;
+        spot = s;
+      }
+      if (o === 0) break;
+    }
+    taken.push(spot);
+    return { id: p.id, ...spot, visible: true };
+  });
 }
 
 /**

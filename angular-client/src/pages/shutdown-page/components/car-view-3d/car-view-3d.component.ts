@@ -26,6 +26,7 @@ import {
   isWebGLAvailable,
   MaterialMode,
   nodeDetail,
+  placeBadges,
   PositionSource,
   resolveStateColours,
   StateColours,
@@ -229,15 +230,15 @@ export class CarView3dComponent {
     this.phase.set('fallback');
   }
 
-  /** Moves each node's button to its marker. Runs outside Angular on every rendered frame. */
+  /** Moves each node's button next to its marker. Runs outside Angular on every rendered frame. */
   private placeBadges(points: ScreenPoint[]): void {
     const stage = this.stage()?.nativeElement;
     if (!stage) return;
-    for (const p of points) {
-      const button = stage.querySelector<HTMLElement>(`button[data-node-id="${p.id}"]`);
+    for (const b of placeBadges(points)) {
+      const button = stage.querySelector<HTMLElement>(`button[data-node-id="${b.id}"]`);
       if (!button) continue;
-      button.style.transform = `translate(${Math.round(p.x)}px, ${Math.round(p.y)}px)`;
-      button.style.visibility = p.visible ? 'visible' : 'hidden';
+      button.style.transform = `translate(${b.left}px, ${b.top}px)`;
+      button.style.visibility = b.visible ? 'visible' : 'hidden';
     }
   }
 
