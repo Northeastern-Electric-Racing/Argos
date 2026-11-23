@@ -1,8 +1,8 @@
 <div class="page">
   <h1 class="title">Shutdown Loop</h1>
   <loop-banner [status]="status()" [tsOn]="tsOn()" />
-  <section class="panel" aria-label="Car side view">
-    <car-view [nodes]="status().nodes" />
+  <section class="panel" aria-label="Car view">
+    <car-view-switch [nodes]="status().nodes" />
   </section>
   <section class="panel" aria-label="Loop in series order">
     <h2 class="section-title">Loop order</h2>

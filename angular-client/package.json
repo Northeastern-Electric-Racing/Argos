@@ -39,6 +39,7 @@
     "rxjs": "~7.8.0",
     "select": "^1.1.2",
     "socket.io-client": "^4.7.2",
+    "three": "0.187.0",
     "tslib": "^2.3.0",
     "uuid": "^14.0.1"
   },
@@ -46,6 +47,7 @@
     "@eslint/js": "^10.0.1",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^22.20.5",
+    "@types/three": "0.187.0",
     "angular-eslint": "22.6.0",
     "eslint": "^10.13.0",
     "eslint-config-prettier": "^10.1.8",

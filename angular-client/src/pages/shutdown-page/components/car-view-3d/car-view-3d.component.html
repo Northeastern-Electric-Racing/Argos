@@ -1,0 +1,85 @@
+<!-- Hidden: each state's class, read for its --sd-color so the 3D colours follow shutdown-states.css -->
+<div #probes class="probes" aria-hidden="true">
+  @for (c of states; track c) {
+    <span [class]="c"></span>
+  }
+</div>
+
+@if (phase() === 'fallback') {
+  <p class="notice" role="status">{{ notice() }}</p>
+  <car-view [nodes]="nodes()" />
+} @else {
+  <div
+    #stage
+    class="stage"
+    role="group"
+    aria-label="3D car view with shutdown nodes"
+    (keydown.escape)="selectedId.set(null)"
+  >
+    <canvas #canvas aria-hidden="true" (pointerdown)="onPointerDown($event)" (click)="onCanvasClick($event)"></canvas>
+    <div class="badges" [class.pending]="phase() !== 'ready'">
+      @for (b of badges(); track b.id) {
+        <button
+          type="button"
+          class="badge"
+          [class]="'badge ' + b.cssClass"
+          [class.unmeasured]="b.unmeasured"
+          [attr.data-node-id]="b.id"
+          [attr.aria-label]="b.ariaLabel"
+          [attr.aria-pressed]="selectedId() === b.id"
+          (click)="select(b.id)"
+        >
+          {{ b.order }}
+        </button>
+      }
+    </div>
+    @if (phase() === 'loading') {
+      <p class="loading" role="status">Loading car model…</p>
+    }
+  </div>
+
+  <div class="toolbar">
+    <div class="seg" role="group" aria-label="Camera view">
+      @for (p of viewPresets; track p.id) {
+        <button type="button" (click)="setView(p.id)">{{ p.label }}</button>
+      }
+    </div>
+    <div class="seg" role="group" aria-label="Model colours">
+      @for (m of materialModes; track m.id) {
+        <button type="button" [attr.aria-pressed]="materialMode() === m.id" (click)="materialMode.set(m.id)">
+          {{ m.label }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="detail" aria-live="polite">
+    @if (selected(); as sel) {
+      <p class="head" [class]="'head ' + sel.cssClass">
+        <status-glyph class="glyph" [state]="sel.status.state" />
+        <strong>{{ sel.order }}. {{ sel.status.node.label }}</strong>
+        <span>{{ sel.detail.stateLabel }}</span>
+        @if (sel.status.mismatch) {
+          <span class="tag">mismatch</span>
+        }
+        @if (sel.status.node.placeholder) {
+          <span class="tag">{{ placeholderTag }}</span>
+        }
+      </p>
+      <dl>
+        <dt>Topic</dt>
+        <dd>{{ sel.detail.topic }}</dd>
+        <dt>Value</dt>
+        <dd>{{ sel.detail.value }}</dd>
+        <dt>Updated</dt>
+        <dd>{{ sel.detail.age }}</dd>
+        <dt>Position</dt>
+        <dd>{{ sel.source }}</dd>
+      </dl>
+    } @else {
+      <p class="hint">
+        Select a node (click it, or tab to its number) to see its reading. Drag to orbit, scroll to zoom, right-drag to pan.
+      </p>
+    }
+  </div>
+}
