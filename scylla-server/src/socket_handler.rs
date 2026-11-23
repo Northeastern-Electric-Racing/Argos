@@ -1,4 +1,4 @@
-use chrono::Utc;
+use chrono::{DateTime, Utc};
 use regex::Regex;
 use ringbuffer::{AllocRingBuffer, RingBuffer};
 use rustc_hash::FxHashMap;
@@ -22,6 +22,7 @@ use crate::metadata_structs::{
     map_dti_flt,
 };
 use crate::rule_structs::{RULE_SOCKET_KEY, RuleManager};
+use crate::shutdown_loop::tracker::parse_fault_topic;
 use crate::{ClientData, SOCKET_DISCARD_PERCENT};
 
 pub async fn socket_handler(
@@ -393,6 +394,16 @@ fn handle_socket_msg(
         return;
     }
 
+    // shutdown loop Faults scylla raises itself: 1 while active, 0 once when cleared
+    if let Some((node, name)) = parse_fault_topic(&data.name) {
+        if data.values.first().is_some_and(|v| *v == 0.0) {
+            clear_fault(fault_ringbuffer, &node, name);
+        } else {
+            register_fault(fault_ringbuffer, node, name, data.timestamp);
+        }
+        return;
+    }
+
     // check to see if this is a fault, and return the fault name and node
     // each bring is the logic to get a node, note the difference in DTI
     let (flt_txt, node) = match fault_regex_bms.captures_iter(&data.name).next() {
@@ -418,37 +429,47 @@ fn handle_socket_msg(
 
     // flt_text is the fault text name
     trace!("Matched on {}, {:?}", flt_txt, node);
+    register_fault(fault_ringbuffer, node, flt_txt, data.timestamp);
+}
 
-    // default to sending a new fault
-    //fault_ringbuffer is basically json of the most recent error
+/// Records an occurrence of fault `name` from `node` at `at`. A fault seen again within
+/// [`FAULT_MIN_REG_GAP`] of when it was last seen only updates its last-seen time; after a longer gap
+/// the old entry is marked expired and a new one starts.
+fn register_fault(
+    fault_ringbuffer: &mut AllocRingBuffer<FaultData>,
+    node: Node,
+    name: &str,
+    at: DateTime<Utc>,
+) {
     let mut should_push = true;
-    // iterate through current faults
     for item in fault_ringbuffer.iter_mut() {
-        // if a fault of the same type is in the queue, and not expired
-
-        if item.name == flt_txt && node.clone() == item.node && !item.expired {
-            // update the last seen metric
+        if item.name == name && node == item.node && !item.expired {
             should_push = false;
-            // if the time since the last fault is greater than [FAULT_MIN_REG_GAP], mark this fault as expired
-
-            if (item.last_seen - data.timestamp) > FAULT_MIN_REG_GAP {
+            if at - item.last_seen > FAULT_MIN_REG_GAP {
                 item.expired = true;
                 should_push = true;
             } else {
-                // otherwise, if the fault isnt expired, ensure we dont create a duplicate fault
-                item.last_seen = data.timestamp;
+                item.last_seen = item.last_seen.max(at);
             }
         }
     }
-    // send a new fault if no message matches and is not expired
     if should_push {
         fault_ringbuffer.enqueue(FaultData {
             node,
-            name: flt_txt.to_string(),
-            occured_at: data.timestamp,
-            last_seen: data.timestamp,
+            name: name.to_string(),
+            occured_at: at,
+            last_seen: at,
             expired: false,
         });
+    }
+}
+
+/// Marks fault `name` from `node` expired, for a source that says when a fault clears
+fn clear_fault(fault_ringbuffer: &mut AllocRingBuffer<FaultData>, node: &Node, name: &str) {
+    for item in fault_ringbuffer.iter_mut() {
+        if item.name == name && *node == item.node {
+            item.expired = true;
+        }
     }
 }
 
@@ -493,5 +514,80 @@ async fn send_socket_msg<T>(
         }
     } else {
         trace!("Discarding message!");
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use chrono::TimeDelta;
+
+    use super::*;
+
+    fn at(secs: i64) -> DateTime<Utc> {
+        DateTime::from_timestamp(1_700_000_000 + secs, 0).unwrap()
+    }
+
+    #[test]
+    fn repeated_fault_updates_last_seen() {
+        let mut rb = AllocRingBuffer::<FaultData>::new(10);
+        register_fault(&mut rb, Node::Bms, "Pack_too_hot", at(0));
+        register_fault(&mut rb, Node::Bms, "Pack_too_hot", at(5));
+        let faults = rb.to_vec();
+        assert_eq!(faults.len(), 1);
+        assert_eq!(faults[0].occured_at, at(0));
+        assert_eq!(faults[0].last_seen, at(5));
+        assert!(!faults[0].expired);
+    }
+
+    // Bug: the gap was computed as last_seen - now (negative), so a fault that came back after a
+    // long gap never started a new entry and the old one never expired
+    #[test]
+    fn fault_after_a_long_gap_expires_the_old_entry_and_starts_a_new_one() {
+        let mut rb = AllocRingBuffer::<FaultData>::new(10);
+        register_fault(&mut rb, Node::Bms, "Pack_too_hot", at(0));
+        let later = at(0) + FAULT_MIN_REG_GAP + TimeDelta::seconds(1);
+        register_fault(&mut rb, Node::Bms, "Pack_too_hot", later);
+        let faults = rb.to_vec();
+        assert_eq!(faults.len(), 2);
+        assert!(faults[0].expired);
+        assert_eq!(faults[0].last_seen, at(0));
+        assert_eq!(faults[1].occured_at, later);
+        assert!(!faults[1].expired);
+    }
+
+    #[test]
+    fn shutdown_fault_topics_raise_and_clear() {
+        let mut rb = AllocRingBuffer::<FaultData>::new(10);
+        let mut timers = FxHashMap::default();
+        let bms = Regex::new(r"BMS\/Faults\/(.*)").unwrap();
+        let charger = Regex::new(r"Charger\/Box\/F_(.*)").unwrap();
+        let mpu = Regex::new(r"MPU\/Fault\/Critical\/(.*)").unwrap();
+        let msg = |value: f32, secs: i64| ClientData {
+            run_id: 1,
+            name: "Argos/Shutdown/Fault/Vcu/Shutdown_Open_TSMS".into(),
+            unit: String::new(),
+            values: vec![value],
+            timestamp: at(secs),
+        };
+        for (value, secs) in [(1.0, 0), (1.0, 1), (0.0, 2)] {
+            handle_socket_msg(
+                &msg(value, secs),
+                &mpu,
+                &bms,
+                &charger,
+                &mut timers,
+                &mut rb,
+            );
+        }
+        let faults = rb.to_vec();
+        assert_eq!(faults.len(), 1);
+        assert_eq!(faults[0].node, Node::Vcu);
+        assert_eq!(faults[0].name, "Shutdown_Open_TSMS");
+        assert_eq!(faults[0].occured_at, at(0));
+        assert_eq!(faults[0].last_seen, at(1));
+        assert!(faults[0].expired);
+        // the loop opens there again: a new occurrence, even within the gap
+        handle_socket_msg(&msg(1.0, 3), &mpu, &bms, &charger, &mut timers, &mut rb);
+        assert_eq!(rb.to_vec().len(), 2);
     }
 }

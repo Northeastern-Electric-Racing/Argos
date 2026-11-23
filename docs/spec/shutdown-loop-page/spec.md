@@ -1,6 +1,8 @@
 # Shutdown Loop page — design
 
-Status: draft for review · 2026-11-18
+Status: draft for review · 2026-11-18 · amended 2026-11-23 (CAN latch, adaptive staleness, scylla-server status: ADR 0009)
+
+*Terminology:* "node" on this page means a **loop node** (an element of the series loop, `LoopNode` in code), not a glossary **Node** (a CAN device). Faults are attributed to glossary Nodes (`Vcu`, `Bms`).
 
 ## Intent
 
@@ -17,8 +19,8 @@ This page answers one question, live, trackside: **which node broke the loop?** 
 
 ## Non-goals
 
-- No historical replay / scrubbing through recorded runs. Live only.
-- No backend (scylla-server) or Zenoh/schema changes. Frontend only.
+- No historical replay / scrubbing through recorded runs on this page. Live only. (scylla-server records the loop status with each Run, so history is available to the graph page, Grafana and Rules; a replay view here is future work.)
+- No Zenoh, schema or database migration changes. *(Amended:)* scylla-server now computes the same loop status and publishes it as datapoints and Faults (see Data and ADR 0009); the page still works without it.
 - No commands (cannot close/reset anything from this page).
 - No faithful CAD-level car art.
 
@@ -37,22 +39,36 @@ All values are booleans: **1 = closed (24 V present, energy can flow), 0 = open*
 | VCU (CAN 0x123, "Shutdown Pins") | `VCU/Shutdown/BMS_GPIO`, `IMD_GPIO`, `BSPD_GPIO`, `HV_C_GPIO`, `BOTS_GPIO`, `INERTIA_SW_GPIO`, `CKPT_GPIO`, `TSMS_GPIO`, `HVD_GPIO` | `HV_C` = MC HVIL interlock; `CKPT` = cockpit BRB |
 | BMS (CAN 0x95, "Shutdown as read by BMS") | `BMS/Shutdown/Acc_Sense`, `TSIP_Sense`, `TS_Minus_Sense`, `TS_Plus_Sense` | |
 | BMS | `BMS/Shutdown/State` | 0 = TS ON, 1 = TS OFF (note: inverted vs. the sense bits). Shown as a header summary, not part of the walk. |
+| VCU (CAN 0x502, "Faults") | `VCU/Faults/Critical/CAN_OUTGOING_FAULT`, `CAN_INCOMING_FAULT`, `BMS_CAN_MONITOR_FAULT`, `LIGHTNING_CAN_MONITOR_FAULT`, `PRECHARGE_FLOATING_FAULT` | 0 = clear. Not a loop voltage: the **CAN latch** reading is derived from them (see Status algorithm). |
 
-Topic definitions: `Odyssey-Definitions/can-messages/vcu.json` and `bms.json`. Values arrive via `Storage.get(topic)` (`DataValue { values: string[]; time; unit }`), same as the efuses page.
+Topic definitions: `Odyssey-Definitions/can-messages/vcu.json` and `bms.json`.
+
+**Published by scylla-server** (ADR 0009), from the topics above, on every change and every second. Stored with the current Run like car data, so they have history and can carry Rules. Node indexes follow the loop order below.
+
+| Topic | Values |
+|---|---|
+| `Argos/Shutdown/Verdict` | 1 = closed, 0 = open, -1 = unknown |
+| `Argos/Shutdown/BreakNode` | index of *F* (first live measurement point reading 0), -1 if none |
+| `Argos/Shutdown/NodeStates` | one code per loop node: 0 closed, 1 suspect, 2 downstream-open, 3 no data, 4 downstream-open with mismatch |
+| `Argos/Shutdown/Mismatch` | 1 while any mismatch is flagged |
+| `Argos/Shutdown/CAN_Latch` | derived CAN latch, 1 closed / 0 open; not sent while unknown |
+| `Argos/Shutdown/Fault/{Vcu\|Bms}/{name}` | 1 every second while a Fault is active, 0 once when it clears |
+
+Faults (glossary sense, shown on the Faults page): `Shutdown_Open_<NODE>` on the board whose reading found the break, `Shutdown_Mismatch_<NODE>` on the board of the contradicting reading, and `CAN_Latch_<FAULT>` on `Vcu` for each tripped critical fault. Values arrive via `Storage.get(topic)` (`DataValue { values: string[]; time; unit }`), same as the efuses page.
 
 ## Loop model
 
-Ordered list of nodes (source of truth lives in one TS constant). Nodes without a reading are listed so they appear on the car and in the strip.
+Ordered list of nodes (source of truth lives in one TS constant, `SHUTDOWN_LOOP`; scylla-server mirrors it in `shutdown_loop/model.rs` and a `cargo test` asserts the two match). Nodes without a reading are listed so they appear on the car and in the strip.
 
 | # | Node | Reading | Kind |
 |---|---|---|---|
 | 1 | GLV master switch | — | switch |
-| 2 | VCU feeds the loop | — | source |
-| 3 | Side BRB R | — | kill button |
-| 4 | Side BRB L | — | kill button |
-| 5 | BMS latch | `BMS_GPIO` | latch |
-| 6 | IMD latch | `IMD_GPIO` | latch |
-| 7 | BSPD latch | `BSPD_GPIO` | latch |
+| 2 | Side BRB R | — | kill button |
+| 3 | Side BRB L | — | kill button |
+| 4 | BMS latch | `BMS_GPIO` | latch |
+| 5 | IMD latch | `IMD_GPIO` | latch |
+| 6 | BSPD latch | `BSPD_GPIO` | latch |
+| 7 | CAN latch | derived from the VCU critical faults | latch |
 | 8 | MC HVIL interlock | `HV_C_GPIO` | interlock |
 | 9 | BOTS | `BOTS_GPIO` | switch |
 | 10 | Inertia switch | `INERTIA_SW_GPIO` | switch |
@@ -66,7 +82,9 @@ Ordered list of nodes (source of truth lives in one TS constant). Nodes without 
 | 18 | TS+ sense | `TS_Plus_Sense` | sense |
 | 19 | AIRs | — | load |
 
-Order of rows 1–14 follows the netmap shutdown diagram; latch order BMS → IMD → BSPD (rows 5–7) and sense order Acc → TSIP → TS− → TS+ (rows 15–18) confirmed by the user. The four BMS sense points sit after the EM interlock.
+Order of rows 1–14 follows the netmap shutdown diagram; latch order BMS → IMD → BSPD (rows 4–6) and sense order Acc → TSIP → TS− → TS+ (rows 15–18) confirmed by the user. The four BMS sense points sit after the EM interlock.
+
+*(Amended 2026-11-23:)* the draft's row 2, "VCU feeds the loop" (kind *source*, no reading), was replaced in the build by the **CAN latch** after the BSPD latch: the VCU's place in the loop is the latch it opens on a critical CAN fault, which, unlike "VCU feeds", can be read (from CAN 0x502). The spec now follows the code; the latch's position after BSPD is the builder's and should be checked against the netmap diagram. The VCU powering the loop is still used as evidence: while any VCU reading is live, the GLV master switch is known closed.
 
 **Energy meter placeholder:** no reading yet, so it behaves like any other unmeasured node. It shows closed when the loop is closed past it, downstream-open when the break is upstream of it, and **suspect** when it falls inside the suspect stretch (e.g. `HVD_GPIO` = 1, `Acc_Sense` = 0 ⇒ suspects: EM interlock, Acc sense) — user's choice, since it is the unmeasured part in that gap. It carries a small "placeholder — no reading yet" tag.
 
@@ -81,13 +99,15 @@ Pure function `computeLoopStatus(readings) → NodeStatus[]`, no Angular depende
    - Nodes after *P* up to and including *F*: **suspect** (the root-cause stretch). If *F* is the first node after *P*, it's a single culprit; otherwise the whole stretch is suspect, e.g. `BMS_GPIO` = 0 ⇒ Side BRB R, Side BRB L, BMS latch are suspects.
    - Nodes after *F*: **downstream-open** (muted, explicitly "not the cause").
    - Unmeasured nodes before the break: closed (inferred). AIRs: energized iff no break.
+   - **CAN latch reading** (derived, not published by the car): 0 while any **live** critical VCU fault is tripped; 1 only while all five are live and 0; no data otherwise. A stale fault counts as unknown, never as tripped (the draft build kept every fault value forever).
 4. If no reading is 0: everything closed, AIRs energized.
-5. **Contradiction:** a measurement point after *F* reading 1 is flagged **mismatch** (sensor/wiring inconsistency), shown on that node and as a header warning. The banner verdict stays "LOOP OPEN" (decided by *F*). *(Builder's call:)* a mismatch is only flagged after it persists past a short grace window (~0.5 s), because VCU and BMS sample independently and will briefly disagree across the board boundary.
-6. **Staleness:** a reading whose last update is older than a timeout, or that has never arrived since page load, is **no data** (grey), and is skipped as a measurement point (it neither closes nor opens the stretch; the suspect stretch widens over it). Timeout is per source board, since VCU and BMS publish independently. Both messages are sent periodically (exact rate unknown); timeout is **~60 s** with no message from that board (user's choice).
+5. **Contradiction:** a measurement point after *F* reading 1 is flagged **mismatch** (sensor/wiring inconsistency), shown on that node and as a header warning. The banner verdict stays "LOOP OPEN" (decided by *F*). *(Builder's call:)* a mismatch is only flagged after both values have held for a short grace window (0.5 s). *(Amended:)* a reading from the other board must also have been **received at least the grace window after the break appeared**: VCU and BMS sample independently, so until the other board sends a fresh sample its last one may predate the break (with a BMS slower than 2 Hz the draft flashed a mismatch on every break).
+6. **Staleness:** a reading whose last update is older than its timeout, or that has never arrived since page load, is **no data** (grey), and is skipped as a measurement point (it neither closes nor opens the stretch; the suspect stretch widens over it). *(Amended:)* the timeout is **per reading** (so per CAN frame), not per board: a message on one frame, the derived CAN latch or `BMS/Shutdown/State` no longer keeps another frame's readings live. It **adapts to the observed rate**: 5 × the smoothed message interval, clamped to **3–60 s**; until a second message arrives it is 60 s (the user's original value, now the cap). A message after a reading went stale starts it afresh (no change time or rate carried across the gap), so a reconnect gets its own grace window and a publisher that slowed down is relearnt instead of flapping stale.
 7. **Banner verdict** *(builder's call)*, three states:
    - **LOOP OPEN** — a live reading is 0. Names the suspect(s).
    - **LOOP CLOSED · AIRs on** — every measurement point is live and reads 1.
    - **UNKNOWN** — no live 0, but one or more measurement points have no data (includes page load before first message). Names which board(s) are silent. Never show "closed" off stale data.
+8. **Server status** *(amended)*: while scylla-server's `Argos/Shutdown/NodeStates` is fresh (received within 3 s) and has one valid code per loop node, the page shows its node states (scylla sees every message; a client may have some discarded) with local values and ages; otherwise it computes locally. The chosen source is on `LoopStatus.source`.
 
 ## Page layout
 
@@ -100,7 +120,7 @@ Pure function `computeLoopStatus(readings) → NodeStatus[]`, no Angular depende
 │      │  node→node in order; green / red / muted / grey   │       │
 │      └───────────────────────────────────────────────────┘       │
 │                                                                  │
-│ GLVMS ─ VCU ─ BRB R ─ BRB L ─ BMS ─ IMD ─ BSPD ─ MC ─ BOTS ─ ... │  ← loop strip
+│ GLVMS ─ BRB R ─ BRB L ─ BMS ─ IMD ─ BSPD ─ CAN ─ MC ─ BOTS ─ ... │  ← loop strip
 │   ●      ●      ●       ●      ●     ●     ●     ●    ●          │
 └──────────────────────────────────────────────────────────────────┘
 ```

@@ -37,6 +37,8 @@ pub enum Node {
     Dti,
     Mpu,
     Charger,
+    /// The VCU, for shutdown loop Faults it reads (ADR 0009)
+    Vcu,
 }
 
 #[derive(Serialize, Clone)]

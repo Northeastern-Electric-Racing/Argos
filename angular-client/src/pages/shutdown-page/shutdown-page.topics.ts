@@ -37,3 +37,22 @@ export const SHUTDOWN_TOPICS = {
     State: 'BMS/Shutdown/State'
   }
 } as const;
+
+/**
+ * Loop status worked out by scylla-server from the topics above (ADR 0009). Stored like any other
+ * datapoint, so they have history and can carry Rules. Node indexes follow SHUTDOWN_LOOP order.
+ */
+export const SHUTDOWN_SERVER_TOPICS = {
+  /** 1 = loop closed, 0 = open, -1 = unknown. */
+  Verdict: 'Argos/Shutdown/Verdict',
+  /** Index of the first live measurement point reading open, or -1 when there is no break. */
+  BreakNode: 'Argos/Shutdown/BreakNode',
+  /** One NODE_STATE_CODE per loop node. */
+  NodeStates: 'Argos/Shutdown/NodeStates',
+  /** 1 while any downstream reading contradicts the break. */
+  Mismatch: 'Argos/Shutdown/Mismatch',
+  /** The CAN latch derived from VCU_CRITICAL_FAULT_TOPICS: 1 = closed, 0 = open; absent while unknown. */
+  CanLatch: 'Argos/Shutdown/CAN_Latch',
+  /** Prefix of the Fault topics `Argos/Shutdown/Fault/{Vcu|Bms}/{name}`: 1 while active, 0 once cleared. */
+  FaultPrefix: 'Argos/Shutdown/Fault/'
+} as const;
