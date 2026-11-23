@@ -16,9 +16,10 @@ export const VIEW_PRESETS: readonly { id: ViewPreset; label: string }[] = [
 
 /** Camera position and orbit target per preset, in car metres (see CarPoint3d). */
 export const CAMERA_PRESETS: Record<ViewPreset, { position: CarPoint3d; target: CarPoint3d }> = {
-  iso: { position: { x: -1.2, y: 1.9, z: 2.9 }, target: { x: 1.0, y: 0.38, z: 0 } },
-  side: { position: { x: 1.0, y: 0.55, z: 4.1 }, target: { x: 1.0, y: 0.45, z: 0 } },
-  top: { position: { x: 1.0, y: 4.4, z: 0.001 }, target: { x: 1.0, y: 0.3, z: 0 } }
+  // From behind the left rear wheel, where most of the loop (main hoop, E-box, accumulator) sits.
+  iso: { position: { x: 3.0, y: 1.5, z: 2.1 }, target: { x: 1.2, y: 0.4, z: 0 } },
+  side: { position: { x: 1.1, y: 0.5, z: 3.3 }, target: { x: 1.1, y: 0.45, z: 0 } },
+  top: { position: { x: 1.1, y: 3.4, z: 0.001 }, target: { x: 1.1, y: 0.3, z: 0 } }
 };
 
 export type MarkerShape = 'sphere' | 'octahedron' | 'cone' | 'cube';

@@ -5,8 +5,7 @@
   position: relative;
 }
 .stage {
-  height: min(60vh, 520px);
-  min-height: 280px;
+  height: clamp(280px, 56vw, min(60vh, 560px));
 }
 .canvas {
   display: block;
@@ -121,6 +120,13 @@ dd {
 .node[aria-pressed='true'] {
   background: var(--sd-color);
   color: var(--color-on-status);
+}
+@media (max-width: 600px) {
+  .info-slot {
+    position: static;
+    max-width: none;
+    margin-top: 8px;
+  }
 }
 .probes {
   display: none;

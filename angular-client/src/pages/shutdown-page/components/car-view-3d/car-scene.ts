@@ -45,14 +45,18 @@ import {
 } from './car-view-3d.model';
 
 const MAX_PIXEL_RATIO = 2;
-const MARKER_R = 0.026;
+const MARKER_R = 0.03;
 const WIRE_R = 0.009;
-const DASH = 0.04;
-const DASH_GAP = 0.03;
-const LABEL_SIZE = 0.07;
-const LABEL_LIFT = 0.065;
+const DASH = 0.05;
+const DASH_GAP = 0.035;
+const LABEL_SIZE = 0.08;
+const LABEL_LIFT = 0.075;
 const PULSE_PERIOD_MS = 1200;
 const TWEEN_MS = 450;
+const BASE_FOV = 35;
+const MAX_FOV = 60;
+/** Canvas aspect (w / h) at and above which the base field of view frames the car. */
+const WIDE_ASPECT = 1.6;
 /** Pointer travel (px) under which a press counts as a click, not an orbit drag. */
 const CLICK_SLOP = 5;
 const UP = new Vector3(0, 1, 0);
@@ -73,7 +77,7 @@ export function createCarScene(options: CarSceneOptions): CarScene {
   renderer.setClearColor(0x000000, 0);
 
   const scene = new Scene();
-  const camera = new PerspectiveCamera(35, 1, 0.05, 50);
+  const camera = new PerspectiveCamera(BASE_FOV, 1, 0.05, 50);
   const controls = new OrbitControls(camera, canvas);
   controls.enableDamping = !reducedMotion;
   controls.dampingFactor = 0.12;
@@ -91,6 +95,9 @@ export function createCarScene(options: CarSceneOptions): CarScene {
   scene.add(car.group);
   const grid = new GridHelper(4.4, 22, new Color(colors.grid), new Color(colors.grid));
   grid.position.set(1.0, 0, 0);
+  const gridMat = grid.material as Material;
+  gridMat.transparent = true;
+  gridMat.opacity = 0.45;
   scene.add(grid);
 
   // Shared geometry and materials, so a state change only swaps meshes and never re-uploads to the GPU.
@@ -127,7 +134,7 @@ export function createCarScene(options: CarSceneOptions): CarScene {
   const ringMap = ringTexture(colors.focus);
   const ring = new Sprite(new SpriteMaterial({ map: ringMap, depthTest: false, transparent: true }));
   ring.scale.setScalar(MARKER_R * 6);
-  ring.renderOrder = 11;
+  ring.renderOrder = 9;
   ring.visible = false;
   scene.add(ring);
 
@@ -251,6 +258,8 @@ export function createCarScene(options: CarSceneOptions): CarScene {
     const h = Math.max(1, container.clientHeight);
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
+    // Keep the car in frame on narrow (phone) canvases by widening the vertical field of view.
+    camera.fov = Math.min(BASE_FOV * Math.max(1, WIDE_ASPECT / camera.aspect), MAX_FOV);
     camera.updateProjectionMatrix();
     requestRender();
   };
@@ -299,7 +308,7 @@ export function createCarScene(options: CarSceneOptions): CarScene {
     loop.clear();
     car.dispose();
     grid.geometry.dispose();
-    (grid.material as Material).dispose();
+    gridMat.dispose();
     [unitTube, pickGeo, ...Object.values(markerGeo)].forEach((g) => g.dispose());
     [
       pickMat,
