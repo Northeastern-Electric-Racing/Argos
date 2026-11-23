@@ -1,6 +1,7 @@
 //! Where the shutdown loop is broken. A port of the angular-client's `shutdown-loop.utils.ts`
-//! (`computeLoopStatus` and helpers): keep the two in step. Times are milliseconds since the epoch,
-//! taken when scylla received each message (never the car's clock).
+//! (`computeLoopStatus` and helpers): keep the two in step; `shutdown-loop.vectors.json` runs in both
+//! test suites. Times are milliseconds on scylla's monotonic clock, taken when it received each
+//! message (never the car's clock).
 
 use rustc_hash::FxHashMap;
 
@@ -130,8 +131,8 @@ pub struct NodeStatus {
 }
 
 impl NodeStatus {
-    /// Code published per node on `Argos/Shutdown/NodeStates`; keep in step with `NODE_STATE_CODE`
-    /// in the angular-client's `shutdown-loop.server.ts`
+    /// Code published per node on `Argos/Shutdown/Node_States`; keep in step with `NODE_STATE_CODE`
+    /// in the angular-client's `shutdown-loop.scylla.ts`
     #[must_use]
     pub const fn code(self) -> f32 {
         match (self.state, self.mismatch) {
@@ -176,17 +177,26 @@ pub struct LoopStatus {
 /// Works out where the series shutdown loop is broken. Each reading is the loop voltage just after
 /// its node, so the first live reading of 0 marks the break; every node between the previous live
 /// reading and that one is a suspect, and everything after it is open only because of the break.
+/// An `open_only` node (the CAN latch) is a measurement point only while its live reading is 0;
+/// otherwise it is treated exactly like an unmeasured node.
 #[must_use]
 pub fn compute_loop_status(nodes: &[LoopNode], readings: &Readings, now: i64) -> LoopStatus {
+    // the live measurement points, by node index
     let live: Vec<Option<&Reading>> = nodes
         .iter()
-        .map(|n| n.topic.and_then(|t| live(readings, t, now)))
+        .map(|n| {
+            n.topic
+                .and_then(|t| live(readings, t, now))
+                .filter(|r| !n.open_only || r.value == 0.0)
+        })
         .collect();
+    // measured by a reading of the loop voltage, not merely able to show an opening
+    let measured = |n: &LoopNode| n.topic.is_some() && !n.open_only;
     let board_live = |board: Board| {
         nodes
             .iter()
             .zip(&live)
-            .any(|(n, r)| n.board == Some(board) && r.is_some())
+            .any(|(n, r)| n.board == Some(board) && measured(n) && r.is_some())
     };
 
     let break_idx = live.iter().position(|r| r.is_some_and(|r| r.value == 0.0));
@@ -201,20 +211,21 @@ pub fn compute_loop_status(nodes: &[LoopNode], readings: &Readings, now: i64) ->
     let all_live = nodes
         .iter()
         .zip(&live)
-        .all(|(n, r)| n.topic.is_none() || r.is_some());
+        .all(|(n, r)| !measured(n) || r.is_some());
     let last_live = live.iter().rposition(Option::is_some);
     let break_reading = break_idx.and_then(|b| live[b]);
-    let break_board = break_idx.and_then(|b| nodes[b].board);
+    let break_node = break_idx.map(|b| &nodes[b]);
 
     let statuses: Vec<NodeStatus> = nodes
         .iter()
         .enumerate()
         .map(|(i, node)| {
             let closed_up_to = last_closed.is_some_and(|p| i <= p);
+            let unmeasured = live[i].is_none() && !measured(node);
             // measured but not live, or unmeasured with no live reading after it to prove it closed
-            let no_data = (node.topic.is_some() && live[i].is_none())
+            let no_data = (measured(node) && live[i].is_none())
                 || (break_reading.is_none()
-                    && node.topic.is_none()
+                    && unmeasured
                     && !all_live
                     && last_live.is_none_or(|l| i > l));
             let state = if no_data {
@@ -226,19 +237,23 @@ pub fn compute_loop_status(nodes: &[LoopNode], readings: &Readings, now: i64) ->
             } else {
                 NodeState::DownstreamOpen
             };
+            // the derived CAN latch is its own source: sampled apart from the GPIOs on its board
+            let same_source = break_node
+                .is_some_and(|b| b.board == node.board && !b.open_only && !node.open_only);
             let mismatch = state == NodeState::DownstreamOpen
                 && match (live[i], break_reading) {
-                    (Some(r), Some(b)) => is_mismatch(r, b, node.board == break_board, now),
+                    (Some(r), Some(b)) => is_mismatch(r, b, same_source, now),
                     _ => false,
                 };
             NodeStatus { state, mismatch }
         })
         .collect();
 
+    // a silent board has a measured loop node in no data; the CAN latch never makes one
     let silent = nodes
         .iter()
         .zip(&statuses)
-        .any(|(n, s)| n.board.is_some() && s.state == NodeState::NoData);
+        .any(|(n, s)| n.board.is_some() && !n.open_only && s.state == NodeState::NoData);
     let suspects: Vec<usize> = (0..statuses.len())
         .filter(|&i| statuses[i].state == NodeState::Suspect)
         .collect();
@@ -259,13 +274,14 @@ pub fn compute_loop_status(nodes: &[LoopNode], readings: &Readings, now: i64) ->
 }
 
 /// A downstream reading of closed contradicts the break once both values have held for the grace
-/// window; one from another board must also have arrived the grace window after the break appeared,
-/// since until that board samples again its last sample may predate the break
-fn is_mismatch(reading: &Reading, brk: &Reading, same_board: bool, now: i64) -> bool {
+/// window; one from another source (another board, or the CAN latch's own frame) must also have
+/// arrived the grace window after the break appeared, since until that source samples again its
+/// last sample may predate the break
+fn is_mismatch(reading: &Reading, brk: &Reading, same_source: bool, now: i64) -> bool {
     if reading.value == 0.0 {
         return false;
     }
-    let sampled_after = same_board || reading.received_at - brk.changed_at >= MISMATCH_GRACE_MS;
+    let sampled_after = same_source || reading.received_at - brk.changed_at >= MISMATCH_GRACE_MS;
     sampled_after && now - brk.changed_at.max(reading.changed_at) >= MISMATCH_GRACE_MS
 }
 
@@ -277,8 +293,11 @@ mod tests {
 
     const NOW: i64 = 1_000_000;
 
+    /// Loop nodes with a topic the car publishes (the CAN latch is derived from the critical faults)
     fn measured() -> impl Iterator<Item = &'static LoopNode> {
-        SHUTDOWN_LOOP.iter().filter(|n| n.topic.is_some())
+        SHUTDOWN_LOOP
+            .iter()
+            .filter(|n| n.topic.is_some() && !n.open_only)
     }
     fn topics_of(board: Board) -> Vec<&'static str> {
         measured()
@@ -294,16 +313,25 @@ mod tests {
             interval_ms: None,
         }
     }
+    fn set_faults(readings: &mut Readings, r: Reading) {
+        for t in VCU_CRITICAL_FAULT_TOPICS {
+            readings.insert(t.to_string(), r);
+        }
+    }
+    /// Every published sense topic 1 and every critical fault clear, all received at `NOW`
     fn all_closed() -> Readings {
-        measured()
+        let mut r: Readings = measured()
             .map(|n| {
                 (
                     n.topic.unwrap().to_string(),
                     reading(1.0, NOW, NOW - 10_000),
                 )
             })
-            .collect()
+            .collect();
+        set_faults(&mut r, reading(0.0, NOW, NOW - 10_000));
+        r
     }
+    /// Sets `topic` and every published sense topic after it in loop order to 0
     fn open_from(readings: &mut Readings, topic: &str) {
         let topics: Vec<_> = measured().filter_map(|n| n.topic).collect();
         let start = topics.iter().position(|t| *t == topic).unwrap();
@@ -311,13 +339,22 @@ mod tests {
             readings.insert((*t).to_string(), reading(0.0, NOW, NOW - 10_000));
         }
     }
+    /// Removes every reading from `board` (for the VCU, both frames)
     fn silence(readings: &mut Readings, board: Board) {
         for t in topics_of(board) {
             readings.remove(t);
         }
+        if board == Board::Vcu {
+            for t in VCU_CRITICAL_FAULT_TOPICS {
+                readings.remove(t);
+            }
+        }
     }
+    /// The status scylla computes: the CAN latch is derived from the fault readings first
     fn run(readings: &Readings) -> LoopStatus {
-        compute_loop_status(SHUTDOWN_LOOP, readings, NOW)
+        let mut r = readings.clone();
+        apply_derived_readings(&mut r, NOW);
+        compute_loop_status(SHUTDOWN_LOOP, &r, NOW)
     }
     fn idx(id: &str) -> usize {
         SHUTDOWN_LOOP.iter().position(|n| n.id == id).unwrap()
@@ -402,12 +439,14 @@ mod tests {
         let mut r = all_closed();
         open_from(&mut r, "BMS/Shutdown/Acc_Sense");
         silence(&mut r, Board::Vcu);
+        // With no reading at all, the CAN latch is an unmeasured node inside the stretch
         assert_eq!(
             suspect_ids(&run(&r)),
             [
                 "glvms",
                 "side-brb-r",
                 "side-brb-l",
+                "can-latch",
                 "em-interlock",
                 "acc-sense"
             ]
@@ -473,11 +512,138 @@ mod tests {
         for t in topics_of(Board::Vcu) {
             r.insert(t.into(), reading(1.0, NOW - 61_000, NOW - 70_000));
         }
-        r.insert(CAN_LATCH_TOPIC.into(), reading(1.0, NOW, NOW));
         let s = run(&r);
         assert_eq!(state(&s, "tsms"), NodeState::NoData);
         assert_eq!(state(&s, "can-latch"), NodeState::Closed);
         assert_eq!(s.verdict, Verdict::Unknown);
+    }
+
+    // Bug: a routine BRB press or latch trip flagged the CAN latch as a mismatch, because its "all
+    // faults clear" reading of 1 was taken for loop voltage after a break
+    #[test]
+    fn can_latch_is_downstream_open_never_a_mismatch_when_the_loop_breaks_upstream() {
+        let mut r = all_closed();
+        open_from(&mut r, "VCU/Shutdown/BMS_GPIO");
+        let s = run(&r);
+        assert_eq!(state(&s, "can-latch"), NodeState::DownstreamOpen);
+        assert!(!s.nodes[idx("can-latch")].mismatch);
+        assert!(!s.mismatch);
+        assert_eq!(s.verdict, Verdict::Open);
+        assert_eq!(suspect_ids(&s), ["side-brb-r", "side-brb-l", "bms-latch"]);
+    }
+
+    // Bug: the derived latch and the GPIOs are both VCU, so a GPIO sample taken before the trip was
+    // flagged as contradicting it, though 0x502 and 0x123 are sampled independently
+    #[test]
+    fn can_latch_trip_needs_a_later_gpio_sample_for_a_mismatch() {
+        let mut r = all_closed();
+        let fast = |r: Reading| Reading {
+            interval_ms: Some(250.0),
+            ..r
+        };
+        for t in measured().filter_map(|n| n.topic) {
+            r.insert(t.into(), fast(reading(1.0, NOW - 700, NOW - 10_000)));
+        }
+        set_faults(&mut r, fast(reading(0.0, NOW - 600, NOW - 10_000)));
+        r.insert(
+            VCU_CRITICAL_FAULT_TOPICS[1].into(),
+            fast(reading(1.0, NOW - 600, NOW - 600)),
+        );
+        let s = run(&r);
+        assert_eq!(suspect_ids(&s), ["can-latch"]);
+        assert!(!s.mismatch);
+        r.insert(
+            "VCU/Shutdown/HV_C_GPIO".into(),
+            fast(reading(1.0, NOW - 50, NOW - 10_000)),
+        );
+        assert!(run(&r).nodes[idx("mc-hvil")].mismatch);
+    }
+
+    // Bug: with its faults clear the latch read as a closed measurement point, so a break at MC HVIL
+    // blamed MC HVIL alone, though a latch that stayed latched would read the same
+    #[test]
+    fn can_latch_is_a_suspect_with_the_next_measured_node_when_its_faults_are_clear() {
+        let mut r = all_closed();
+        open_from(&mut r, "VCU/Shutdown/HV_C_GPIO");
+        assert_eq!(suspect_ids(&run(&r)), ["can-latch", "mc-hvil"]);
+    }
+
+    #[test]
+    fn stale_can_latch_faults_do_not_make_the_verdict_unknown() {
+        let mut r = all_closed();
+        set_faults(&mut r, reading(0.0, NOW - 61_000, NOW - 70_000));
+        let s = run(&r);
+        assert_eq!(s.verdict, Verdict::Closed);
+        assert_eq!(state(&s, "can-latch"), NodeState::Closed);
+    }
+
+    #[test]
+    fn can_latch_is_not_evidence_that_the_glv_master_switch_is_closed() {
+        let mut r = all_closed();
+        for t in topics_of(Board::Vcu) {
+            r.remove(t);
+        }
+        open_from(&mut r, "BMS/Shutdown/Acc_Sense");
+        assert_eq!(
+            suspect_ids(&run(&r)),
+            [
+                "glvms",
+                "side-brb-r",
+                "side-brb-l",
+                "can-latch",
+                "em-interlock",
+                "acc-sense"
+            ]
+        );
+    }
+
+    /// `shutdown-loop.vectors.json` in the angular-client, which its unit tests run too: the two
+    /// copies of the algorithm must give the same codes and verdict for every vector
+    #[test]
+    fn matches_the_angular_client_golden_vectors() {
+        let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../angular-client/src/pages/shutdown-page/shutdown-loop.vectors.json");
+        let src = std::fs::read_to_string(&path)
+            .unwrap_or_else(|e| panic!("{} must exist: {e}", path.display()));
+        let golden: serde_json::Value = serde_json::from_str(&src).expect("vectors are JSON");
+        let vectors = golden["vectors"].as_array().expect("a vectors array");
+        assert!(vectors.len() >= 20);
+        for v in vectors {
+            let name = v["name"].as_str().unwrap();
+            let now = v["now"].as_i64().unwrap();
+            let mut readings: Readings = v["readings"]
+                .as_object()
+                .unwrap()
+                .iter()
+                .map(|(topic, r)| {
+                    (
+                        topic.clone(),
+                        Reading {
+                            value: r["value"].as_f64().unwrap() as f32,
+                            received_at: r["receivedAt"].as_i64().unwrap(),
+                            changed_at: r["changedAt"].as_i64().unwrap(),
+                            interval_ms: r.get("intervalMs").and_then(serde_json::Value::as_f64),
+                        },
+                    )
+                })
+                .collect();
+            apply_derived_readings(&mut readings, now);
+            let status = compute_loop_status(SHUTDOWN_LOOP, &readings, now);
+            let codes: Vec<f64> = status.nodes.iter().map(|n| f64::from(n.code())).collect();
+            let expected: Vec<f64> = v["codes"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|c| c.as_f64().unwrap())
+                .collect();
+            assert_eq!(codes, expected, "{name}");
+            let verdict = match status.verdict {
+                Verdict::Open => "open",
+                Verdict::Closed => "closed",
+                Verdict::Unknown => "unknown",
+            };
+            assert_eq!(verdict, v["verdict"].as_str().unwrap(), "{name}");
+        }
     }
 
     #[test]

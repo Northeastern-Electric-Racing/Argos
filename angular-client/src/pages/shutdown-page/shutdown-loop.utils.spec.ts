@@ -1,4 +1,6 @@
 import { Board, SHUTDOWN_LOOP } from './shutdown-loop.model';
+import { NODE_STATE_CODE } from './shutdown-loop.scylla';
+import GOLDEN from './shutdown-loop.vectors.json';
 import { SHUTDOWN_TOPICS, VCU_CRITICAL_FAULT_TOPICS } from './shutdown-page.topics';
 import {
   computeLoopStatus,
@@ -16,22 +18,36 @@ import {
 
 const NOW = 1_000_000;
 const { VCU, BMS } = SHUTDOWN_TOPICS;
-const MEASURED = SHUTDOWN_LOOP.filter((n) => n.topic);
+/** Loop nodes with a topic the car publishes (the CAN latch is derived from the critical faults). */
+const MEASURED = SHUTDOWN_LOOP.filter((n) => n.topic && !n.openOnly);
 const MEASURED_TOPICS = MEASURED.map((n) => n.topic!);
 const topicsOf = (board: Board): string[] => MEASURED.filter((n) => n.board === board).map((n) => n.topic!);
 
-/** Readings with every measured topic = 1, all received at NOW. */
-const allClosed = (): Map<string, Reading> =>
-  new Map(MEASURED_TOPICS.map((t) => [t, { value: 1, receivedAt: NOW, changedAt: NOW - 10_000 }]));
+/** Sets every critical VCU fault to `value` (0 = clear). */
+const setFaults = (readings: Map<string, Reading>, value: number, reading: Partial<Reading> = {}): void => {
+  for (const t of VCU_CRITICAL_FAULT_TOPICS) {
+    readings.set(t, { value, receivedAt: NOW, changedAt: NOW - 10_000, ...reading });
+  }
+};
 
-/** Sets `topic` and every measured topic after it in loop order to 0. */
+/** Readings with every published sense topic = 1 and every critical fault clear, all received at NOW. */
+const allClosed = (): Map<string, Reading> => {
+  const readings = new Map(MEASURED_TOPICS.map((t) => [t, { value: 1, receivedAt: NOW, changedAt: NOW - 10_000 }]));
+  setFaults(readings, 0);
+  return readings;
+};
+
+/** Sets `topic` and every published sense topic after it in loop order to 0. */
 const openFrom = (readings: Map<string, Reading>, topic: string): void => {
   const start = MEASURED_TOPICS.indexOf(topic);
   for (const t of MEASURED_TOPICS.slice(start)) readings.set(t, { value: 0, receivedAt: NOW, changedAt: NOW - 10_000 });
 };
 
-/** Removes every reading published by `board`, as if it had never been heard from. */
-const silence = (readings: Map<string, Reading>, board: Board): void => topicsOf(board).forEach((t) => readings.delete(t));
+/** Removes every reading published by `board` (for the VCU, both frames), as if it had never been heard from. */
+const silence = (readings: Map<string, Reading>, board: Board): void => {
+  topicsOf(board).forEach((t) => readings.delete(t));
+  if (board === 'VCU') VCU_CRITICAL_FAULT_TOPICS.forEach((t) => readings.delete(t));
+};
 
 /** Moves every reading from `board` back in time by `ms`. */
 const age = (readings: Map<string, Reading>, board: Board, ms: number): void => {
@@ -41,11 +57,14 @@ const age = (readings: Map<string, Reading>, board: Board, ms: number): void => 
   }
 };
 
-const run = (readings: Map<string, Reading>, now = NOW): LoopStatus => computeLoopStatus(SHUTDOWN_LOOP, readings, now);
+/** The status the page computes: the CAN latch is derived from the fault readings first. */
+const run = (readings: Map<string, Reading>, now = NOW): LoopStatus =>
+  computeLoopStatus(SHUTDOWN_LOOP, withDerivedReadings(readings, now), now);
 
-const stateOf = (status: LoopStatus, id: string): NodeState => status.nodes.find((n) => n.node.id === id)!.state;
+const nodeOf = (status: LoopStatus, id: string) => status.nodes.find((n) => n.node.id === id)!;
+const stateOf = (status: LoopStatus, id: string): NodeState => nodeOf(status, id).state;
 const suspectIds = (status: LoopStatus): string[] => status.suspects.map((n) => n.id);
-const mismatchOf = (status: LoopStatus, id: string): boolean => status.nodes.find((n) => n.node.id === id)!.mismatch;
+const mismatchOf = (status: LoopStatus, id: string): boolean => nodeOf(status, id).mismatch;
 
 describe('computeLoopStatus', () => {
   it('closed when all live and 1', () => {
@@ -148,7 +167,8 @@ describe('computeLoopStatus', () => {
     openFrom(readings, BMS.Acc);
     silence(readings, 'VCU');
     const status = run(readings);
-    expect(suspectIds(status)).toEqual(['glvms', 'side-brb-r', 'side-brb-l', 'em-interlock', 'acc-sense']);
+    // With no reading at all, the CAN latch is an unmeasured node inside the stretch.
+    expect(suspectIds(status)).toEqual(['glvms', 'side-brb-r', 'side-brb-l', 'can-latch', 'em-interlock', 'acc-sense']);
     expect(status.noDataInStretch.map((n) => n.id)).toContain('tsms');
   });
 
@@ -240,11 +260,87 @@ describe('computeLoopStatus', () => {
   it('judges each reading by its own age, not by the last message from its board', () => {
     const readings = allClosed();
     age(readings, 'VCU', 61_000);
-    readings.set(VCU.CAN_LATCH, { value: 1, receivedAt: NOW, changedAt: NOW });
     const status = run(readings);
     expect(stateOf(status, 'tsms')).toBe('no-data');
+    expect(nodeOf(status, 'can-latch').value).toBe(1);
     expect(stateOf(status, 'can-latch')).toBe('closed');
     expect(status.verdict).toBe('unknown');
+  });
+
+  it('reports how long each reading stays live', () => {
+    const readings = allClosed();
+    readings.set(VCU.TSMS, { value: 1, receivedAt: NOW, changedAt: NOW, intervalMs: 250 });
+    const status = run(readings);
+    expect(nodeOf(status, 'tsms').staleAfterMs).toBe(3000);
+    expect(nodeOf(status, 'hvd').staleAfterMs).toBe(60_000);
+    expect(nodeOf(status, 'can-latch').staleAfterMs).toBe(60_000);
+    expect(nodeOf(status, 'glvms').staleAfterMs).toBeUndefined();
+  });
+});
+
+// The 0x502 faults say whether a fault is tripped, not whether there is loop voltage after the latch
+// (it can stay latched after its fault clears), so the derived CAN latch only ever shows an opening.
+describe('computeLoopStatus: the CAN latch shows only an opening', () => {
+  // Bug: a routine BRB press or latch trip flagged the CAN latch as a mismatch, because its "all
+  // faults clear" reading of 1 was taken for loop voltage after a break.
+  it('is downstream-open, never a mismatch, when the loop breaks upstream of it', () => {
+    const readings = allClosed();
+    openFrom(readings, VCU.BMS);
+    const status = run(readings);
+    expect(stateOf(status, 'can-latch')).toBe('downstream-open');
+    expect(mismatchOf(status, 'can-latch')).toBe(false);
+    expect(status.mismatch).toBe(false);
+    expect(status.verdict).toBe('open');
+    expect(suspectIds(status)).toEqual(['side-brb-r', 'side-brb-l', 'bms-latch']);
+  });
+
+  // Bug: the derived latch and the GPIOs are both VCU, so a GPIO sample taken before the trip was
+  // flagged as contradicting it, though 0x502 and 0x123 are sampled independently.
+  it('needs a GPIO sample taken after a trip before flagging a mismatch', () => {
+    const readings = allClosed();
+    for (const t of MEASURED_TOPICS) {
+      readings.set(t, { value: 1, receivedAt: NOW - 700, changedAt: NOW - 10_000, intervalMs: 250 });
+    }
+    setFaults(readings, 0, { receivedAt: NOW - 600, intervalMs: 250 });
+    readings.set(VCU_CRITICAL_FAULT_TOPICS[1], { value: 1, receivedAt: NOW - 600, changedAt: NOW - 600, intervalMs: 250 });
+    const status = run(readings);
+    expect(suspectIds(status)).toEqual(['can-latch']);
+    expect(status.mismatch).toBe(false);
+    // A 0x123 frame received well after the trip that still reads closed is a real contradiction.
+    readings.set(VCU.HV_C, { value: 1, receivedAt: NOW - 50, changedAt: NOW - 10_000, intervalMs: 250 });
+    expect(mismatchOf(run(readings), 'mc-hvil')).toBe(true);
+  });
+
+  // Bug: with its faults clear the latch read as a closed measurement point, so a break at MC HVIL
+  // blamed MC HVIL alone, though a latch that stayed latched would read the same.
+  it('is a suspect with the next measured node when its faults are clear', () => {
+    const readings = allClosed();
+    openFrom(readings, VCU.HV_C);
+    expect(suspectIds(run(readings))).toEqual(['can-latch', 'mc-hvil']);
+  });
+
+  it('does not make the verdict unknown or the VCU silent when its faults are stale', () => {
+    const readings = allClosed();
+    setFaults(readings, 0, { receivedAt: NOW - 61_000 });
+    const status = run(readings);
+    expect(status.verdict).toBe('closed');
+    expect(status.silentBoards).toEqual([]);
+    expect(stateOf(status, 'can-latch')).toBe('closed');
+  });
+
+  it('is not evidence that the GLV master switch is closed', () => {
+    const readings = allClosed();
+    // 0x123 is silent, 0x502 still reports every fault clear.
+    topicsOf('VCU').forEach((t) => readings.delete(t));
+    openFrom(readings, BMS.Acc);
+    expect(suspectIds(run(readings))).toEqual([
+      'glvms',
+      'side-brb-r',
+      'side-brb-l',
+      'can-latch',
+      'em-interlock',
+      'acc-sense'
+    ]);
   });
 });
 
@@ -349,4 +445,26 @@ describe('deriveCanLatch', () => {
     expect(readings.has(VCU.CAN_LATCH)).toBe(false);
     expect(withDerivedReadings(new Map(), NOW).has(VCU.CAN_LATCH)).toBe(false);
   });
+});
+
+// The same vectors run in scylla-server's `cargo test` (shutdown_loop/status.rs), so the two copies
+// of the algorithm can't drift apart.
+describe('golden vectors shared with scylla-server', () => {
+  const code = (s: { state: NodeState; mismatch: boolean }): number =>
+    s.mismatch ? NODE_STATE_CODE.mismatch : NODE_STATE_CODE[s.state];
+
+  it('has at least 20 vectors covering every code and verdict', () => {
+    expect(GOLDEN.vectors.length).toBeGreaterThanOrEqual(20);
+    expect(new Set(GOLDEN.vectors.flatMap((v) => v.codes))).toEqual(new Set(Object.values(NODE_STATE_CODE)));
+    expect(new Set(GOLDEN.vectors.map((v) => v.verdict))).toEqual(new Set(['open', 'closed', 'unknown']));
+  });
+
+  for (const v of GOLDEN.vectors) {
+    it(v.name, () => {
+      const readings = new Map<string, Reading>(Object.entries(v.readings as Record<string, Reading>));
+      const status = computeLoopStatus(SHUTDOWN_LOOP, withDerivedReadings(readings, v.now), v.now);
+      expect(status.nodes.map(code)).toEqual(v.codes);
+      expect(status.verdict).toBe(v.verdict);
+    });
+  }
 });

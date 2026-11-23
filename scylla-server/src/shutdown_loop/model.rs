@@ -39,10 +39,15 @@ pub struct LoopNode {
     pub topic: Option<&'static str>,
     /// Board publishing `topic`; present iff `topic` is
     pub board: Option<Board>,
+    /// The reading can only show this node open (the CAN latch: its faults say whether one is
+    /// tripped, not whether there is loop voltage after it). It is a measurement point only while
+    /// it reads 0; otherwise the node is treated as unmeasured. `openOnly` in the angular-client.
+    pub open_only: bool,
 }
 
-/// Not published by the car: derived from [`VCU_CRITICAL_FAULT_TOPICS`] (1 = all clear, 0 = any tripped)
-pub const CAN_LATCH_TOPIC: &str = "VCU/Faults/Critical";
+/// Key of the CAN latch reading derived from [`VCU_CRITICAL_FAULT_TOPICS`] (1 = all clear, 0 = any
+/// tripped); not published by the car. It is the topic scylla publishes the derived reading on.
+pub const CAN_LATCH_TOPIC: &str = "Argos/Shutdown/CAN_Latch";
 
 /// Critical VCU faults (CAN 0x502): 0 when clear, non-zero when tripped. Any tripped one opens the CAN latch.
 pub const VCU_CRITICAL_FAULT_TOPICS: [&str; 5] = [
@@ -58,6 +63,7 @@ const fn unmeasured(id: &'static str) -> LoopNode {
         id,
         topic: None,
         board: None,
+        open_only: false,
     }
 }
 
@@ -66,6 +72,15 @@ const fn measured(id: &'static str, topic: &'static str, board: Board) -> LoopNo
         id,
         topic: Some(topic),
         board: Some(board),
+        open_only: false,
+    }
+}
+
+/// A node whose reading can only show it open (see [`LoopNode::open_only`])
+const fn open_only(id: &'static str, topic: &'static str, board: Board) -> LoopNode {
+    LoopNode {
+        open_only: true,
+        ..measured(id, topic, board)
     }
 }
 
@@ -77,7 +92,7 @@ pub const SHUTDOWN_LOOP: &[LoopNode] = &[
     measured("bms-latch", "VCU/Shutdown/BMS_GPIO", Board::Vcu),
     measured("imd-latch", "VCU/Shutdown/IMD_GPIO", Board::Vcu),
     measured("bspd-latch", "VCU/Shutdown/BSPD_GPIO", Board::Vcu),
-    measured("can-latch", CAN_LATCH_TOPIC, Board::Vcu),
+    open_only("can-latch", CAN_LATCH_TOPIC, Board::Vcu),
     measured("mc-hvil", "VCU/Shutdown/HV_C_GPIO", Board::Vcu),
     measured("bots", "VCU/Shutdown/BOTS_GPIO", Board::Vcu),
     measured("inertia", "VCU/Shutdown/INERTIA_SW_GPIO", Board::Vcu),
@@ -139,6 +154,7 @@ mod tests {
         let id = Regex::new(r"id: '([^']+)'").unwrap();
         let topic = Regex::new(r"topic: (VCU|BMS)\.(\w+)").unwrap();
         let board = Regex::new(r"board: '(VCU|BMS)'").unwrap();
+        let open_only = Regex::new(r"openOnly: true").unwrap();
 
         let starts: Vec<_> = id.captures_iter(loop_src).collect();
         let mut client = Vec::new();
@@ -155,12 +171,19 @@ mod tests {
                 "VCU" => Board::Vcu,
                 _ => Board::Bms,
             });
-            client.push((c[1].to_string(), t, b));
+            client.push((c[1].to_string(), t, b, open_only.is_match(entry)));
         }
 
         let server: Vec<_> = SHUTDOWN_LOOP
             .iter()
-            .map(|n| (n.id.to_string(), n.topic.map(str::to_string), n.board))
+            .map(|n| {
+                (
+                    n.id.to_string(),
+                    n.topic.map(str::to_string),
+                    n.board,
+                    n.open_only,
+                )
+            })
             .collect();
         assert_eq!(
             server, client,

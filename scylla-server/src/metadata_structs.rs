@@ -53,7 +53,8 @@ pub struct FaultData {
     /// when the fault was last seen
     #[serde(with = "ts_milliseconds")]
     pub last_seen: DateTime<Utc>,
-    /// whether another fault of the same node and name as occured after this fault
+    /// whether the fault has stopped: another occurrence of it came after a long gap, or its source
+    /// reported it cleared (the shutdown loop Faults, ADR 0009)
     pub expired: bool,
 }
 pub const FAULT_SOCKET_KEY: &str = "faults";

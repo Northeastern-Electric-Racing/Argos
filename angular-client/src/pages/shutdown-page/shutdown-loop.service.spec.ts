@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import Storage from 'src/services/storage.service';
 import { SHUTDOWN_LOOP } from './shutdown-loop.model';
-import { NODE_STATE_CODE } from './shutdown-loop.server';
+import { NODE_STATE_CODE } from './shutdown-loop.scylla';
 import { ShutdownLoopService } from './shutdown-loop.service';
 import { SHUTDOWN_SERVER_TOPICS, SHUTDOWN_TOPICS, VCU_CRITICAL_FAULT_TOPICS } from './shutdown-page.topics';
 
@@ -122,25 +122,31 @@ describe('ShutdownLoopService', () => {
     expect(service.status().verdict).toBe('closed');
   });
 
-  it('CAN latch has no data until a critical fault arrives', () => {
+  // The faults only ever show the latch open, so without them it is inferred like an unmeasured node.
+  it('CAN latch is inferred closed before any critical fault arrives', () => {
     MEASURED_TOPICS.forEach((t) => push(t, ['1']));
-    expect(canLatch().state).toBe('no-data');
+    expect(canLatch().value).toBeUndefined();
+    expect(canLatch().state).toBe('closed');
+    expect(service.status().verdict).toBe('closed');
   });
 
   it('CAN latch does not stay tripped once its faults go stale', () => {
     pushAll('1');
     push(VCU_CRITICAL_FAULT_TOPICS[0], ['1']);
+    expect(service.status().suspects.map((n) => n.id)).toEqual(['can-latch']);
     // 0x123 keeps arriving, 0x502 (the faults) stops.
     keepSending(61_000, () => MEASURED_TOPICS.forEach((t) => push(t, ['1'])));
-    expect(canLatch().state).toBe('no-data');
-    expect(service.status().verdict).toBe('unknown');
+    expect(canLatch().value).toBeUndefined();
+    expect(service.status().suspects).toEqual([]);
+    expect(service.status().verdict).toBe('closed');
   });
 
   it('messages on one VCU frame do not keep the other frame live', () => {
     pushAll('1');
     keepSending(61_000, faultsClear);
     expect(node('tsms').state).toBe('no-data');
-    expect(canLatch().state).toBe('closed');
+    expect(canLatch().value).toBe(1);
+    expect(service.status().verdict).toBe('unknown');
   });
 
   it('BMS/Shutdown/State does not keep the BMS sense readings live', () => {
@@ -172,6 +178,30 @@ describe('ShutdownLoopService', () => {
     keepSending(3_500, () => pushAll('1'));
     expect(service.status().source).toBe('local');
     expect(service.status().verdict).toBe('closed');
+  });
+
+  // Bug: with the backend up, scylla's status of the Calypso sim replaced the mock panel's scenario.
+  it('uses its own status while preferServer is off, as when the mock panel publishes', () => {
+    pushAll('1');
+    const codes = SHUTDOWN_LOOP.map((n) => (n.id === 'tsms' ? NODE_STATE_CODE.suspect : NODE_STATE_CODE.closed));
+    push(SHUTDOWN_SERVER_TOPICS.NodeStates, codes.map(String));
+    expect(service.status().source).toBe('server');
+    service.preferServer.set(false);
+    expect(service.status().source).toBe('local');
+    expect(service.status().verdict).toBe('closed');
+    service.preferServer.set(true);
+    expect(service.status().source).toBe('server');
+  });
+
+  // Bug: staleness was measured on the wall clock, so an NTP step kept stale readings live or
+  // blanked live ones.
+  it('measures staleness on a monotonic clock, not the wall clock', () => {
+    pushAll('1');
+    vi.setSystemTime(Date.now() + 3_600_000);
+    expect(service.status().verdict).toBe('closed');
+    vi.setSystemTime(Date.now() - 7_200_000);
+    vi.advanceTimersByTime(61_000);
+    expect(service.status().verdict).toBe('unknown');
   });
 
   it('unsubscribes on destroy', () => {

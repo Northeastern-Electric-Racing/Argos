@@ -12,6 +12,12 @@ export interface LoopNode {
   topic?: string;
   /** Board that publishes `topic`; present iff `topic` is. */
   board?: Board;
+  /**
+   * The reading can only show this node open (the CAN latch: its faults say whether one is tripped,
+   * not whether there is loop voltage after it). It is a measurement point only while it reads 0;
+   * otherwise the node is treated as unmeasured.
+   */
+  openOnly?: true;
   /** True only for nodes with no reading yet that stand in for real hardware. */
   placeholder?: boolean;
   /** Position on the car side-view drawing, as % of its width / height (0–100). */
@@ -20,7 +26,11 @@ export interface LoopNode {
 
 const { VCU, BMS } = SHUTDOWN_TOPICS;
 
-/** The shutdown loop in series order, from GLV source to the AIR coils. */
+/**
+ * The shutdown loop in series order, from GLV source to the AIR coils.
+ * Parsed by scylla-server's `matches_the_angular_client_loop` test: keep one `id:` per entry and
+ * topics as `VCU.X`/`BMS.X`.
+ */
 export const SHUTDOWN_LOOP: readonly LoopNode[] = [
   { id: 'glvms', label: 'GLV master switch', kind: 'switch', car: { x: 71.2, y: 38.7 } },
   { id: 'side-brb-r', label: 'Side BRB R', kind: 'kill', car: { x: 67.8, y: 26.5 } },
@@ -28,7 +38,15 @@ export const SHUTDOWN_LOOP: readonly LoopNode[] = [
   { id: 'bms-latch', label: 'BMS latch', kind: 'latch', topic: VCU.BMS, board: 'VCU', car: { x: 58.7, y: 48.3 } },
   { id: 'imd-latch', label: 'IMD latch', kind: 'latch', topic: VCU.IMD, board: 'VCU', car: { x: 61.6, y: 48.3 } },
   { id: 'bspd-latch', label: 'BSPD latch', kind: 'latch', topic: VCU.BSPD, board: 'VCU', car: { x: 64.4, y: 48.8 } },
-  { id: 'can-latch', label: 'CAN latch', kind: 'latch', topic: VCU.CAN_LATCH, board: 'VCU', car: { x: 67.2, y: 48.8 } },
+  {
+    id: 'can-latch',
+    label: 'CAN latch',
+    kind: 'latch',
+    topic: VCU.CAN_LATCH,
+    board: 'VCU',
+    openOnly: true,
+    car: { x: 67.2, y: 48.8 }
+  },
   { id: 'mc-hvil', label: 'MC HVIL interlock', kind: 'interlock', topic: VCU.HV_C, board: 'VCU', car: { x: 80.3, y: 74.3 } },
   { id: 'bots', label: 'BOTS', kind: 'switch', topic: VCU.BOTS, board: 'VCU', car: { x: 7.4, y: 82.3 } },
   { id: 'inertia', label: 'Inertia switch', kind: 'switch', topic: VCU.INERTIA_SW, board: 'VCU', car: { x: 31.5, y: 43.5 } },

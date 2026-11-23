@@ -34,6 +34,10 @@ jobs:
             scylla:
               - "scylla-server/**"
               - ".github/workflows/scylla-ci.yml"
+              # read by the shutdown loop parity tests in scylla-server/src/shutdown_loop
+              - "angular-client/src/pages/shutdown-page/shutdown-loop.model.ts"
+              - "angular-client/src/pages/shutdown-page/shutdown-page.topics.ts"
+              - "angular-client/src/pages/shutdown-page/shutdown-loop.vectors.json"
 
   build:
     needs: changes
