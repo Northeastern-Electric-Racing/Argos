@@ -1,8 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, ElementRef, input, output, viewChildren } from '@angular/core';
 import { tw } from 'src/ui/recipes/tw';
-import { NODE_STATE_DISPLAY, nodeAriaLabel } from '../../shutdown-loop.display';
-import { rovingIndex } from '../../shutdown-selection.store';
+import { loopOf, NODE_STATE_DISPLAY, nodeAriaLabel, stateLabel } from '../../shutdown-loop.display';
 import { NodeState, NodeStatus } from '../../shutdown-loop.utils';
+import { LoopView } from '../../loop-view/loop-view';
+import { rovingIndex } from '../../loop-view/roving-index';
 import { StatusGlyphComponent } from '../status-glyph/status-glyph.component';
 
 interface Marker {
@@ -39,8 +40,8 @@ const CALLOUT_ALIGN = {
  * Side view of the car frame with each shutdown node where it sits, joined by the loop wiring in series order. Each
  * segment takes the state of the node before it (the loop voltage just after that node). Markers are HTML over the
  * drawing, so they keep their size and focus ring at any width; the wiring is SVG with non-scaling strokes.
- * Follows the view contract in ShutdownSelectionStore (nodes, selectedId, previewId, nodeSelect, nodePreview), which a
- * 3D car view can implement the same way. A callout names the highlighted node, or the break while nothing is.
+ * A LoopView (loop-view/loop-view.ts), as a 3D car view is too. A callout names the highlighted loop node, or the
+ * break while nothing is.
  */
 @Component({
   selector: 'car-view',
@@ -49,16 +50,18 @@ const CALLOUT_ALIGN = {
   host: { class: 'block' },
   imports: [StatusGlyphComponent]
 })
-export class CarViewComponent {
-  nodes = input.required<NodeStatus[]>();
-  selectedId = input<string | null>(null);
-  previewId = input<string | null>(null);
-  nodeSelect = output<string | null>();
-  nodePreview = output<string | null>();
+export class CarViewComponent implements LoopView {
+  readonly nodes = input.required<NodeStatus[]>();
+  readonly selectedId = input<string | null>(null);
+  readonly previewId = input<string | null>(null);
+  readonly nodeSelect = output<string | null>();
+  readonly nodePreview = output<string | null>();
 
   private readonly markerEls = viewChildren<ElementRef<HTMLElement>>('marker');
 
   protected readonly highlightId = computed(() => this.previewId() ?? this.selectedId());
+
+  private readonly loop = computed(() => loopOf(this.nodes()));
 
   protected readonly markers = computed<Marker[]>(() =>
     this.nodes().map((s, i) => {
@@ -70,7 +73,7 @@ export class CarViewComponent {
         x: s.node.car.x,
         y: s.node.car.y,
         disc: s.node.topic ? d.marker.measured : d.marker.unmeasured,
-        ariaLabel: nodeAriaLabel(s)
+        ariaLabel: nodeAriaLabel(s, this.loop())
       };
     })
   );
@@ -112,14 +115,19 @@ export class CarViewComponent {
     if (!m) return undefined;
     const d = NODE_STATE_DISPLAY[m.status.state];
     const align = m.x < 15 ? CALLOUT_ALIGN.start : m.x > 85 ? CALLOUT_ALIGN.end : CALLOUT_ALIGN.center;
-    return { ...m, label: m.status.node.label, stateLabel: d.label, stateText: d.text, align };
+    return { ...m, label: m.status.node.label, stateLabel: stateLabel(m.status, this.loop()), stateText: d.text, align };
   });
+
+  /** Toggles the pin (LoopView rule 2). */
+  protected toggle(id: string): void {
+    this.nodeSelect.emit(id === this.selectedId() ? null : id);
+  }
 
   protected onKeydown(event: KeyboardEvent, index: number): void {
     const { id } = this.nodes()[index].node;
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
-      this.nodeSelect.emit(id);
+      this.toggle(id);
       return;
     }
     if (event.key === 'Escape') {

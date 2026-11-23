@@ -5,11 +5,19 @@ import {
   explainNode,
   formatAge,
   formatValue,
+  loopOf,
+  loopSummary,
   loopZones,
   NODE_STATE_DISPLAY,
+  nodeAriaLabel,
   nodeNotes,
-  SHORT_LABEL
+  readStateColours,
+  segmentState,
+  SHORT_LABEL,
+  shortStateLabel,
+  stateLabel
 } from './shutdown-loop.display';
+import { CssVarReader, MISSING_THEME_COLOUR } from './shutdown-loop.theme';
 import { LoopStatus, NodeState, NodeStatus } from './shutdown-loop.utils';
 
 const node = (id: string) => SHUTDOWN_LOOP.find((n) => n.id === id)!;
@@ -54,8 +62,62 @@ describe('shutdown loop display', () => {
     }
   });
 
-  it('has a short strip label for every node', () => {
+  it('has a short strip label for every loop node, and none for anything else', () => {
     for (const n of SHUTDOWN_LOOP) expect(SHORT_LABEL[n.id]).toBeTruthy();
+    expect(Object.keys(SHORT_LABEL).sort()).toEqual(SHUTDOWN_LOOP.map((n) => n.id).sort());
+  });
+
+  describe('state colours', () => {
+    const STATE_TOKENS = Object.values(NODE_STATE_DISPLAY).map((d) => d.token.replace(/^--color-/, ''));
+    /** The state-token colours a class list uses through bg-, border- or stroke- utilities. */
+    const stateColoursIn = (classes: string) =>
+      classes
+        .split(/\s+/)
+        .map((c) => /^(?:bg|border|stroke)-(.+)$/.exec(c)?.[1])
+        .filter((name): name is string => !!name && STATE_TOKENS.includes(name));
+
+    it.each(Object.entries(NODE_STATE_DISPLAY))('draws %s in its own token only', (_, d) => {
+      const name = d.token.replace(/^--color-/, '');
+      expect(d.stroke.split(' ')).toContain(`stroke-${name}`);
+      for (const classes of [d.marker.measured, d.marker.unmeasured, d.connector]) {
+        expect(classes.split(' ')).toContain(`border-${name}`);
+      }
+      const used = [d.marker.measured, d.marker.unmeasured, d.connector, d.stroke].flatMap(stateColoursIn);
+      expect(new Set(used)).toEqual(new Set([name]));
+    });
+
+    it('fills measured closed and cause markers with their token', () => {
+      expect(NODE_STATE_DISPLAY.closed.marker.measured.split(' ')).toContain('bg-success');
+      expect(NODE_STATE_DISPLAY.suspect.marker.measured.split(' ')).toContain('bg-danger');
+    });
+
+    it('uses the reserved tokens: danger only for the cause, never the accent', () => {
+      expect(NODE_STATE_DISPLAY.suspect.token).toBe('--color-danger');
+      expect(NODE_STATE_DISPLAY.closed.token).toBe('--color-success');
+      expect(NODE_STATE_DISPLAY['downstream-open'].token).toBe('--color-fg-dim');
+      expect(NODE_STATE_DISPLAY['no-data'].token).toBe('--color-fg-muted');
+    });
+
+    it('gives each state a wire style: the cause strong and solid, closed normal, the rest muted and dashed', () => {
+      expect(NODE_STATE_DISPLAY.suspect).toMatchObject({ emphasis: 'strong', dash: null });
+      expect(NODE_STATE_DISPLAY.closed).toMatchObject({ emphasis: 'normal', dash: null });
+      expect(NODE_STATE_DISPLAY['downstream-open'].emphasis).toBe('muted');
+      expect(NODE_STATE_DISPLAY['no-data'].emphasis).toBe('muted');
+      expect(NODE_STATE_DISPLAY['downstream-open'].dash).toBeTruthy();
+      expect(NODE_STATE_DISPLAY['no-data'].dash).toBeTruthy();
+    });
+
+    it('reads every state colour through the reader, for three.js', () => {
+      const read: CssVarReader = (token) =>
+        ({ '--color-success': '#00ff00', '--color-danger': '#ff8800', '--color-fg-dim': '#888888' })[token as string] ?? '';
+      vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      expect(readStateColours(read)).toEqual({
+        closed: '#00ff00',
+        suspect: '#ff8800',
+        'downstream-open': '#888888',
+        'no-data': MISSING_THEME_COLOUR
+      });
+    });
   });
 
   describe('formatAge', () => {
@@ -102,6 +164,68 @@ describe('shutdown loop display', () => {
 
     it('has no zones while the loop is closed', () => {
       expect(loopZones(loop({}).nodes).every((z) => z.zone === null)).toBe(true);
+    });
+  });
+
+  describe('segmentState', () => {
+    it('gives each wire the state of the loop node before it, and the wire after the break downstream-open', () => {
+      const { nodes } = tsmsOpen();
+      expect(segmentState(nodes, idx('tsms') - 1)).toBe('closed');
+      expect(segmentState(nodes, idx('tsms'))).toBe('downstream-open');
+      expect(segmentState(nodes, idx('hvd'))).toBe('downstream-open');
+    });
+
+    it('keeps the wires inside a suspect stretch suspect', () => {
+      const s = loop({ 'side-brb-r': 'suspect', 'side-brb-l': 'suspect', 'bms-latch': 'suspect' });
+      expect(segmentState(s.nodes, idx('side-brb-r'))).toBe('suspect');
+      expect(segmentState(s.nodes, idx('side-brb-l'))).toBe('suspect');
+      expect(segmentState(s.nodes, idx('bms-latch'))).toBe('downstream-open');
+    });
+  });
+
+  describe('state labels', () => {
+    it('names a single culprit the cause', () => {
+      const s = tsmsOpen();
+      const tsms = s.nodes[idx('tsms')];
+      expect(stateLabel(tsms, s)).toBe('Open — cause');
+      expect(shortStateLabel(tsms, s)).toBe('Cause');
+      expect(nodeAriaLabel(tsms, s)).toBe('TSMS: Open — cause');
+    });
+
+    it('names every member of a wider stretch a possible cause', () => {
+      const s = loop({ 'side-brb-r': 'suspect', 'side-brb-l': 'suspect', 'bms-latch': 'suspect' });
+      for (const id of ['side-brb-r', 'bms-latch']) {
+        expect(stateLabel(s.nodes[idx(id)], s)).toBe('Open — possible cause');
+        expect(shortStateLabel(s.nodes[idx(id)], s)).toBe('Suspect');
+      }
+      expect(nodeAriaLabel(s.nodes[idx('side-brb-r')], s)).toBe('Side BRB R: Open — possible cause (no sensor)');
+    });
+
+    it('names loop nodes after the break downstream, and keeps the defaults otherwise', () => {
+      const s = tsmsOpen();
+      expect(stateLabel(s.nodes[idx('hvd')], s)).toBe('Open — after the break');
+      expect(shortStateLabel(s.nodes[idx('hvd')], s)).toBe('Downstream');
+      expect(nodeAriaLabel({ ...s.nodes[idx('hvd')], mismatch: true }, s)).toBe('HVD: Open — after the break, mismatch');
+      expect(stateLabel(s.nodes[idx('bots')], s)).toBe('Closed');
+    });
+
+    it('works from a view’s nodes alone', () => {
+      const s = tsmsOpen();
+      expect(loopOf(s.nodes).suspects.map((n) => n.id)).toEqual(['tsms']);
+      expect(stateLabel(s.nodes[idx('tsms')], loopOf(s.nodes))).toBe('Open — cause');
+    });
+  });
+
+  describe('loopSummary', () => {
+    it('names the verdict and the break only', () => {
+      expect(loopSummary(tsmsOpen())).toBe('LOOP OPEN — cause: TSMS');
+      expect(loopSummary(loop({ 'side-brb-r': 'suspect', 'bms-latch': 'suspect' }))).toBe(
+        'LOOP OPEN — cause at or before BMS latch'
+      );
+      expect(loopSummary(loop({}))).toBe('LOOP CLOSED · AIRs on');
+      expect(loopSummary(loop({}, { verdict: 'unknown', silentBoards: ['VCU', 'BMS'] }))).toBe(
+        'UNKNOWN — no data from VCU and BMS'
+      );
     });
   });
 
@@ -182,17 +306,29 @@ describe('shutdown loop display', () => {
     expect(nodeNotes(s.nodes[idx('tsms')])).toEqual([]);
   });
 
-  it('works out each board’s freshness from its newest reading', () => {
-    const s = loop({});
-    s.nodes[idx('tsms')].ageMs = 900;
-    const fresh = boardFreshness(s.nodes);
-    expect(fresh).toEqual([
-      { board: 'VCU', ageMs: 900, stale: false },
-      { board: 'BMS', ageMs: 2000, stale: false }
-    ]);
-    const silent = s.nodes.map((n) => (n.node.board === 'BMS' ? { ...n, ageMs: undefined } : n));
-    expect(boardFreshness(silent)[1]).toEqual({ board: 'BMS', ageMs: undefined, stale: true });
-    const old = s.nodes.map((n) => (n.node.board === 'VCU' ? { ...n, ageMs: 61_000 } : n));
-    expect(boardFreshness(old)[0].stale).toBe(true);
+  describe('boardFreshness', () => {
+    it('takes each board’s age from its newest reading', () => {
+      const s = loop({});
+      s.nodes[idx('tsms')].ageMs = 900;
+      expect(boardFreshness(s.nodes)).toEqual([
+        { board: 'VCU', ageMs: 900, staleCount: 0, stale: false },
+        { board: 'BMS', ageMs: 2000, staleCount: 0, stale: false }
+      ]);
+    });
+
+    it('is stale only when every measured loop node of the board is no-data, and counts the stale ones', () => {
+      const s = loop({ 'acc-sense': 'no-data' });
+      expect(boardFreshness(s.nodes)[1]).toMatchObject({ board: 'BMS', staleCount: 1, stale: false });
+      const bms = SHUTDOWN_LOOP.filter((n) => n.board === 'BMS' && n.topic).map((n) => n.id);
+      const silent = loop(Object.fromEntries(bms.map((id) => [id, 'no-data'] as const)));
+      const silentBms = silent.nodes.map((n) => (n.node.board === 'BMS' ? { ...n, ageMs: undefined } : n));
+      expect(boardFreshness(silentBms)[1]).toEqual({ board: 'BMS', ageMs: undefined, staleCount: bms.length, stale: true });
+    });
+
+    it('never decides staleness from an age: an old reading logic still calls live is not stale', () => {
+      const s = loop({});
+      const old = s.nodes.map((n) => (n.node.board === 'VCU' ? { ...n, ageMs: 61_000 } : n));
+      expect(boardFreshness(old)[0]).toMatchObject({ ageMs: 61_000, staleCount: 0, stale: false });
+    });
   });
 });

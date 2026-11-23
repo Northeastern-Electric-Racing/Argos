@@ -5,13 +5,14 @@ import { LoopBannerComponent } from './components/loop-banner/loop-banner.compon
 import { LoopMetaComponent } from './components/loop-meta/loop-meta.component';
 import { LoopStripComponent } from './components/loop-strip/loop-strip.component';
 import { MockPanelComponent } from './components/mock-panel/mock-panel.component';
-import { NodeDetailComponent } from './components/node-detail/node-detail.component';
+import { LoopNodeDetailComponent } from './components/loop-node-detail/loop-node-detail.component';
 import { ShutdownLoopService } from './shutdown-loop.service';
 import { ShutdownSelectionStore } from './shutdown-selection.store';
 
 /**
- * Shutdown Loop page: live view of the series shutdown circuit that names the node that broke it. The loop strip,
- * the car view and the banner share one selection (ShutdownSelectionStore), shown in the detail panel.
+ * Shutdown Loop page: live view of the series shutdown circuit that names the loop node that broke it. The loop
+ * strip, the car view and the banner share one selection (ShutdownSelectionStore), bound once per view and shown
+ * in loop-node-detail.
  */
 @Component({
   selector: 'shutdown-page',
@@ -24,7 +25,7 @@ import { ShutdownSelectionStore } from './shutdown-selection.store';
     LoopBannerComponent,
     CarViewComponent,
     LoopStripComponent,
-    NodeDetailComponent,
+    LoopNodeDetailComponent,
     MockPanelComponent
   ]
 })

@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { SHUTDOWN_LOOP } from '../../shutdown-loop.model';
 import { NodeStatus } from '../../shutdown-loop.utils';
+import { expectLoopViewContract } from '../../loop-view/loop-view.contract';
 import { CarViewComponent } from './car-view.component';
 
 const TSMS = SHUTDOWN_LOOP.findIndex((n) => n.id === 'tsms');
@@ -15,8 +16,6 @@ const NODES: NodeStatus[] = SHUTDOWN_LOOP.map((node, i) => ({
 describe('CarViewComponent', () => {
   let el: HTMLElement;
   let fixture: ComponentFixture<CarViewComponent>;
-  let selected: (string | null)[];
-  let previewed: (string | null)[];
   const marker = (id: string) => el.querySelector<HTMLElement>(`[role="option"][data-node-id="${id}"]`)!;
   const callout = () => el.querySelector<HTMLElement>('[data-callout]')?.textContent?.replace(/\s+/g, ' ').trim();
 
@@ -24,10 +23,6 @@ describe('CarViewComponent', () => {
     await TestBed.configureTestingModule({ imports: [CarViewComponent] }).compileComponents();
     fixture = TestBed.createComponent(CarViewComponent);
     fixture.componentRef.setInput('nodes', NODES);
-    selected = [];
-    previewed = [];
-    fixture.componentInstance.nodeSelect.subscribe((id) => selected.push(id));
-    fixture.componentInstance.nodePreview.subscribe((id) => previewed.push(id));
     fixture.detectChanges();
     el = fixture.nativeElement;
   });
@@ -50,7 +45,7 @@ describe('CarViewComponent', () => {
     expect(callout()).toBe('12 · TSMS · Open — cause');
     fixture.componentRef.setInput('previewId', 'hvd');
     fixture.detectChanges();
-    expect(callout()).toBe('13 · HVD · Open — upstream');
+    expect(callout()).toBe('13 · HVD · Open — after the break');
     expect(marker('hvd').dataset['highlighted']).toBe('true');
   });
 
@@ -58,27 +53,12 @@ describe('CarViewComponent', () => {
     const mismatched = NODES.map((n) => (n.node.id === 'hvd' ? { ...n, value: 1, mismatch: true } : n));
     fixture.componentRef.setInput('nodes', mismatched);
     fixture.detectChanges();
-    expect(marker('hvd').getAttribute('aria-label')).toBe('HVD: Open — upstream, mismatch');
+    expect(marker('hvd').getAttribute('aria-label')).toBe('HVD: Open — after the break, mismatch');
     expect(marker('hvd').textContent).toContain('!');
     expect(marker('bots').textContent).not.toContain('!');
   });
 
-  it('reflects the selection and keeps one tab stop', () => {
-    fixture.componentRef.setInput('selectedId', 'bots');
-    fixture.detectChanges();
-    expect(marker('bots').getAttribute('aria-selected')).toBe('true');
-    expect(marker('bots').tabIndex).toBe(0);
-    expect(el.querySelectorAll('[role="option"][tabindex="0"]').length).toBe(1);
-  });
-
-  it('selects on click and focus, previews on hover', () => {
-    marker('bots').click();
-    marker('hvd').dispatchEvent(new FocusEvent('focus'));
-    marker('glvms').dispatchEvent(new MouseEvent('mouseenter'));
-    marker('glvms').dispatchEvent(new MouseEvent('mouseleave'));
-    expect(selected).toEqual(['bots', 'hvd']);
-    expect(previewed).toEqual(['glvms', null]);
-  });
+  expectLoopViewContract(() => TestBed.createComponent(CarViewComponent));
 
   it('moves focus in loop order with arrow keys', () => {
     marker('tsms').focus();

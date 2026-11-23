@@ -1,6 +1,6 @@
 import { SHUTDOWN_LOOP } from './shutdown-loop.model';
 import { NODE_STATE_CODE, parseServerNodeStates, resolveLoopStatus, SERVER_FRESH_MS } from './shutdown-loop.server';
-import { computeLoopStatus, LoopStatus, Reading } from './shutdown-loop.utils';
+import { computeLoopStatus, LoopStatus, Reading, STALE_AFTER_MS } from './shutdown-loop.utils';
 
 const NOW = 1_000_000;
 const MEASURED_TOPICS = SHUTDOWN_LOOP.filter((n) => n.topic).map((n) => n.topic!);
@@ -34,6 +34,7 @@ describe('resolveLoopStatus', () => {
     const tsms = status.nodes[idx('tsms')];
     expect(tsms.value).toBe(1);
     expect(tsms.ageMs).toBe(0);
+    expect(tsms.staleAfterMs).toBe(STALE_AFTER_MS);
   });
 
   it('falls back to local once the server status is stale', () => {

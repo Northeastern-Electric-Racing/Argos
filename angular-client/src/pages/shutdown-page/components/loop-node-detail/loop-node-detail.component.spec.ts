@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { SHUTDOWN_LOOP } from '../../shutdown-loop.model';
 import { LoopStatus, NodeStatus } from '../../shutdown-loop.utils';
-import { NodeDetailComponent } from './node-detail.component';
+import { LoopNodeDetailComponent } from './loop-node-detail.component';
 
 const TSMS = SHUTDOWN_LOOP.findIndex((n) => n.id === 'tsms');
 const NODES: NodeStatus[] = SHUTDOWN_LOOP.map((node, i) => ({
@@ -21,8 +21,8 @@ const LOOP: LoopStatus = {
   airsEnergized: false
 };
 
-describe('NodeDetailComponent', () => {
-  let fixture: ComponentFixture<NodeDetailComponent>;
+describe('LoopNodeDetailComponent', () => {
+  let fixture: ComponentFixture<LoopNodeDetailComponent>;
   let el: HTMLElement;
   const text = () => el.textContent!.replace(/\s+/g, ' ');
   const field = (name: string) =>
@@ -34,8 +34,8 @@ describe('NodeDetailComponent', () => {
   };
 
   beforeEach(async () => {
-    await TestBed.configureTestingModule({ imports: [NodeDetailComponent] }).compileComponents();
-    fixture = TestBed.createComponent(NodeDetailComponent);
+    await TestBed.configureTestingModule({ imports: [LoopNodeDetailComponent] }).compileComponents();
+    fixture = TestBed.createComponent(LoopNodeDetailComponent);
     fixture.componentRef.setInput('status', LOOP);
     el = fixture.nativeElement;
   });
@@ -49,7 +49,7 @@ describe('NodeDetailComponent', () => {
   it('shows label, kind, topic, value, age and why', () => {
     show('hvd');
     expect(el.querySelector('h2')!.textContent!.replace(/\s+/g, ' ').trim()).toBe('13 HVD');
-    expect(field('state')).toBe('Open — upstream');
+    expect(field('state')).toBe('Open — after the break');
     expect(field('kind')).toBe('Interlock');
     expect(field('topic')).toBe('VCU/Shutdown/HVD_GPIO');
     expect(field('value')).toBe('0 (open)');
@@ -64,10 +64,10 @@ describe('NodeDetailComponent', () => {
     expect(text()).toContain('Placeholder: no reading yet');
   });
 
-  it('prompts to pick a node when the loop is closed and nothing is selected', () => {
+  it('prompts to pick a loop node when the loop is closed and nothing is selected', () => {
     fixture.componentRef.setInput('status', { ...LOOP, verdict: 'closed', suspects: [] });
     show(null);
     expect(el.querySelector('h2')).toBeNull();
-    expect(text()).toContain('Select a node');
+    expect(text()).toContain('Select a loop node');
   });
 });

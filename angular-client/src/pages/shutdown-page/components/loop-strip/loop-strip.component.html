@@ -16,10 +16,11 @@
         [attr.data-measured]="!!it.s.node.topic"
         [attr.data-highlighted]="highlightId() === it.s.node.id"
         [attr.aria-selected]="selectedId() === it.s.node.id"
-        [attr.aria-label]="ariaLabel(it.s)"
+        [attr.aria-label]="it.ariaLabel"
         [tabindex]="tabStopId() === it.s.node.id ? 0 : -1"
-        (click)="nodeSelect.emit(it.s.node.id)"
-        (focus)="nodeSelect.emit(it.s.node.id)"
+        (click)="toggle(it.s.node.id)"
+        (focus)="nodePreview.emit(it.s.node.id)"
+        (blur)="nodePreview.emit(null)"
         (keydown)="onKeydown($event, i)"
         (mouseenter)="nodePreview.emit(it.s.node.id)"
         (mouseleave)="nodePreview.emit(null)"
@@ -51,7 +52,7 @@
           [class]="it.s.state === 'downstream-open' || it.s.state === 'no-data' ? 'text-fg-muted' : 'text-fg'"
           >{{ short[it.s.node.id] }}</span
         >
-        <span aria-hidden="true" class="text-xs leading-tight font-bold" [class]="it.d.text">{{ it.d.short }}</span>
+        <span aria-hidden="true" class="text-xs leading-tight font-bold" [class]="it.d.text">{{ it.stateShort }}</span>
         @if (it.s.node.placeholder) {
           <span aria-hidden="true" class="text-badge leading-tight text-fg-muted italic">placeholder</span>
         }

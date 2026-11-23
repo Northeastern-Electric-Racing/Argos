@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { rovingIndex, ShutdownSelectionStore } from './shutdown-selection.store';
+import { ShutdownSelectionStore } from './shutdown-selection.store';
 
 describe('ShutdownSelectionStore', () => {
   let store: ShutdownSelectionStore;
@@ -9,13 +9,13 @@ describe('ShutdownSelectionStore', () => {
     store = TestBed.inject(ShutdownSelectionStore);
   });
 
-  it('starts with nothing selected', () => {
+  it('starts with nothing selected or previewed', () => {
     expect(store.selectedId()).toBeNull();
     expect(store.previewId()).toBeNull();
     expect(store.activeId()).toBeNull();
   });
 
-  it('highlights the hovered node over the selected one, and falls back when hover ends', () => {
+  it('makes the previewed loop node active over the pinned one, and falls back when the preview ends', () => {
     store.select('tsms');
     expect(store.activeId()).toBe('tsms');
     store.preview('hvd');
@@ -25,27 +25,26 @@ describe('ShutdownSelectionStore', () => {
     expect(store.activeId()).toBe('tsms');
   });
 
-  it('clears the selection', () => {
-    store.select('tsms');
+  it('clears the preview when it pins, so the chosen loop node shows at once', () => {
+    store.preview('hvd');
+    store.select('bots');
+    expect(store.previewId()).toBeNull();
+    expect(store.activeId()).toBe('bots');
+  });
+
+  it('clears the preview when it unpins too', () => {
+    store.select('bots');
+    store.preview('hvd');
     store.select(null);
+    expect(store.selectedId()).toBeNull();
+    expect(store.previewId()).toBeNull();
     expect(store.activeId()).toBeNull();
   });
-});
 
-describe('rovingIndex', () => {
-  it.each([
-    ['ArrowRight', 3, 4],
-    ['ArrowDown', 3, 4],
-    ['ArrowLeft', 3, 2],
-    ['ArrowUp', 3, 2],
-    ['Home', 3, 0],
-    ['End', 3, 18],
-    ['ArrowRight', 18, 18],
-    ['ArrowLeft', 0, 0]
-  ])('%s from %i → %i', (key, from, to) => expect(rovingIndex(key, from, 19)).toBe(to));
-
-  it('ignores other keys', () => {
-    expect(rovingIndex('a', 3, 19)).toBeUndefined();
-    expect(rovingIndex('Enter', 3, 19)).toBeUndefined();
+  it('is idempotent', () => {
+    store.select('bots');
+    store.select('bots');
+    expect(store.selectedId()).toBe('bots');
+    expect(store.previewId()).toBeNull();
   });
 });

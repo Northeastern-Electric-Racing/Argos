@@ -27,7 +27,7 @@
     >
       <h2 id="loop-order-title" class="m-0 flex flex-wrap items-baseline gap-x-2 text-base font-bold text-fg">
         Loop order
-        <span class="text-xs font-normal text-fg-muted">GLV source → AIR coils · arrow keys move between nodes</span>
+        <span class="text-xs font-normal text-fg-muted">GLV source → AIR coils · arrow keys move between loop nodes</span>
       </h2>
       <loop-strip
         [nodes]="status().nodes"
@@ -38,7 +38,7 @@
       />
     </section>
 
-    <node-detail class="min-w-0 lg:col-start-2 lg:row-start-1" [status]="status()" [nodeId]="selection.activeId()" />
+    <loop-node-detail class="min-w-0 lg:col-start-2 lg:row-start-1" [status]="status()" [nodeId]="selection.activeId()" />
   </div>
 
   @if (devMode) {

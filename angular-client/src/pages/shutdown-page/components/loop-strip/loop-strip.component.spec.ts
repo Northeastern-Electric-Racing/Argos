@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { SHUTDOWN_LOOP } from '../../shutdown-loop.model';
 import { NodeStatus } from '../../shutdown-loop.utils';
+import { expectLoopViewContract } from '../../loop-view/loop-view.contract';
 import { LoopStripComponent } from './loop-strip.component';
 
 /** TSMS is the cause; everything before it closed, after it downstream-open. */
@@ -42,7 +43,7 @@ describe('LoopStripComponent', () => {
     expect(item('tsms').dataset['state']).toBe('suspect');
     expect(item('hvd').dataset['state']).toBe('downstream-open');
     expect(item('tsms').textContent).toContain('Cause');
-    expect(item('hvd').textContent).toContain('Upstream');
+    expect(item('hvd').textContent).toContain('Downstream');
     expect(item('tsms').getAttribute('aria-label')).toBe('TSMS: Open — cause');
   });
 
@@ -65,16 +66,9 @@ describe('LoopStripComponent', () => {
     expect(item('tsms').dataset['measured']).toBe('true');
   });
 
-  describe('selection', () => {
-    it('reflects the selected node with aria-selected and makes it the only tab stop', () => {
-      fixture.componentRef.setInput('selectedId', 'bots');
-      fixture.detectChanges();
-      expect(item('bots').getAttribute('aria-selected')).toBe('true');
-      expect(item('tsms').getAttribute('aria-selected')).toBe('false');
-      expect(item('bots').tabIndex).toBe(0);
-      expect(el.querySelectorAll('[tabindex="0"]').length).toBe(1);
-    });
+  expectLoopViewContract(() => TestBed.createComponent(LoopStripComponent));
 
+  describe('selection', () => {
     it('makes the first suspect the tab stop while nothing is selected', () => {
       expect(item('tsms').tabIndex).toBe(0);
       expect(item('glvms').tabIndex).toBe(-1);
@@ -85,15 +79,6 @@ describe('LoopStripComponent', () => {
       fixture.detectChanges();
       expect(item('hvd').dataset['highlighted']).toBe('true');
       expect(item('tsms').dataset['highlighted']).toBe('false');
-    });
-
-    it('selects on click and focus, previews on hover', () => {
-      item('bots').click();
-      item('hvd').dispatchEvent(new FocusEvent('focus'));
-      item('glvms').dispatchEvent(new MouseEvent('mouseenter'));
-      item('glvms').dispatchEvent(new MouseEvent('mouseleave'));
-      expect(selected).toEqual(['bots', 'hvd']);
-      expect(previewed).toEqual(['glvms', null]);
     });
   });
 
@@ -109,14 +94,14 @@ describe('LoopStripComponent', () => {
       expect(document.activeElement).toBe(item('glvms'));
       key('glvms', 'End');
       expect(document.activeElement).toBe(item('airs'));
-      expect(selected.at(-1)).toBe('airs');
     });
 
-    it('selects with Enter and Space, clears with Escape', () => {
-      key('bots', 'Enter');
-      key('hvd', ' ');
-      key('hvd', 'Escape');
-      expect(selected).toEqual(['bots', 'hvd', null]);
+    it('previews the focused loop node without pinning it, and clears the preview when focus leaves', () => {
+      item('tsms').focus();
+      key('tsms', 'ArrowRight');
+      item('hvd').blur();
+      expect(previewed).toEqual(['tsms', null, 'hvd', null]);
+      expect(selected).toEqual([]);
     });
   });
 });

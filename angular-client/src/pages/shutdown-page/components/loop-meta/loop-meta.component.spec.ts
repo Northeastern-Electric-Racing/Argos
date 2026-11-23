@@ -1,12 +1,13 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { SHUTDOWN_LOOP } from '../../shutdown-loop.model';
+import { Board, SHUTDOWN_LOOP } from '../../shutdown-loop.model';
 import { NodeStatus } from '../../shutdown-loop.utils';
 import { LoopMetaComponent } from './loop-meta.component';
 
-const nodes = (vcuAge?: number, bmsAge?: number): NodeStatus[] =>
+/** Every loop node closed, except the measured ones of `stale` boards, which logic has made no-data. */
+const nodes = (vcuAge?: number, bmsAge?: number, stale: Board[] = []): NodeStatus[] =>
   SHUTDOWN_LOOP.map((node) => ({
     node,
-    state: 'closed',
+    state: node.topic && node.board && stale.includes(node.board) ? 'no-data' : 'closed',
     mismatch: false,
     ageMs: node.board === 'VCU' ? vcuAge : node.board === 'BMS' ? bmsAge : undefined
   }));
@@ -45,8 +46,9 @@ describe('LoopMetaComponent', () => {
     expect(chip('VCU').dataset['stale']).toBe('false');
   });
 
-  it('flags silent and stale boards', () => {
-    const text = render(nodes(75_000, undefined));
+  it('flags boards whose readings logic calls stale, never judging an age itself', () => {
+    expect(render(nodes(75_000, 1000))).not.toContain('stale');
+    const text = render(nodes(75_000, undefined, ['VCU', 'BMS']));
     expect(text).toContain('VCU 1 min 15 s ago · stale');
     expect(text).toContain('BMS never');
     expect(chip('VCU').dataset['stale']).toBe('true');

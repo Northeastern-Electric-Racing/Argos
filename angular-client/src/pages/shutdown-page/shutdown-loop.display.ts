@@ -1,19 +1,25 @@
 import { tw } from 'src/ui/recipes/tw';
 import { Board, NodeKind } from './shutdown-loop.model';
-import { LoopStatus, NodeState, NodeStatus, STALE_AFTER_MS } from './shutdown-loop.utils';
+import { CssVarReader, readThemeColour, ThemeColourToken } from './shutdown-loop.theme';
+import { LoopStatus, NodeState, NodeStatus, summarizeLoop } from './shutdown-loop.utils';
 
 /**
- * Presentation of the shutdown loop: labels, icons, colours and the plain-language explanations shown per node.
- * Presentation only: the status itself comes from computeLoopStatus (shutdown-loop.utils.ts).
+ * Presentation of the shutdown loop, shared by every view of it (strip, 2D car, 3D car): labels, icons, colours,
+ * wire styles and the plain-language explanations shown per loop node. Presentation only: the status itself comes
+ * from computeLoopStatus / resolveLoopStatus (logic), which the UI only reads.
  *
- * State is never colour alone: each state has an icon and a label, and measured nodes are filled while unmeasured
- * ones are hollow. Colours (theme tokens): closed success green, the cause danger orange (NER red is the accent),
- * downstream a muted grey, no data a dashed grey.
+ * State is never colour alone: each state has an icon, a label and a wire style (dash + emphasis), and measured
+ * loop nodes are filled while unmeasured ones are hollow. Colours are theme tokens (`token`): closed success
+ * green, the cause danger orange (NER red is the accent), downstream a dim grey, no data a dashed muted grey.
+ * Tailwind views use the class lists; three.js reads the same tokens with readStateColours.
  */
+/** How heavily a wire is drawn: the cause strong, closed normal, downstream and no data muted (2D width, 3D radius). */
+export type WireEmphasis = 'strong' | 'normal' | 'muted';
+
 export interface StateDisplay {
-  /** Full label, used in ARIA names and the detail panel. */
+  /** Default full label, used in ARIA names and the detail panel; stateLabel() refines it for a suspect. */
   label: string;
-  /** Short label under each strip node. */
+  /** Default short label under each strip item; shortStateLabel() refines it for a suspect. */
   short: string;
   /** Material Icons ligature for <ui-icon>. */
   icon: string;
@@ -23,9 +29,13 @@ export interface StateDisplay {
   marker: { measured: string; unmeasured: string };
   /** Strip connector after a node in this state (the loop voltage just after it). */
   connector: string;
-  /** Car view wiring segment after a node in this state, and its dash pattern (SVG user units = px). */
+  /** Car view wiring segment after a node in this state (Tailwind, 2D). */
   stroke: string;
+  /** The state's theme token; every bg-/border-/stroke- colour above is this token. 3D reads it (readStateColours). */
+  token: ThemeColourToken;
+  /** Wire dash pattern as an SVG dasharray (user units = px), or null for solid; 3D maps it to dashed tubes. */
   dash: string | null;
+  emphasis: WireEmphasis;
 }
 
 export const NODE_STATE_DISPLAY: Record<NodeState, StateDisplay> = {
@@ -40,7 +50,9 @@ export const NODE_STATE_DISPLAY: Record<NodeState, StateDisplay> = {
     },
     connector: tw('border-solid border-success'),
     stroke: tw('stroke-success'),
-    dash: null
+    token: '--color-success',
+    dash: null,
+    emphasis: 'normal'
   },
   suspect: {
     label: 'Open — cause',
@@ -53,11 +65,13 @@ export const NODE_STATE_DISPLAY: Record<NodeState, StateDisplay> = {
     },
     connector: tw('border-solid border-danger'),
     stroke: tw('stroke-danger'),
-    dash: null
+    token: '--color-danger',
+    dash: null,
+    emphasis: 'strong'
   },
   'downstream-open': {
-    label: 'Open — upstream',
-    short: 'Upstream',
+    label: 'Open — after the break',
+    short: 'Downstream',
     icon: 'remove',
     text: tw('text-fg-muted'),
     marker: {
@@ -66,7 +80,9 @@ export const NODE_STATE_DISPLAY: Record<NodeState, StateDisplay> = {
     },
     connector: tw('border-dashed border-fg-dim'),
     stroke: tw('stroke-fg-dim'),
-    dash: '7 6'
+    token: '--color-fg-dim',
+    dash: '7 6',
+    emphasis: 'muted'
   },
   'no-data': {
     label: 'No data',
@@ -79,9 +95,53 @@ export const NODE_STATE_DISPLAY: Record<NodeState, StateDisplay> = {
     },
     connector: tw('border-dotted border-fg-muted'),
     stroke: tw('stroke-fg-muted'),
-    dash: '2 5'
+    token: '--color-fg-muted',
+    dash: '2 5',
+    emphasis: 'muted'
   }
 };
+
+/** Each state's colour as `read` resolves its token, for three.js materials: `readStateColours(cssVarReader(root))`. */
+export function readStateColours(read: CssVarReader): Record<NodeState, string> {
+  const entries = (Object.keys(NODE_STATE_DISPLAY) as NodeState[]).map(
+    (state) => [state, readThemeColour(NODE_STATE_DISPLAY[state].token, read)] as const
+  );
+  return Object.fromEntries(entries) as Record<NodeState, string>;
+}
+
+/**
+ * The state of wire `i`, from loop node `i` to `i + 1`: the loop voltage just after node `i`, so it takes that
+ * node's state, except that the wire after the break (the last suspect) is already open downstream of it.
+ */
+export function segmentState(nodes: readonly NodeStatus[], i: number): NodeState {
+  const { state } = nodes[i];
+  if (state !== 'suspect') return state;
+  return nodes.slice(i + 1).some((n) => n.state === 'suspect') ? 'suspect' : 'downstream-open';
+}
+
+/** What the state labels need from the loop: its suspect stretch. A LoopStatus, or loopOf(nodes) in a view. */
+export type LoopStretch = Pick<LoopStatus, 'suspects' | 'noDataInStretch'>;
+
+/**
+ * The loop-wide summary of a view's `nodes` input (LoopView gives views the nodes only), for stateLabel and
+ * loopSummary. It summarises the states logic decided; it never re-decides them.
+ */
+export const loopOf = (nodes: readonly NodeStatus[]): Omit<LoopStatus, 'source'> => summarizeLoop([...nodes]);
+
+/** One culprit: a single suspect and no silent reading in its stretch. */
+const singleCause = (loop: LoopStretch) => loop.suspects.length === 1 && loop.noDataInStretch.length === 0;
+
+/** The full state label in loop terms: the single cause, a possible cause in a wider stretch, or the default. */
+export function stateLabel(s: NodeStatus, loop: LoopStretch): string {
+  if (s.state === 'suspect') return singleCause(loop) ? 'Open — cause' : 'Open — possible cause';
+  return NODE_STATE_DISPLAY[s.state].label;
+}
+
+/** The short state label under a strip item; see stateLabel. */
+export function shortStateLabel(s: NodeStatus, loop: LoopStretch): string {
+  if (s.state === 'suspect') return singleCause(loop) ? 'Cause' : 'Suspect';
+  return NODE_STATE_DISPLAY[s.state].short;
+}
 
 /** Tag shown on the energy-meter interlock until it has a reading. */
 export const PLACEHOLDER_TAG = 'placeholder — no reading yet';
@@ -165,7 +225,7 @@ export function loopZones(nodes: readonly NodeStatus[]): ZoneSlot[] {
 }
 
 /** The first open reading: the last node of the suspect stretch. */
-export const breakNode = (loop: LoopStatus) => loop.suspects.at(-1);
+export const breakNode = (loop: Pick<LoopStatus, 'suspects'>) => loop.suspects.at(-1);
 
 const joinOr = (labels: string[]): string =>
   labels.length <= 1 ? labels[0] ?? '' : `${labels.slice(0, -1).join(', ')} or ${labels.at(-1)}`;
@@ -229,21 +289,47 @@ export interface BoardFreshness {
   board: Board;
   /** Age of the board's newest reading; undefined if nothing has arrived since the page opened. */
   ageMs?: number;
+  /** How many of the board's measured loop nodes are stale (no-data: logic decides). */
+  staleCount: number;
+  /** Every measured loop node of the board is stale. */
   stale: boolean;
 }
 
-/** When each board last published, from the newest reading among its nodes. */
+/**
+ * When each board last published, from the newest reading among its loop nodes, and how many of its measured
+ * loop nodes are stale. Staleness is logic's call (a measured loop node in `no-data`): no timeouts here.
+ */
 export function boardFreshness(nodes: readonly NodeStatus[]): BoardFreshness[] {
   return (['VCU', 'BMS'] as const).map((board) => {
-    const ages = nodes.filter((n) => n.node.board === board && n.ageMs !== undefined).map((n) => n.ageMs!);
+    const measured = nodes.filter((n) => n.node.board === board && n.node.topic);
+    const ages = measured.filter((n) => n.ageMs !== undefined).map((n) => n.ageMs!);
     const ageMs = ages.length ? Math.min(...ages) : undefined;
-    return { board, ageMs, stale: ageMs === undefined || ageMs > STALE_AFTER_MS };
+    const staleCount = measured.filter((n) => n.state === 'no-data').length;
+    return { board, ageMs, staleCount, stale: measured.length > 0 && staleCount === measured.length };
   });
 }
 
-/** ARIA name for a node, shared by the strip and the car view. */
-export function nodeAriaLabel(s: NodeStatus): string {
+/** ARIA name for a loop node, shared by every view of the loop. */
+export function nodeAriaLabel(s: NodeStatus, loop: LoopStretch): string {
   const mismatch = s.mismatch ? ', mismatch' : '';
   const sensor = s.node.topic ? '' : ' (no sensor)';
-  return `${s.node.label}: ${NODE_STATE_DISPLAY[s.state].label}${mismatch}${sensor}`;
+  return `${s.node.label}: ${stateLabel(s, loop)}${mismatch}${sensor}`;
+}
+
+/**
+ * The verdict and the break loop node in one sentence, with no warnings or stretch list: the banner's live region
+ * and the accessible name of a car view drawn as an image ("LOOP OPEN — cause: TSMS").
+ */
+export function loopSummary(loop: Pick<LoopStatus, 'verdict' | 'suspects' | 'noDataInStretch' | 'silentBoards'>): string {
+  switch (loop.verdict) {
+    case 'open': {
+      const brk = breakNode(loop);
+      if (!brk) return 'LOOP OPEN';
+      return singleCause(loop) ? `LOOP OPEN — cause: ${brk.label}` : `LOOP OPEN — cause at or before ${brk.label}`;
+    }
+    case 'closed':
+      return 'LOOP CLOSED · AIRs on';
+    case 'unknown':
+      return loop.silentBoards.length ? `UNKNOWN — no data from ${loop.silentBoards.join(' and ')}` : 'UNKNOWN';
+  }
 }

@@ -1,6 +1,6 @@
 <div
   role="listbox"
-  aria-label="Car side view: each shutdown node where it sits on the car"
+  aria-label="Car side view: each loop node where it sits on the car"
   class="relative mx-auto aspect-[1000/535] w-full max-w-5xl"
 >
   <!-- The frame drawing, dimmed so the wiring and markers read over it. Nose faces left. -->
@@ -47,8 +47,9 @@
       [attr.aria-selected]="selectedId() === m.id"
       [attr.aria-label]="m.ariaLabel"
       [tabindex]="tabStopId() === m.id ? 0 : -1"
-      (click)="nodeSelect.emit(m.id)"
-      (focus)="nodeSelect.emit(m.id)"
+      (click)="toggle(m.id)"
+      (focus)="nodePreview.emit(m.id)"
+      (blur)="nodePreview.emit(null)"
       (keydown)="onKeydown($event, i)"
       (mouseenter)="nodePreview.emit(m.id)"
       (mouseleave)="nodePreview.emit(null)"

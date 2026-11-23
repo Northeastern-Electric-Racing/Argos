@@ -20,6 +20,8 @@ export interface NodeStatus {
   value?: number;
   /** now - receivedAt; set only for measured nodes with a reading. */
   ageMs?: number;
+  /** How long this reading stays live without a new message: staleAfterMs(reading). Set only for measured loop nodes with a reading. */
+  staleAfterMs?: number;
   /** Reads closed after the break, persisting past MISMATCH_GRACE_MS. */
   mismatch: boolean;
 }
@@ -146,6 +148,7 @@ export function computeLoopStatus(nodes: readonly LoopNode[], readings: Readings
       node,
       value: reading?.value,
       ageMs: reading ? now - reading.receivedAt : undefined,
+      staleAfterMs: reading ? staleAfterMs(reading) : undefined,
       mismatch: false
     };
     if (node.topic && live[i] === undefined) return { ...base, state: 'no-data' };

@@ -1,10 +1,10 @@
 <section
-  aria-label="Node details"
+  aria-label="Loop node details"
   class="flex h-full flex-col gap-3 rounded-md border border-solid border-border bg-surface-1 p-4 max-md:p-3"
 >
   @if (detail(); as x) {
     <p class="m-0 text-xs font-bold tracking-wide text-fg-muted uppercase">
-      {{ x.isDefault ? 'Where the loop broke' : 'Selected node' }}
+      {{ x.isDefault ? 'Where the loop broke' : 'Selected loop node' }}
     </p>
     <div class="flex items-center gap-3">
       <span aria-hidden="true" [class]="x.disc"><status-glyph [state]="x.s.state" size="md" /></span>
@@ -12,7 +12,7 @@
         <h2 class="m-0 text-lg leading-tight font-bold text-fg">
           <span class="text-fg-muted tabular-nums">{{ x.order }}</span> {{ x.s.node.label }}
         </h2>
-        <span data-field="state" class="text-sm font-bold" [class]="x.d.text">{{ x.d.label }}</span>
+        <span data-field="state" class="text-sm font-bold" [class]="x.d.text">{{ x.stateLabel }}</span>
       </div>
     </div>
 
@@ -43,7 +43,7 @@
   } @else {
     <p class="m-0 flex items-start gap-2 text-sm text-fg-label">
       <ui-icon class="shrink-0" name="touch_app" size="sm" />
-      Select a node in the loop or on the car to see its reading, age and why it is in its state.
+      Select a loop node in the loop or on the car to see its reading, age and why it is in its state.
     </p>
   }
 </section>

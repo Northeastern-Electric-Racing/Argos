@@ -214,6 +214,17 @@ describe('computeLoopStatus', () => {
     expect(run(readings).nodes.find((n) => n.node.id === 'glvms')!.value).toBeUndefined();
   });
 
+  it('reports how long each measured reading stays live, so the UI never computes it', () => {
+    const readings = allClosed();
+    readings.set(VCU.TSMS, { value: 1, receivedAt: NOW, changedAt: NOW, intervalMs: 1000 });
+    const status = run(readings);
+    expect(status.nodes.find((n) => n.node.id === 'tsms')!.staleAfterMs).toBe(5000);
+    expect(status.nodes.find((n) => n.node.id === 'hvd')!.staleAfterMs).toBe(STALE_AFTER_MS);
+    expect(status.nodes.find((n) => n.node.id === 'glvms')!.staleAfterMs).toBeUndefined();
+    readings.delete(VCU.HVD);
+    expect(run(readings).nodes.find((n) => n.node.id === 'hvd')!.staleAfterMs).toBeUndefined();
+  });
+
   it('goes stale after a few missed messages once the rate is known', () => {
     const readings = allClosed();
     for (const t of topicsOf('BMS')) readings.set(t, { value: 1, receivedAt: NOW, changedAt: NOW, intervalMs: 1000 });

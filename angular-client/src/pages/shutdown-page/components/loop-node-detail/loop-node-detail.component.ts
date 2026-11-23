@@ -8,7 +8,8 @@ import {
   formatValue,
   KIND_LABEL,
   NODE_STATE_DISPLAY,
-  nodeNotes
+  nodeNotes,
+  stateLabel
 } from '../../shutdown-loop.display';
 import { LoopStatus } from '../../shutdown-loop.utils';
 import { StatusGlyphComponent } from '../status-glyph/status-glyph.component';
@@ -16,17 +17,18 @@ import { StatusGlyphComponent } from '../status-glyph/status-glyph.component';
 const discBase = tw('grid size-10 shrink-0 place-items-center rounded-full border-3');
 
 /**
- * Details of one node: what it is, its raw reading and age, and why it is in its state in loop terms. Shows the
- * node given (the page's highlighted one), else the break while the loop is open.
+ * Details of one loop node: what it is, its raw reading and age, and why it is in its state in loop terms. Shows
+ * the loop node given (the page's active one, ShutdownSelectionStore.activeId), else the break while the loop is
+ * open. The page's only detail panel: no view of the loop shows one of its own.
  */
 @Component({
-  selector: 'node-detail',
-  templateUrl: './node-detail.component.html',
+  selector: 'loop-node-detail',
+  templateUrl: './loop-node-detail.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
   imports: [StatusGlyphComponent, UiIconComponent]
 })
-export class NodeDetailComponent {
+export class LoopNodeDetailComponent {
   status = input.required<LoopStatus>();
   nodeId = input<string | null>(null);
 
@@ -41,6 +43,7 @@ export class NodeDetailComponent {
       s,
       order: index + 1,
       d,
+      stateLabel: stateLabel(s, loop),
       disc: cx(discBase, s.node.topic ? d.marker.measured : d.marker.unmeasured),
       kind: KIND_LABEL[s.node.kind],
       value: formatValue(s.value),

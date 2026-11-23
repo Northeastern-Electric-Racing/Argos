@@ -10,9 +10,18 @@ import {
   viewChildren
 } from '@angular/core';
 import { cx, tw } from 'src/ui/recipes/tw';
-import { loopZones, NODE_STATE_DISPLAY, nodeAriaLabel, SHORT_LABEL, ZoneSlot } from '../../shutdown-loop.display';
-import { rovingIndex } from '../../shutdown-selection.store';
+import {
+  loopOf,
+  loopZones,
+  NODE_STATE_DISPLAY,
+  nodeAriaLabel,
+  SHORT_LABEL,
+  shortStateLabel,
+  ZoneSlot
+} from '../../shutdown-loop.display';
 import { NodeStatus } from '../../shutdown-loop.utils';
+import { LoopView } from '../../loop-view/loop-view';
+import { rovingIndex } from '../../loop-view/roving-index';
 import { StatusGlyphComponent } from '../status-glyph/status-glyph.component';
 
 /** The bracket drawn over a zone, per position: legs only at its ends. */
@@ -34,9 +43,10 @@ const bracketLabelZone = {
 
 /**
  * The shutdown loop laid out in series order: the page's main diagnostic read. A listbox with one option per
- * node; arrows, Home and End move through it (one tab stop), and focus selects. The suspect stretch is bracketed in
- * the cause colour, the downstream run in a dashed grey marked "not the cause". Follows the view contract in
- * ShutdownSelectionStore. Scrolls sideways when narrow, bringing the highlighted node (or the stretch) into view.
+ * loop node; arrows, Home and End move focus through it (one tab stop) and preview, click, Enter or Space toggle
+ * the pin. The suspect stretch is bracketed in the cause colour, the downstream run in a dashed grey marked "not
+ * the cause". A LoopView (loop-view/loop-view.ts). Scrolls sideways when narrow, bringing the highlighted loop
+ * node (or the stretch) into view.
  */
 @Component({
   selector: 'loop-strip',
@@ -45,15 +55,14 @@ const bracketLabelZone = {
   host: { class: 'block min-w-0' },
   imports: [StatusGlyphComponent]
 })
-export class LoopStripComponent {
-  nodes = input.required<NodeStatus[]>();
-  selectedId = input<string | null>(null);
-  previewId = input<string | null>(null);
-  nodeSelect = output<string | null>();
-  nodePreview = output<string | null>();
+export class LoopStripComponent implements LoopView {
+  readonly nodes = input.required<NodeStatus[]>();
+  readonly selectedId = input<string | null>(null);
+  readonly previewId = input<string | null>(null);
+  readonly nodeSelect = output<string | null>();
+  readonly nodePreview = output<string | null>();
 
   protected readonly short = SHORT_LABEL;
-  protected readonly ariaLabel = nodeAriaLabel;
 
   private readonly scroller = viewChild.required<ElementRef<HTMLElement>>('scroller');
   private readonly itemEls = viewChildren<ElementRef<HTMLElement>>('item');
@@ -61,7 +70,14 @@ export class LoopStripComponent {
   protected readonly zones = computed(() => loopZones(this.nodes()));
   protected readonly items = computed(() => {
     const zones = this.zones();
-    return this.nodes().map((s, i) => ({ s, d: NODE_STATE_DISPLAY[s.state], z: zones[i] }));
+    const loop = loopOf(this.nodes());
+    return this.nodes().map((s, i) => ({
+      s,
+      d: NODE_STATE_DISPLAY[s.state],
+      z: zones[i],
+      ariaLabel: nodeAriaLabel(s, loop),
+      stateShort: shortStateLabel(s, loop)
+    }));
   });
   protected readonly highlightId = computed(() => this.previewId() ?? this.selectedId());
   /** The one node reachable by Tab: the selected one, else the first suspect, else the loop start. */
@@ -96,11 +112,16 @@ export class LoopStripComponent {
     return z.end ? 'Broke the loop' : 'Suspect stretch';
   }
 
+  /** Toggles the pin (LoopView rule 2). */
+  protected toggle(id: string): void {
+    this.nodeSelect.emit(id === this.selectedId() ? null : id);
+  }
+
   protected onKeydown(event: KeyboardEvent, index: number): void {
     const { id } = this.nodes()[index].node;
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
-      this.nodeSelect.emit(id);
+      this.toggle(id);
       return;
     }
     if (event.key === 'Escape') {
