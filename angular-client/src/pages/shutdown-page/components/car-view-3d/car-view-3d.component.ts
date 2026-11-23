@@ -4,52 +4,45 @@ import {
   Component,
   computed,
   DestroyRef,
+  DOCUMENT,
   effect,
   ElementRef,
   inject,
-  InjectionToken,
   input,
-  NgZone,
+  output,
   signal,
-  viewChild
+  viewChild,
+  viewChildren
 } from '@angular/core';
-import { DOCUMENT } from '@angular/common';
-import { NODE_STATE_DISPLAY, PLACEHOLDER_TAG } from '../../shutdown-loop.display';
+import { UiIconComponent } from 'src/ui/icon/icon.component';
+import { buttonClass } from 'src/ui/recipes/button';
+import { segmentedClasses } from 'src/ui/recipes/segmented';
+import { cx, tw } from 'src/ui/recipes/tw';
+import { loopOf, loopSummary, readStateColours } from '../../shutdown-loop.display';
+import { cssVarReader, readThemeColour } from '../../shutdown-loop.theme';
 import { NodeStatus } from '../../shutdown-loop.utils';
-import { CarViewComponent } from '../car-view/car-view.component';
-import { StatusGlyphComponent } from '../status-glyph/status-glyph.component';
-import { CarScene, CarSceneModule, ScreenPoint } from './car-scene.types';
+import { CarLoopView } from '../../loop-view/loop-view';
+import { CarScene, ScreenPoint } from './car-scene.types';
+import { BadgePlacement, placeBadges, ViewPreset } from './car-view-3d.projection';
+import { CAR_MODEL_URL, CAR_SCENE_LOADER, WEBGL_SUPPORT } from './car-view-3d.tokens';
 import {
-  FALLBACK_NOTICES,
+  ABSENT_MODEL_NOTICE,
+  BADGE_FALLBACK_SIZE,
+  BadgeModel,
+  badgeModels,
   FallbackReason,
   fallbackReasonFor,
-  isWebGLAvailable,
+  MATERIAL_MODES,
   MaterialMode,
-  nodeDetail,
-  placeBadges,
-  PositionSource,
-  resolveStateColours,
-  StateColours,
-  ViewPreset
+  orbitHint,
+  readMaterialMode,
+  sameSceneStatus,
+  SCENE_COLOR_TOKENS,
+  SceneColours,
+  sceneStatus,
+  writeMaterialMode
 } from './car-view-3d.utils';
 
-/** Loads the three.js scene module on demand, so three is a lazy chunk. Overridden in tests. */
-export const CAR_SCENE_LOADER = new InjectionToken<() => Promise<CarSceneModule>>('CAR_SCENE_LOADER', {
-  providedIn: 'root',
-  factory: () => () => import('./car-scene')
-});
-
-/** Whether this browser can make a WebGL context. Overridden in tests (jsdom has none). */
-export const WEBGL_SUPPORT = new InjectionToken<() => boolean>('WEBGL_SUPPORT', {
-  providedIn: 'root',
-  factory: () => {
-    const doc = inject(DOCUMENT);
-    return () => isWebGLAvailable(doc);
-  }
-});
-
-const MODEL_URL = 'assets/models/car.glb';
-const DRACO_PATH = 'assets/draco/';
 /** A click that moved further than this since pointerdown was an orbit drag, not a pick. */
 const CLICK_SLOP_PX = 5;
 
@@ -58,109 +51,103 @@ const VIEW_PRESETS: { id: ViewPreset; label: string }[] = [
   { id: 'top', label: 'Top' },
   { id: 'iso', label: 'Iso' }
 ];
-const MATERIAL_MODES: { id: MaterialMode; label: string }[] = [
-  { id: 'cad', label: 'CAD' },
-  { id: 'theme', label: 'Theme' },
-  { id: 'ghost', label: 'Ghost' }
-];
-const SOURCE_LABEL: Record<PositionSource, string> = {
-  model: 'from the model',
-  table: 'from the position table'
-};
 
-type Phase = 'loading' | 'ready' | 'fallback';
+type Phase = 'starting' | 'loading' | 'ready' | 'absent' | 'failed';
+
+const storage = (): Storage => localStorage;
+
+const BADGE_BASE = tw(
+  'pointer-events-auto invisible absolute top-0 left-0 inline-flex cursor-pointer items-center gap-0.5 rounded-full border-2 font-mono font-bold whitespace-nowrap select-none'
+);
+const BADGE_SIZE = { normal: tw('h-6 px-1 text-xs'), suspect: tw('h-8 px-2 text-sm') };
+const BADGE_HIGHLIGHT = tw('z-10 ring-2 ring-fg ring-offset-1 ring-offset-page');
 
 /**
- * 3D car view: loads the car model (glTF/GLB), draws the shutdown loop through it as tubes coloured by node
- * state, and lets the viewer orbit, pick a view and select a node. Falls back to the 2D side view when
- * WebGL, three or the model can't be loaded. three.js runs outside Angular and renders only on change.
+ * 3D car view (glTF): draws the shutdown loop as tubes and markers at once, then loads the car model (GLB) around
+ * them. Loop nodes are placed from NODE_POSITIONS_3D unless the model names an anchor for them. A LoopView: it
+ * highlights `previewId ?? selectedId`, a pick toggles the pin, hover previews; the strip is the keyboard path, so
+ * the canvas is an image labelled with the loop summary and the badges are pointer-only. When 3D can't run (no
+ * WebGL, a broken model, a lost context) it emits `unavailable` and the page shows the 2D view. Renders on change.
  */
 @Component({
   selector: 'car-view-3d',
   templateUrl: './car-view-3d.component.html',
-  styleUrls: ['../../shutdown-states.css', './car-view-3d.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CarViewComponent, StatusGlyphComponent]
+  imports: [UiIconComponent],
+  host: { class: 'flex flex-col gap-2', '(keydown.escape)': 'nodeSelect.emit(null)' }
 })
-export class CarView3dComponent {
-  nodes = input.required<NodeStatus[]>();
+export class CarView3dComponent implements CarLoopView {
+  readonly nodes = input.required<NodeStatus[]>();
+  readonly selectedId = input<string | null>(null);
+  readonly previewId = input<string | null>(null);
+  /** False below `sm`: an overview, so no picking and only the active loop node's badge. */
+  readonly interactive = input(true);
+  readonly nodeSelect = output<string | null>();
+  readonly nodePreview = output<string | null>();
+  /** 3D can't run here; the page switches to 2D and shows FALLBACK_NOTICES[reason]. */
+  readonly unavailable = output<FallbackReason>();
 
   private loadScene = inject(CAR_SCENE_LOADER);
   private webglSupported = inject(WEBGL_SUPPORT);
-  private zone = inject(NgZone);
+  private modelUrl = inject(CAR_MODEL_URL);
   private doc = inject(DOCUMENT);
-  private stage = viewChild<ElementRef<HTMLElement>>('stage');
-  private canvas = viewChild<ElementRef<HTMLCanvasElement>>('canvas');
-  private probes = viewChild.required<ElementRef<HTMLElement>>('probes');
+  private stage = viewChild.required<ElementRef<HTMLElement>>('stage');
+  private canvas = viewChild.required<ElementRef<HTMLCanvasElement>>('canvas');
+  private badgeEls = viewChildren<ElementRef<HTMLElement>>('badge');
+  private leaderEls = viewChildren<ElementRef<SVGLineElement>>('leader');
 
   private scene = signal<CarScene | null>(null);
   private destroyed = false;
-  private pointerDown?: { x: number; y: number };
+  private pointerDown?: { x: number; y: number; id: number };
+  private hoverId: string | null = null;
+  private placements = new Map<string, BadgePlacement>();
+  private badgeSizes = new Map<string, { width: number; height: number }>();
 
-  readonly phase = signal<Phase>('loading');
-  readonly fallbackReason = signal<FallbackReason | null>(null);
-  readonly notice = computed(() => {
-    const reason = this.fallbackReason();
-    return reason ? FALLBACK_NOTICES[reason] : '';
-  });
-  readonly view = signal<ViewPreset>('iso');
-  readonly materialMode = signal<MaterialMode>('ghost');
-  readonly selectedId = signal<string | null>(null);
-  readonly positionSources = signal<ReadonlyMap<string, PositionSource>>(new Map());
-
+  readonly phase = signal<Phase>('starting');
+  readonly progress = signal<number | null>(null);
+  readonly materialMode = signal<MaterialMode>(readMaterialMode(storage));
+  readonly coarsePointer = this.media('(pointer: coarse)');
+  readonly hint = orbitHint(this.coarsePointer);
+  readonly absentNotice = ABSENT_MODEL_NOTICE;
   readonly viewPresets = VIEW_PRESETS;
   readonly materialModes = MATERIAL_MODES;
-  readonly placeholderTag = PLACEHOLDER_TAG;
-  readonly states = Object.values(NODE_STATE_DISPLAY).map((d) => d.cssClass);
+  readonly presetClass = buttonClass('neutral', 'sm');
+  readonly modelListClass = segmentedClasses.list;
+  readonly modelItemClass = segmentedClasses.item;
 
-  readonly badges = computed(() =>
-    this.nodes().map((s, i) => ({
-      id: s.node.id,
-      order: i + 1,
-      cssClass: NODE_STATE_DISPLAY[s.state].cssClass,
-      unmeasured: !s.node.topic,
-      ariaLabel:
-        `${i + 1}. ${s.node.label}: ${NODE_STATE_DISPLAY[s.state].label}` +
-        (s.node.topic ? '' : ' (no sensor)') +
-        (s.mismatch ? ', mismatch' : '')
-    }))
-  );
-
-  readonly selected = computed(() => {
-    const id = this.selectedId();
-    const index = this.nodes().findIndex((s) => s.node.id === id);
-    if (index < 0) return null;
-    const status = this.nodes()[index];
-    const source = this.positionSources().get(status.node.id);
-    return {
-      order: index + 1,
-      status,
-      cssClass: NODE_STATE_DISPLAY[status.state].cssClass,
-      detail: nodeDetail(status),
-      source: source ? SOURCE_LABEL[source] : 'not placed'
-    };
+  /** previewId ?? selectedId: the loop node every view highlights. */
+  readonly active = computed(() => this.previewId() ?? this.selectedId());
+  readonly label = computed(() => `3D car view with shutdown loop nodes. ${loopSummary(loopOf(this.nodes()))}`);
+  readonly loadingText = computed(() => {
+    const p = this.progress();
+    return p === null ? 'Loading car model…' : `Loading car model… ${Math.round(p * 100)} %`;
   });
-
-  /** State colours as shutdown-states.css defines them, read once from hidden probe elements. */
-  private colours?: StateColours;
+  readonly badges = computed(() => badgeModels(this.nodes()));
+  /** What the scene draws; equal across ticks that change only values or ages, so those never reach three. */
+  private sceneStatus = computed(() => sceneStatus(this.nodes()), { equal: sameSceneStatus });
 
   constructor() {
     afterNextRender(() => void this.start());
 
     effect(() => {
       const scene = this.scene();
-      const nodes = this.nodes();
-      if (scene) this.zone.runOutsideAngular(() => scene.setStatuses(nodes, this.stateColours()));
+      const status = this.sceneStatus();
+      scene?.setStatuses(status);
     });
     effect(() => {
       const scene = this.scene();
       const mode = this.materialMode();
-      if (scene) this.zone.runOutsideAngular(() => scene.setMaterialMode(mode));
+      scene?.setMaterialMode(mode);
     });
     effect(() => {
       const scene = this.scene();
-      const id = this.selectedId();
-      if (scene) this.zone.runOutsideAngular(() => scene.setSelected(id));
+      const id = this.active();
+      scene?.setHighlight(id);
+    });
+    effect(() => {
+      // A new set of badges is laid out again before its first placement.
+      this.badgeEls();
+      this.badgeSizes.clear();
     });
 
     inject(DestroyRef).onDestroy(() => {
@@ -169,99 +156,155 @@ export class CarView3dComponent {
     });
   }
 
+  badgeClass(b: BadgeModel): string {
+    const active = this.active() === b.id;
+    return cx(
+      BADGE_BASE,
+      b.suspect ? BADGE_SIZE.suspect : BADGE_SIZE.normal,
+      b.classes,
+      active && BADGE_HIGHLIGHT,
+      !this.interactive() && (active ? tw('pointer-events-none') : tw('hidden'))
+    );
+  }
+
   setView(preset: ViewPreset): void {
-    this.view.set(preset);
     this.scene()?.setView(preset);
   }
 
-  select(id: string | null): void {
-    this.selectedId.set(this.selectedId() === id ? null : id);
+  setMaterialMode(mode: MaterialMode): void {
+    this.materialMode.set(mode);
+    writeMaterialMode(storage, mode);
+  }
+
+  /** Rule 2: a pick pins a loop node, picking the pinned one (or nothing) clears the pin. */
+  toggle(id: string | null): void {
+    this.nodeSelect.emit(id === null || id === this.selectedId() ? null : id);
+  }
+
+  preview(id: string | null): void {
+    if (id === this.hoverId) return;
+    this.hoverId = id;
+    this.nodePreview.emit(id);
   }
 
   onPointerDown(event: PointerEvent): void {
-    this.pointerDown = { x: event.clientX, y: event.clientY };
+    if (event.button !== 0 || event.isPrimary === false) return;
+    this.pointerDown = { x: event.clientX, y: event.clientY, id: event.pointerId };
+  }
+
+  onPointerMove(event: PointerEvent): void {
+    if (event.buttons || event.pointerType === 'touch' || !this.interactive()) return;
+    const scene = this.scene();
+    if (scene) this.preview(scene.pick(event.clientX, event.clientY));
   }
 
   onCanvasClick(event: MouseEvent): void {
     const start = this.pointerDown;
     this.pointerDown = undefined;
-    if (start && Math.hypot(event.clientX - start.x, event.clientY - start.y) > CLICK_SLOP_PX) return;
+    if (!start || Math.hypot(event.clientX - start.x, event.clientY - start.y) > CLICK_SLOP_PX) return;
     const scene = this.scene();
-    if (scene) this.selectedId.set(scene.pick(event.clientX, event.clientY));
+    if (scene && this.interactive()) this.toggle(scene.pick(event.clientX, event.clientY));
   }
 
   private async start(): Promise<void> {
-    if (!this.webglSupported()) return this.fallBack('webgl');
-    const stage = this.stage()?.nativeElement;
-    const canvas = this.canvas()?.nativeElement;
-    if (!stage || !canvas) return this.fallBack('init');
+    if (!this.webglSupported()) return this.fail('webgl');
+    let module;
     try {
-      const module = await this.loadScene();
-      if (this.destroyed) return;
-      const scene = await this.zone.runOutsideAngular(() =>
-        module.createCarScene({
-          container: stage,
-          canvas,
-          nodes: this.nodes().map((s) => s.node),
-          modelUrl: MODEL_URL,
-          dracoDecoderPath: DRACO_PATH,
-          view: this.view(),
-          materialMode: this.materialMode(),
-          theme: this.themeColours(),
-          onFrame: (points) => this.placeBadges(points)
-        })
-      );
-      if (this.destroyed) {
-        scene.dispose();
-        return;
-      }
-      this.positionSources.set(scene.positionSources);
-      this.scene.set(scene);
-      this.phase.set('ready');
+      module = await this.loadScene();
     } catch (error) {
-      console.error('Shutdown 3D view failed, showing 2D:', error);
-      this.fallBack(fallbackReasonFor(error));
+      return this.fail('init', error);
     }
-  }
-
-  private fallBack(reason: FallbackReason): void {
     if (this.destroyed) return;
-    this.fallbackReason.set(reason);
-    this.phase.set('fallback');
-  }
-
-  /** Moves each node's button next to its marker. Runs outside Angular on every rendered frame. */
-  private placeBadges(points: ScreenPoint[]): void {
-    const stage = this.stage()?.nativeElement;
-    if (!stage) return;
-    for (const b of placeBadges(points)) {
-      const button = stage.querySelector<HTMLElement>(`button[data-node-id="${b.id}"]`);
-      if (!button) continue;
-      button.style.transform = `translate(${b.left}px, ${b.top}px)`;
-      button.style.visibility = b.visible ? 'visible' : 'hidden';
-    }
-  }
-
-  private stateColours(): StateColours {
-    if (!this.colours) {
-      const probes = this.probes().nativeElement;
-      const view = this.doc.defaultView;
-      this.colours = resolveStateColours((cssClass) => {
-        const probe = probes.querySelector(`.${cssClass}`);
-        return probe && view ? view.getComputedStyle(probe).getPropertyValue('--sd-color') : undefined;
+    let scene: CarScene;
+    try {
+      scene = await module.createCarScene({
+        container: this.stage().nativeElement,
+        canvas: this.canvas().nativeElement,
+        nodes: this.nodes().map((s) => s.node),
+        view: 'iso',
+        materialMode: this.materialMode(),
+        colours: this.colours(),
+        reducedMotion: this.media('(prefers-reduced-motion: reduce)'),
+        coarsePointer: this.coarsePointer,
+        onFrame: (points) => this.placeBadges(points),
+        onContextLost: () => this.fail('context')
       });
+    } catch (error) {
+      return this.fail(fallbackReasonFor(error), error);
     }
-    return this.colours;
+    if (this.destroyed) return scene.dispose();
+    this.scene.set(scene);
+    this.phase.set('loading');
+    try {
+      const result = await scene.loadModel(this.modelUrl, (p) => this.progress.set(p));
+      if (this.destroyed) return;
+      if (result.kind === 'absent') {
+        console.info(`Shutdown 3D view: no car model (${result.reason}); drawing the loop wiring only.`);
+        this.phase.set('absent');
+      } else {
+        console.info(`Shutdown 3D view: ${result.summary}`);
+        result.warnings.forEach((w) => console.warn(`Shutdown 3D view: ${w}`));
+        this.phase.set('ready');
+      }
+    } catch (error) {
+      if (!this.destroyed) this.fail(fallbackReasonFor(error), error);
+    }
   }
 
-  private themeColours(): { body: string; ghost: string; grid: string; selection: string } {
-    const style = this.doc.defaultView?.getComputedStyle(this.doc.documentElement);
-    const token = (name: string, fallback: string) => style?.getPropertyValue(name).trim() || fallback;
-    return {
-      body: token('--color-border-strong', '#5a5a5a'),
-      ghost: token('--color-fg-muted', '#a3a3a3'),
-      grid: token('--color-border', '#414141'),
-      selection: token('--color-fg', '#efefef')
-    };
+  private fail(reason: FallbackReason, error?: unknown): void {
+    if (this.destroyed || this.phase() === 'failed') return;
+    console.warn(`Shutdown 3D view unavailable (${reason}), showing 2D.`, error ?? '');
+    this.phase.set('failed');
+    this.scene()?.dispose();
+    this.scene.set(null);
+    this.unavailable.emit(reason);
+  }
+
+  /** Moves each badge next to its marker, with a leader line when it had to move away. Runs per rendered frame. */
+  private placeBadges(points: ScreenPoint[]): void {
+    const els = new Map(this.badgeEls().map((r) => [r.nativeElement.dataset['nodeId']!, r.nativeElement]));
+    const leaders = new Map(this.leaderEls().map((r) => [r.nativeElement.dataset['nodeId']!, r.nativeElement]));
+    const models = new Map(this.badges().map((b) => [b.id, b]));
+    if (!this.badgeSizes.size) {
+      for (const [id, el] of els) {
+        const width = el.offsetWidth || BADGE_FALLBACK_SIZE.width;
+        const height = el.offsetHeight || BADGE_FALLBACK_SIZE.height;
+        this.badgeSizes.set(id, { width, height });
+      }
+    }
+    const input = points
+      .filter((p) => els.has(p.id))
+      .map((p) => ({ ...p, suspect: !!models.get(p.id)?.suspect, ...(this.badgeSizes.get(p.id) ?? BADGE_FALLBACK_SIZE) }));
+    const placed = placeBadges(input, this.placements);
+    this.placements = new Map(placed.map((b) => [b.id, b]));
+    for (const b of placed) {
+      const el = els.get(b.id)!;
+      el.style.transform = `translate(${b.left}px, ${b.top}px)`;
+      el.style.visibility = b.visible ? 'visible' : 'hidden';
+      const line = leaders.get(b.id);
+      if (!line) continue;
+      const p = points.find((q) => q.id === b.id)!;
+      line.style.visibility = b.leader && !el.classList.contains('hidden') ? 'visible' : 'hidden';
+      line.setAttribute('x1', String(p.x));
+      line.setAttribute('y1', String(p.y));
+      line.setAttribute('x2', String(b.leaderTo.x));
+      line.setAttribute('y2', String(b.leaderTo.y));
+    }
+  }
+
+  private colours(): { states: ReturnType<typeof readStateColours>; scene: SceneColours } {
+    const read = cssVarReader(this.doc.documentElement);
+    const scene = Object.fromEntries(
+      Object.entries(SCENE_COLOR_TOKENS).map(([name, token]) => [name, readThemeColour(token, read)])
+    ) as SceneColours;
+    return { states: readStateColours(read), scene };
+  }
+
+  private media(query: string): boolean {
+    try {
+      return this.doc.defaultView?.matchMedia?.(query).matches ?? false;
+    } catch {
+      return false;
+    }
   }
 }

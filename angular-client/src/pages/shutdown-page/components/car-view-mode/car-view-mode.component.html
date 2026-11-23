@@ -1,0 +1,14 @@
+<div role="group" aria-label="Car view" [class]="listClass">
+  @for (m of modes; track m.id) {
+    <button
+      type="button"
+      [class]="itemClass"
+      [attr.aria-pressed]="mode() === m.id"
+      [attr.aria-description]="m.id === '3d' && unavailable() ? unavailable() : null"
+      [attr.title]="m.id === '3d' && unavailable() ? unavailable() : null"
+      (click)="choose(m.id)"
+    >
+      {{ m.label }}
+    </button>
+  }
+</div>

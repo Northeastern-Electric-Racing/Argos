@@ -2,7 +2,7 @@ import { SHUTDOWN_LOOP } from './shutdown-loop.model';
 import { NODE_POSITIONS_3D } from './shutdown-loop.positions-3d';
 
 describe('NODE_POSITIONS_3D', () => {
-  it('has a position for every node in the loop', () => {
+  it('has a position for every loop node', () => {
     const missing = SHUTDOWN_LOOP.filter((n) => !NODE_POSITIONS_3D[n.id]).map((n) => n.id);
     expect(missing).toEqual([]);
   });
@@ -12,23 +12,33 @@ describe('NODE_POSITIONS_3D', () => {
     expect(Object.keys(NODE_POSITIONS_3D).filter((id) => !ids.has(id))).toEqual([]);
   });
 
-  it('places every node on the car, in metres around the rear axle', () => {
-    for (const [id, [x, y, z]] of Object.entries(NODE_POSITIONS_3D)) {
-      expect([x, y, z].every(Number.isFinite), id).toBe(true);
-      expect(x, id).toBeGreaterThan(-0.5);
-      expect(x, id).toBeLessThan(3);
-      expect(y, id).toBeGreaterThanOrEqual(0);
-      expect(y, id).toBeLessThan(1.5);
-      expect(Math.abs(z), id).toBeLessThan(1);
+  it('gives no two loop nodes the same position', () => {
+    const seen = new Map<string, string>();
+    for (const [id, p] of Object.entries(NODE_POSITIONS_3D)) {
+      const key = p.join(',');
+      expect(seen.get(key), `${id} shares ${key}`).toBeUndefined();
+      seen.set(key, id);
     }
   });
 
-  it('puts the right side BRB on the driver’s right (+Z) and the left one on the left', () => {
-    expect(NODE_POSITIONS_3D['side-brb-r'][2]).toBeGreaterThan(0);
-    expect(NODE_POSITIONS_3D['side-brb-l'][2]).toBeLessThan(0);
+  it('places every loop node on the car, in metres around the rear axle', () => {
+    for (const [id, [x, y, z]] of Object.entries(NODE_POSITIONS_3D)) {
+      expect([x, y, z].every(Number.isFinite), id).toBe(true);
+      expect(x, id).toBeGreaterThanOrEqual(-0.75);
+      expect(x, id).toBeLessThanOrEqual(0.75);
+      expect(y, id).toBeGreaterThanOrEqual(0);
+      expect(y, id).toBeLessThanOrEqual(1.3);
+      expect(z, id).toBeGreaterThanOrEqual(-0.5);
+      expect(z, id).toBeLessThanOrEqual(2.6);
+    }
   });
 
-  it('puts BOTS (pedal box) ahead of the AIRs (accumulator)', () => {
-    expect(NODE_POSITIONS_3D['bots'][0]).toBeGreaterThan(NODE_POSITIONS_3D['airs'][0]);
+  it('puts the left side BRB on the driver’s left (+X) and the right one on the right', () => {
+    expect(NODE_POSITIONS_3D['side-brb-l'][0]).toBeGreaterThan(0);
+    expect(NODE_POSITIONS_3D['side-brb-r'][0]).toBeLessThan(0);
+  });
+
+  it('puts BOTS (pedal box) ahead of the AIRs (accumulator), along +Z', () => {
+    expect(NODE_POSITIONS_3D['bots'][2]).toBeGreaterThan(NODE_POSITIONS_3D['airs'][2]);
   });
 });

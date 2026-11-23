@@ -1,136 +1,108 @@
-import { NODE_STATE_DISPLAY } from '../../shutdown-loop.display';
+import { NODE_STATE_DISPLAY, segmentState, SHORT_LABEL, WireEmphasis } from '../../shutdown-loop.display';
 import { LoopNode } from '../../shutdown-loop.model';
 import { NODE_ANCHOR_PREFIX, Vec3 } from '../../shutdown-loop.positions-3d';
+import { ThemeColourToken } from '../../shutdown-loop.theme';
 import { NodeState, NodeStatus } from '../../shutdown-loop.utils';
 
-// Pure logic for the 3D car view. Nothing here imports three, so it is cheap to test and to load.
+// Pure logic for the glTF 3D car view. Nothing here imports three, so it is cheap to test and to load.
 
-export type ViewPreset = 'side' | 'top' | 'iso';
-/** How the car model is painted: its own (CAD) colours, a theme grey, or a see-through theme grey. */
-export type MaterialMode = 'cad' | 'theme' | 'ghost';
+/** How the car model is painted: its own colours, a solid theme grey, or a see-through theme grey. */
+export type MaterialMode = 'original' | 'solid' | 'see-through';
+export const MATERIAL_MODES: readonly { id: MaterialMode; label: string }[] = [
+  { id: 'original', label: 'Original' },
+  { id: 'solid', label: 'Solid' },
+  { id: 'see-through', label: 'See-through' }
+];
 export type MarkerShape = 'sphere' | 'octahedron' | 'cone' | 'box';
-export type PositionSource = 'model' | 'table';
 export type StateColours = Record<NodeState, string>;
 
-/** A named node found in the model, with its position in model space (metres). */
-export interface NodeAnchor {
-  name: string;
-  position: Vec3;
-}
-export interface ResolvedPositions {
-  positions: Map<string, { position: Vec3; source: PositionSource }>;
-  /** Loop nodes with neither an anchor in the model nor a table entry; they are not drawn. */
-  missing: string[];
-  /** Anchors named like a shutdown node whose id is not in the loop (typos in CAD). */
-  unknownAnchors: string[];
-}
+/** Neutral theme tokens for the scene itself; state colours come from readStateColours. */
+export const SCENE_COLOR_TOKENS = {
+  body: '--color-border-strong',
+  ghost: '--color-fg-muted',
+  grid: '--color-border',
+  highlight: '--color-fg',
+  mismatch: '--color-warn'
+} as const satisfies Record<string, ThemeColourToken>;
+export type SceneColours = Record<keyof typeof SCENE_COLOR_TOKENS, string>;
+
+// ---------------------------------------------------------------------------------------------------------------
+// Model anchors and units
 
 const ANCHOR_RE = new RegExp(`^${NODE_ANCHOR_PREFIX.slice(0, -1)}[:_](.+?)(?:\\.\\d+)?$`, 'i');
 
 /**
- * The loop node id a model node's name marks, or undefined. Accepts `shutdown:<id>` as documented, and
- * the forms exporters turn it into: `shutdown_<id>` with underscores for hyphens, any case, and Blender's
- * `.001` duplicate suffix.
+ * The loop node id a model node's authored name marks, or undefined. Accepts `shutdown:<id>` as documented, and
+ * the forms exporters turn it into: `shutdown_<id>` with underscores for hyphens, any case, and Blender's `.001`
+ * duplicate suffix. A parsed id is only an anchor if it is a loop node id (prepareModel checks).
  */
 export function parseNodeAnchorName(name: string): string | undefined {
   const match = ANCHOR_RE.exec(name.trim());
   return match ? match[1].toLowerCase().replace(/_/g, '-') : undefined;
 }
 
-/** Each node's position: a named empty in the model wins over the table; the first anchor for an id wins. */
+/** Named exactly as documented (`shutdown:`), so an unknown id after it is a typo worth reporting. */
+export const hasExactAnchorPrefix = (name: string) => name.startsWith(NODE_ANCHOR_PREFIX);
+
+export interface ResolvedPositions {
+  positions: Map<string, { position: Vec3; source: 'model' | 'table' }>;
+  /** Loop nodes with neither an anchor in the model nor a table entry; they are not drawn. */
+  missing: string[];
+}
+
+/** Each loop node's position: an anchor in the model wins over the table. */
 export function resolveNodePositions(
   nodes: readonly LoopNode[],
   table: Readonly<Record<string, Vec3>>,
-  anchors: readonly NodeAnchor[]
+  anchors: ReadonlyMap<string, Vec3> = new Map()
 ): ResolvedPositions {
-  const ids = new Set(nodes.map((n) => n.id));
-  const fromModel = new Map<string, Vec3>();
-  const unknownAnchors: string[] = [];
-  for (const anchor of anchors) {
-    const id = parseNodeAnchorName(anchor.name);
-    if (id === undefined) continue;
-    if (!ids.has(id)) unknownAnchors.push(anchor.name);
-    else if (!fromModel.has(id)) fromModel.set(id, anchor.position);
-  }
-
   const positions: ResolvedPositions['positions'] = new Map();
   const missing: string[] = [];
   for (const { id } of nodes) {
-    const model = fromModel.get(id);
-    const tablePos = table[id];
+    const model = anchors.get(id);
     if (model) positions.set(id, { position: model, source: 'model' });
-    else if (tablePos) positions.set(id, { position: tablePos, source: 'table' });
+    else if (table[id]) positions.set(id, { position: table[id], source: 'table' });
     else missing.push(id);
   }
-  return { positions, missing, unknownAnchors };
+  return { positions, missing };
 }
 
-/** shutdown-states.css values, used when the stylesheet's colours can't be read (tests, odd browsers). */
-export const FALLBACK_STATE_COLOURS: StateColours = {
-  closed: '#2fd35a',
-  suspect: '#ff4d4d',
-  'downstream-open': '#8a8a8a',
-  'no-data': '#8b93a1'
-};
+/** Unit scales a CAD export may need: metres, centimetres, millimetres, inches. */
+const UNIT_SCALES = [1, 0.01, 0.001, 0.0254] as const;
+const CAR_LENGTH_M = 3;
+const CAR_LENGTH_RANGE_M = [1.5, 6] as const;
 
 /**
- * Each state's colour, read through the same class the 2D view uses (NODE_STATE_DISPLAY[state].cssClass),
- * so the 3D view follows shutdown-states.css. `read` returns the `--sd-color` an element with that class gets.
+ * The scale that brings a model to metres, guessed from its largest dimension: the unit that makes it closest to a
+ * 3 m car, if that lands between 1.5 m and 6 m. `fits` is false (and the scale 1) when no unit does.
  */
-export function resolveStateColours(read: (cssClass: string) => string | null | undefined): StateColours {
-  const colours = { ...FALLBACK_STATE_COLOURS };
-  for (const state of Object.keys(NODE_STATE_DISPLAY) as NodeState[]) {
-    const value = read(NODE_STATE_DISPLAY[state].cssClass)?.trim();
-    if (value) colours[state] = value;
+export function unitScaleFor(maxDimension: number): { scale: number; fits: boolean } {
+  if (!Number.isFinite(maxDimension) || maxDimension <= 0) return { scale: 1, fits: false };
+  const [lo, hi] = CAR_LENGTH_RANGE_M;
+  let best: number | undefined;
+  for (const scale of UNIT_SCALES) {
+    const length = maxDimension * scale;
+    if (length < lo || length > hi) continue;
+    if (best === undefined || Math.abs(length - CAR_LENGTH_M) < Math.abs(maxDimension * best - CAR_LENGTH_M)) best = scale;
   }
-  return colours;
+  return best === undefined ? { scale: 1, fits: false } : { scale: best, fits: true };
 }
 
-/** strong = the cause, muted = open only because of upstream or unknown; drawn thick / thin. */
-export type SegmentEmphasis = 'strong' | 'normal' | 'muted';
-export interface LoopSegment3d {
-  key: string;
-  from: Vec3;
-  to: Vec3;
-  state: NodeState;
-  colour: string;
-  emphasis: SegmentEmphasis;
+/** The one console line a model load writes, so placement can be checked without a debugger. */
+export function modelSummary(s: {
+  file: string;
+  total: number;
+  anchored: readonly string[];
+  scale: number;
+  unknownAnchors: readonly string[];
+}): string {
+  const from = s.anchored.length ? ` (${s.anchored.join(', ')})` : '';
+  const unknown = s.unknownAnchors.length ? s.unknownAnchors.join(', ') : 'none';
+  return `${s.file}: ${s.anchored.length}/${s.total} loop nodes from anchors${from}, scale ×${s.scale}, unknown: ${unknown}`;
 }
 
-const EMPHASIS: Record<NodeState, SegmentEmphasis> = {
-  closed: 'normal',
-  suspect: 'strong',
-  'downstream-open': 'muted',
-  'no-data': 'muted'
-};
-
-/**
- * The loop wiring as segments between consecutive nodes in series order. Each segment takes the state of
- * the node it leaves, as the 2D view's polyline does. Pairs with an unplaced end are skipped.
- */
-export function loopSegments(
-  statuses: readonly NodeStatus[],
-  positions: ResolvedPositions['positions'],
-  colours: StateColours
-): LoopSegment3d[] {
-  const segments: LoopSegment3d[] = [];
-  for (let i = 0; i + 1 < statuses.length; i++) {
-    const from = statuses[i];
-    const to = statuses[i + 1];
-    const a = positions.get(from.node.id);
-    const b = positions.get(to.node.id);
-    if (!a || !b) continue;
-    segments.push({
-      key: `${from.node.id}-${to.node.id}`,
-      from: a.position,
-      to: b.position,
-      state: from.state,
-      colour: colours[from.state],
-      emphasis: EMPHASIS[from.state]
-    });
-  }
-  return segments;
-}
+// ---------------------------------------------------------------------------------------------------------------
+// What the scene draws, reduced to what changes its pixels
 
 /** One shape per state, so markers read apart without colour (WCAG 1.4.1). */
 export const MARKER_SHAPES: Record<NodeState, MarkerShape> = {
@@ -140,178 +112,138 @@ export const MARKER_SHAPES: Record<NodeState, MarkerShape> = {
   'no-data': 'box'
 };
 
-export interface MarkerStyle {
-  shape: MarkerShape;
-  /** Unmeasured nodes (no sensor) are drawn as wireframes, like the 2D view's hollow markers. */
-  hollow: boolean;
-  colour: string;
+/** A loop node as the scene draws it: no value or age, which change every tick without changing a pixel. */
+export interface SceneNode {
+  id: string;
+  state: NodeState;
+  /** Has a sensor of its own; unmeasured markers are wireframes, like the 2D view's hollow markers. */
+  measured: boolean;
+  mismatch: boolean;
+}
+export interface SceneStatus {
+  nodes: SceneNode[];
+  /** segments[i] is the state of the wire from nodes[i] to nodes[i + 1] (segmentState, shared with 2D). */
+  segments: NodeState[];
 }
 
-export function markerStyle(status: NodeStatus, colours: StateColours): MarkerStyle {
-  return { shape: MARKER_SHAPES[status.state], hollow: !status.node.topic, colour: colours[status.state] };
-}
-
-export interface NodeDetail {
-  stateLabel: string;
-  topic: string;
-  value: string;
-  age: string;
-}
-
-/** Text for the selected node's detail panel. */
-export function nodeDetail(s: NodeStatus): NodeDetail {
-  const stateLabel = NODE_STATE_DISPLAY[s.state].label;
-  if (!s.node.topic) return { stateLabel, topic: 'no sensor', value: '—', age: '—' };
-  if (s.state === 'no-data' || s.value === undefined || s.ageMs === undefined) {
-    return { stateLabel, topic: s.node.topic, value: 'no data', age: '—' };
-  }
+export function sceneStatus(nodes: readonly NodeStatus[]): SceneStatus {
   return {
-    stateLabel,
-    topic: s.node.topic,
-    value: `${s.value} (${s.value ? 'closed' : 'open'})`,
-    age: `${Math.round(s.ageMs / 1000)} s ago`
+    nodes: nodes.map((s) => ({ id: s.node.id, state: s.state, measured: !!s.node.topic, mismatch: s.mismatch })),
+    segments: nodes.slice(0, -1).map((_, i) => segmentState(nodes, i))
   };
 }
 
-/**
- * Scale that brings a model to metres, guessed from its largest dimension: a car is a few metres long, so a
- * size in the hundreds is centimetres and in the thousands millimetres (common for CAD exports).
- */
-export function unitScaleFor(maxDimension: number): number {
-  if (!Number.isFinite(maxDimension) || maxDimension <= 0) return 1;
-  if (maxDimension > 1000) return 0.001;
-  if (maxDimension > 50) return 0.01;
-  return 1;
+/** Equality for a `computed` of sceneStatus, so ticks that change only values or ages never reach three. */
+export function sameSceneStatus(a: SceneStatus, b: SceneStatus): boolean {
+  return (
+    a.nodes.length === b.nodes.length &&
+    a.segments.length === b.segments.length &&
+    a.nodes.every((n, i) => markerKey(n) === markerKey(b.nodes[i]) && n.id === b.nodes[i].id) &&
+    a.segments.every((s, i) => s === b.segments[i])
+  );
 }
 
-/**
- * Camera distance from the target at which every point is in view. Points are relative to the target, in
- * camera axes: x right, y up, z towards the camera. Fitting the box's corners rather than its bounding
- * sphere fills a wide canvas properly.
- */
-export function fitDistanceToPoints(points: readonly Vec3[], verticalFovDeg: number, aspect: number, margin = 1.1): number {
-  const tanV = Math.tan((verticalFovDeg * Math.PI) / 360);
-  const tanH = tanV * aspect;
-  let distance = 0;
-  for (const [x, y, z] of points) {
-    distance = Math.max(distance, z + Math.max((Math.abs(x) * margin) / tanH, (Math.abs(y) * margin) / tanV));
-  }
-  return distance;
+/** Everything that changes a marker's look. */
+export const markerKey = (n: SceneNode) =>
+  `${MARKER_SHAPES[n.state]}|${n.state}|${n.measured ? 'solid' : 'hollow'}|${n.mismatch}`;
+
+export interface SegmentStyle {
+  emphasis: WireEmphasis;
+  /** [dash, gap] in metres, or null for a solid wire. */
+  dash: readonly [number, number] | null;
 }
 
-/** Node buttons are this many CSS pixels square (the AA minimum target). */
-export const BADGE_SIZE = 24;
-const BADGE_GAP = 2;
-/**
- * Where a badge's top-left corner may go relative to its marker, in order of preference: up-right first,
- * then the other corners, then a ring further out.
- */
-const BADGE_OFFSETS: readonly (readonly [number, number])[] = [
-  [6, -30],
-  [-30, -30],
-  [6, 6],
-  [-30, 6],
-  [6, -56],
-  [-30, -56],
-  [32, -30],
-  [-56, -30],
-  [32, 6],
-  [-56, 6],
-  [6, 32],
-  [-30, 32],
-  [32, -56],
-  [-56, -56],
-  [32, 32],
-  [-56, 32]
-];
+/** Metres per SVG user unit when the 2D dash pattern is drawn along a 3D wire. */
+export const DASH_UNIT_M = 0.006;
 
-export interface BadgePlacement {
+/** A wire's style from its state, in the same language as 2D: NODE_STATE_DISPLAY's emphasis and dash pattern. */
+export function segmentStyle(state: NodeState): SegmentStyle {
+  const { emphasis, dash } = NODE_STATE_DISPLAY[state];
+  const parts = dash?.split(/[\s,]+/).map(Number) ?? [];
+  const valid = parts.length >= 2 && parts.every((n) => Number.isFinite(n) && n > 0);
+  return { emphasis, dash: valid ? [parts[0] * DASH_UNIT_M, parts[1] * DASH_UNIT_M] : null };
+}
+
+/** Everything that changes a wire's look. */
+export const segmentKey = (state: NodeState) => {
+  const { emphasis, dash } = segmentStyle(state);
+  return `${state}|${emphasis}|${dash?.join(',') ?? 'solid'}`;
+};
+
+/** The ids whose key differs between `before` and `after` (new ids included). */
+export function changedKeys(before: ReadonlyMap<string, string>, after: ReadonlyMap<string, string>): string[] {
+  return [...after].filter(([id, key]) => before.get(id) !== key).map(([id]) => id);
+}
+
+/** Splits the line from `from` to `to` into dashes of length `dash` separated by `gap`; the last may be shorter. */
+export function dashPieces(from: Vec3, to: Vec3, dash: number, gap: number): [Vec3, Vec3][] {
+  const length = Math.hypot(to[0] - from[0], to[1] - from[1], to[2] - from[2]);
+  if (length === 0 || dash <= 0) return [];
+  const at = (d: number): Vec3 => {
+    const t = Math.min(d, length) / length;
+    return [from[0] + (to[0] - from[0]) * t, from[1] + (to[1] - from[1]) * t, from[2] + (to[2] - from[2]) * t];
+  };
+  const pieces: [Vec3, Vec3][] = [];
+  // A small epsilon so floating error at the end doesn't add a zero-length dash.
+  for (let d = 0; d < length - 1e-9; d += dash + gap) pieces.push([at(d), at(d + dash)]);
+  return pieces;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Badges
+
+export interface BadgeModel {
   id: string;
-  left: number;
-  top: number;
-  visible: boolean;
+  /** 1-based position in the loop. */
+  order: number;
+  /** Material Icons ligature of the state (StateDisplay.icon). */
+  icon: string;
+  /** The suspect badge also names the loop node. */
+  name: string | null;
+  suspect: boolean;
+  mismatch: boolean;
+  /** Marker classes from NODE_STATE_DISPLAY: filled when measured, hollow (dashed when not live) when not. */
+  classes: string;
 }
 
-/**
- * Places each node's button next to its projected marker, in loop order, taking the first spot around the
- * marker that doesn't cover a button already placed (clustered nodes, like the latches, fan out).
- */
-export function placeBadges(points: readonly { id: string; x: number; y: number; visible: boolean }[]): BadgePlacement[] {
-  const taken: { left: number; top: number }[] = [];
-  const reach = BADGE_SIZE + BADGE_GAP;
-  // Total overlap (px²) of a badge at (left, top) with those already placed; 0 = clear.
-  const overlap = (left: number, top: number) =>
-    taken.reduce(
-      (sum, t) => sum + Math.max(0, reach - Math.abs(t.left - left)) * Math.max(0, reach - Math.abs(t.top - top)),
-      0
-    );
-  return points.map((p) => {
-    const spots = BADGE_OFFSETS.map(([dx, dy]) => ({ left: Math.round(p.x + dx), top: Math.round(p.y + dy) }));
-    if (!p.visible) return { id: p.id, ...spots[0], visible: false };
-    // The first clear spot, or, in a crowd, the least covered one.
-    let [spot] = spots;
-    let best = Infinity;
-    for (const s of spots) {
-      const o = overlap(s.left, s.top);
-      if (o < best) {
-        best = o;
-        spot = s;
-      }
-      if (o === 0) break;
-    }
-    taken.push(spot);
-    return { id: p.id, ...spot, visible: true };
+export function badgeModels(nodes: readonly NodeStatus[]): BadgeModel[] {
+  return nodes.map((s, i) => {
+    const display = NODE_STATE_DISPLAY[s.state];
+    const suspect = s.state === 'suspect';
+    return {
+      id: s.node.id,
+      order: i + 1,
+      icon: display.icon,
+      name: suspect ? SHORT_LABEL[s.node.id] ?? s.node.label : null,
+      suspect,
+      mismatch: s.mismatch,
+      classes: s.node.topic ? display.marker.measured : display.marker.unmeasured
+    };
   });
 }
 
-/**
- * Direction from the target to the camera per preset, in model space. Side looks at the car's left so the
- * nose points left, as in the 2D view.
- */
-export const VIEW_DIRECTIONS: Record<ViewPreset, Vec3> = {
-  side: [0, 0.05, -1],
-  top: [0, 1, -0.001],
-  iso: [0.8, 0.7, -1]
-};
+/** Badge size used until the browser has laid a badge out (and in jsdom, which lays nothing out). */
+export const BADGE_FALLBACK_SIZE = { width: 36, height: 24 } as const;
 
-/** The id of the visible point nearest (x, y), if one is within `reach` pixels. */
-export function nearestPoint(
-  points: readonly { id: string; x: number; y: number; visible: boolean }[],
-  x: number,
-  y: number,
-  reach: number
-): string | null {
-  let best: string | null = null;
-  let bestDist = reach;
-  for (const p of points) {
-    if (!p.visible) continue;
-    const d = Math.hypot(p.x - x, p.y - y);
-    if (d <= bestDist) {
-      best = p.id;
-      bestDist = d;
-    }
-  }
-  return best;
-}
+// ---------------------------------------------------------------------------------------------------------------
+// Fallbacks, notices and preferences
 
-export function isWebGLAvailable(doc: Pick<Document, 'createElement'>): boolean {
-  try {
-    const canvas = doc.createElement('canvas');
-    return !!(canvas.getContext('webgl2') ?? canvas.getContext('webgl'));
-  } catch {
-    return false;
-  }
-}
+export type FallbackReason = 'webgl' | 'model' | 'init' | 'context';
 
-export type FallbackReason = 'webgl' | 'model' | 'init';
-
-/** Thrown by the scene: no WebGL context could be made, or the model failed to load or parse. */
+/** Thrown by the scene: no WebGL context, the model is present but broken (or timed out), or setup failed. */
 export class CarSceneError extends Error {
   constructor(
-    readonly kind: 'webgl' | 'model',
+    readonly kind: 'webgl' | 'model' | 'init',
     options?: { cause?: unknown }
   ) {
-    super(kind === 'webgl' ? 'WebGL is unavailable' : 'The car model could not be loaded', options);
+    super(
+      kind === 'webgl'
+        ? 'WebGL is unavailable'
+        : kind === 'model'
+          ? 'The car model could not be loaded'
+          : 'The 3D scene failed to start',
+      options
+    );
     this.name = 'CarSceneError';
   }
 }
@@ -320,27 +252,36 @@ export function fallbackReasonFor(error: unknown): FallbackReason {
   return error instanceof CarSceneError ? error.kind : 'init';
 }
 
+/** Shown by the page above the 2D view after the 3D view gave up. File paths go to the console only. */
 export const FALLBACK_NOTICES: Record<FallbackReason, string> = {
-  webgl: 'The 3D view needs WebGL, which this browser has turned off. Showing the 2D view.',
-  model: 'The car model (assets/models/car.glb) is missing or could not be read. Showing the 2D view.',
-  init: 'The 3D view failed to start. Showing the 2D view.'
+  webgl: '3D view unavailable (no WebGL). Showing 2D.',
+  model: '3D view unavailable (the car model could not be read). Showing 2D.',
+  init: '3D view failed to start. Showing 2D.',
+  context: '3D view lost its graphics context (sleep or GPU reset). Showing 2D; switch to 3D to retry.'
 };
 
-export type CarViewMode = '2d' | '3d';
-export const VIEW_MODE_KEY = 'shutdown-car-view';
+export const ABSENT_MODEL_NOTICE = 'No car model yet, showing the loop wiring only';
 
-/** The stored 2D/3D choice; 3D when nothing (valid) is stored or storage is blocked. */
-export function readViewMode(storage: () => Pick<Storage, 'getItem'>): CarViewMode {
+/** How to move the camera, for the pointer in hand. */
+export const orbitHint = (coarse: boolean) =>
+  coarse
+    ? 'Two fingers to rotate and zoom. Pick a view to reset.'
+    : 'Drag to orbit, scroll to zoom, right-drag to pan. Pick a view to reset.';
+
+export const MATERIAL_MODE_KEY = 'argos.shutdown.carView.material';
+
+export function readMaterialMode(storage: () => Pick<Storage, 'getItem'>): MaterialMode {
   try {
-    return storage().getItem(VIEW_MODE_KEY) === '2d' ? '2d' : '3d';
+    const stored = storage().getItem(MATERIAL_MODE_KEY);
+    return MATERIAL_MODES.some((m) => m.id === stored) ? (stored as MaterialMode) : 'see-through';
   } catch {
-    return '3d';
+    return 'see-through';
   }
 }
 
-export function writeViewMode(storage: () => Pick<Storage, 'setItem'>, mode: CarViewMode): void {
+export function writeMaterialMode(storage: () => Pick<Storage, 'setItem'>, mode: MaterialMode): void {
   try {
-    storage().setItem(VIEW_MODE_KEY, mode);
+    storage().setItem(MATERIAL_MODE_KEY, mode);
   } catch {
     // Private mode or blocked storage: the choice just isn't remembered.
   }

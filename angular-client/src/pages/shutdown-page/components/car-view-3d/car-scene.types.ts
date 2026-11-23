@@ -1,43 +1,48 @@
 import { LoopNode } from '../../shutdown-loop.model';
-import { NodeStatus } from '../../shutdown-loop.utils';
-import { MaterialMode, PositionSource, StateColours, ViewPreset } from './car-view-3d.utils';
+import { ProjectedPoint, ViewPreset } from './car-view-3d.projection';
+import { MaterialMode, SceneColours, SceneStatus, StateColours } from './car-view-3d.utils';
 
 // The contract between the car-view-3d component and the lazily loaded three.js scene (car-scene.ts).
 // Kept apart from car-scene.ts so the component (and its tests) never import three.
 
-/** A node's marker projected onto the canvas, in CSS pixels from its top-left corner. */
-export interface ScreenPoint {
-  id: string;
-  x: number;
-  y: number;
-  /** False when the point is behind the camera or off the canvas. */
-  visible: boolean;
-}
+/** A loop node's marker projected onto the canvas, in CSS pixels from its top-left corner. */
+export type ScreenPoint = ProjectedPoint;
 
 export interface CarSceneOptions {
   /** Sized element the canvas fills; watched for resizes. */
   container: HTMLElement;
   canvas: HTMLCanvasElement;
   nodes: readonly LoopNode[];
-  modelUrl: string;
-  /** Folder holding the Draco decoder (draco_decoder.wasm etc.), served from our own assets. */
-  dracoDecoderPath: string;
   view: ViewPreset;
   materialMode: MaterialMode;
-  /** Theme colours (CSS colour strings) for the theme / ghost materials and the ground grid. */
-  theme: { body: string; ghost: string; grid: string; selection: string };
-  /** Called after every rendered frame with each placed node's screen position. */
+  /** Theme colours (CSS colour strings): readStateColours for the states, SCENE_COLOR_TOKENS for the rest. */
+  colours: { states: StateColours; scene: SceneColours };
+  /** prefers-reduced-motion: no orbit damping. */
+  reducedMotion: boolean;
+  /** A coarse (touch) pointer: one finger scrolls the page, two fingers orbit and zoom. */
+  coarsePointer: boolean;
+  /** Called after every rendered frame with each placed loop node's screen position. */
   onFrame: (points: ScreenPoint[]) => void;
+  /** The browser took the WebGL context away (sleep, GPU reset); the view should dispose and fall back. */
+  onContextLost: () => void;
 }
 
+/** What loading the car model found: no model (the wiring is drawn alone), or a model with its summary line. */
+export type CarModelResult = { kind: 'absent'; reason: string } | { kind: 'loaded'; summary: string; warnings: string[] };
+
 export interface CarScene {
-  /** Where each placed node's position came from: a named empty in the model or the table. */
-  readonly positionSources: ReadonlyMap<string, PositionSource>;
-  setStatuses(statuses: readonly NodeStatus[], colours: StateColours): void;
+  /**
+   * Loads the car model into the scene, which until then draws the loop wiring alone. Resolves absent when there is
+   * no model; rejects with CarSceneError('model') when one is present but broken or too slow.
+   */
+  loadModel(url: string | null, onProgress?: (fraction: number | null) => void): Promise<CarModelResult>;
+  /** Redraws only the markers and wires whose look changed; returns how many changed. */
+  setStatuses(status: SceneStatus): number;
   setMaterialMode(mode: MaterialMode): void;
   setView(preset: ViewPreset): void;
-  setSelected(id: string | null): void;
-  /** The node whose marker is nearest a click (client coordinates), within a few pixels, or null. */
+  /** previewId ?? selectedId: scaled up and ringed, keeping its state colour. */
+  setHighlight(id: string | null): void;
+  /** The loop node whose marker is nearest a pointer position (client coordinates), within a few pixels, or null. */
   pick(clientX: number, clientY: number): string | null;
   dispose(): void;
 }

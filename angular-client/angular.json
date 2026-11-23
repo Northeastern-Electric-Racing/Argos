@@ -29,7 +29,11 @@
               "src/favicon.ico",
               "src/assets",
               { "glob": "maplibre-gl-worker.mjs", "input": "node_modules/maplibre-gl/dist", "output": "/" },
-              { "glob": "*", "input": "node_modules/three/examples/jsm/libs/draco/gltf", "output": "assets/draco" }
+              {
+                "glob": "{draco_wasm_wrapper.js,draco_decoder.wasm}",
+                "input": "node_modules/three/examples/jsm/libs/draco/gltf",
+                "output": "assets/draco"
+              }
             ],
             "inlineStyleLanguage": "css",
             "styles": ["src/styles.css", { "input": "src/styles/maplibre.css", "bundleName": "maplibre", "inject": false }],

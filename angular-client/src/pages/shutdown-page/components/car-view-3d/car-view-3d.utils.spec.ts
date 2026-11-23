@@ -1,24 +1,27 @@
+import { NODE_STATE_DISPLAY, segmentState } from '../../shutdown-loop.display';
 import { LoopNode, SHUTDOWN_LOOP } from '../../shutdown-loop.model';
 import { NODE_POSITIONS_3D, Vec3 } from '../../shutdown-loop.positions-3d';
 import { NodeState, NodeStatus } from '../../shutdown-loop.utils';
 import {
+  badgeModels,
   CarSceneError,
-  FALLBACK_STATE_COLOURS,
+  changedKeys,
+  dashPieces,
   fallbackReasonFor,
-  fitDistanceToPoints,
-  isWebGLAvailable,
-  loopSegments,
+  hasExactAnchorPrefix,
   MARKER_SHAPES,
-  markerStyle,
-  nearestPoint,
-  nodeDetail,
+  markerKey,
+  MATERIAL_MODE_KEY,
+  modelSummary,
   parseNodeAnchorName,
-  placeBadges,
-  readViewMode,
+  readMaterialMode,
   resolveNodePositions,
-  resolveStateColours,
+  sameSceneStatus,
+  sceneStatus,
+  segmentKey,
+  segmentStyle,
   unitScaleFor,
-  writeViewMode
+  writeMaterialMode
 } from './car-view-3d.utils';
 
 const node = (id: string, topic?: string): LoopNode => ({
@@ -35,258 +38,193 @@ const status = (n: LoopNode, state: NodeState, extra: Partial<NodeStatus> = {}):
   mismatch: false,
   ...extra
 });
-const COLOURS = { closed: '#0f0', suspect: '#f00', 'downstream-open': '#888', 'no-data': '#99a' };
+const TSMS = SHUTDOWN_LOOP.findIndex((n) => n.id === 'tsms');
+const BREAK_AT_TSMS: NodeStatus[] = SHUTDOWN_LOOP.map((n, i) =>
+  status(n, i < TSMS ? 'closed' : i === TSMS ? 'suspect' : 'downstream-open', {
+    value: n.topic ? (i < TSMS ? 1 : 0) : undefined,
+    ageMs: n.topic ? 1000 : undefined
+  })
+);
 
 describe('parseNodeAnchorName', () => {
-  it('reads the node id from a shutdown: name', () => {
+  it('reads the loop node id from a shutdown: name', () => {
     expect(parseNodeAnchorName('shutdown:tsms')).toBe('tsms');
     expect(parseNodeAnchorName('shutdown:side-brb-r')).toBe('side-brb-r');
   });
 
-  it('accepts exporters that swap the colon and hyphens for underscores, and any case', () => {
-    expect(parseNodeAnchorName('shutdown_side_brb_r')).toBe('side-brb-r');
-    expect(parseNodeAnchorName('Shutdown:TSMS')).toBe('tsms');
+  it('accepts exporters that swap the colon and hyphens for underscores, any case, and a .001 suffix', () => {
+    expect(parseNodeAnchorName('Shutdown_Side_BRB_R.001')).toBe('side-brb-r');
+    expect(parseNodeAnchorName('SHUTDOWN_TSMS')).toBe('tsms');
   });
 
-  it('drops a Blender duplicate suffix', () => {
-    expect(parseNodeAnchorName('shutdown:hvd.001')).toBe('hvd');
-  });
-
-  it('ignores other names', () => {
+  it('ignores names without the prefix', () => {
     expect(parseNodeAnchorName('wheel-front-left')).toBeUndefined();
-    expect(parseNodeAnchorName('shutdown')).toBeUndefined();
-    expect(parseNodeAnchorName('shutdown:')).toBeUndefined();
-    expect(parseNodeAnchorName('')).toBeUndefined();
+    expect(parseNodeAnchorName('tsms')).toBeUndefined();
+  });
+
+  it('only treats the exact documented prefix as a typo candidate', () => {
+    expect(hasExactAnchorPrefix('shutdown:tsm')).toBe(true);
+    expect(hasExactAnchorPrefix('Shutdown_Button_Left')).toBe(false);
   });
 });
 
 describe('resolveNodePositions', () => {
   const nodes = [node('a'), node('b'), node('c')];
-  const table: Record<string, Vec3> = { a: [1, 0, 0], b: [2, 0, 0], c: [3, 0, 0] };
+  const table: Record<string, Vec3> = { a: [0, 0, 1], b: [0, 0, 2] };
 
-  it('uses the table when the model has no anchors', () => {
-    const r = resolveNodePositions(nodes, table, []);
-    expect(r.positions.get('b')).toEqual({ position: [2, 0, 0], source: 'table' });
-    expect(r.missing).toEqual([]);
-    expect(r.unknownAnchors).toEqual([]);
+  it('uses the table, and lets a model anchor override it', () => {
+    const { positions, missing } = resolveNodePositions(nodes, table, new Map([['b', [1, 1, 1] as Vec3]]));
+    expect(positions.get('a')).toEqual({ position: [0, 0, 1], source: 'table' });
+    expect(positions.get('b')).toEqual({ position: [1, 1, 1], source: 'model' });
+    expect(missing).toEqual(['c']);
   });
 
-  it('lets a named empty in the model override the table', () => {
-    const r = resolveNodePositions(nodes, table, [{ name: 'shutdown:b', position: [9, 8, 7] }]);
-    expect(r.positions.get('b')).toEqual({ position: [9, 8, 7], source: 'model' });
-    expect(r.positions.get('a')?.source).toBe('table');
-  });
-
-  it('keeps the first anchor when a node is named twice', () => {
-    const r = resolveNodePositions(nodes, table, [
-      { name: 'shutdown:b', position: [9, 9, 9] },
-      { name: 'shutdown:b.001', position: [5, 5, 5] }
-    ]);
-    expect(r.positions.get('b')?.position).toEqual([9, 9, 9]);
-  });
-
-  it('reports anchors for unknown ids and ignores unrelated model nodes', () => {
-    const r = resolveNodePositions(nodes, table, [
-      { name: 'shutdown:nope', position: [0, 0, 0] },
-      { name: 'body', position: [0, 0, 0] }
-    ]);
-    expect(r.unknownAnchors).toEqual(['shutdown:nope']);
-    expect(r.positions.size).toBe(3);
-  });
-
-  it('reports nodes with neither an anchor nor a table entry', () => {
-    const r = resolveNodePositions([...nodes, node('d')], table, []);
-    expect(r.missing).toEqual(['d']);
-    expect(r.positions.has('d')).toBe(false);
-  });
-
-  it('places every real loop node from the shipped table', () => {
-    const r = resolveNodePositions(SHUTDOWN_LOOP, NODE_POSITIONS_3D, []);
-    expect(r.missing).toEqual([]);
-    expect(r.positions.size).toBe(SHUTDOWN_LOOP.length);
-  });
-});
-
-describe('resolveStateColours', () => {
-  it('reads each state colour through its NODE_STATE_DISPLAY class', () => {
-    const seen: string[] = [];
-    const colours = resolveStateColours((cssClass) => {
-      seen.push(cssClass);
-      return { 'state-closed': ' #111111 ', 'state-suspect': '#222222' }[cssClass];
-    });
-    expect(seen.sort()).toEqual(['state-closed', 'state-downstream', 'state-no-data', 'state-suspect']);
-    expect(colours.closed).toBe('#111111');
-    expect(colours.suspect).toBe('#222222');
-  });
-
-  it('falls back to the shutdown-states.css values when a colour cannot be read', () => {
-    expect(resolveStateColours(() => '')).toEqual(FALLBACK_STATE_COLOURS);
-    expect(resolveStateColours(() => undefined)['no-data']).toBe('#8b93a1');
-  });
-});
-
-describe('loopSegments', () => {
-  const nodes = [node('a', 't/a'), node('b'), node('c', 't/c'), node('d')];
-  const { positions } = resolveNodePositions(nodes, { a: [0, 0, 0], b: [1, 0, 0], c: [2, 0, 0], d: [3, 0, 0] }, []);
-  const statuses = [
-    status(nodes[0], 'closed'),
-    status(nodes[1], 'suspect'),
-    status(nodes[2], 'suspect'),
-    status(nodes[3], 'downstream-open')
-  ];
-
-  it('joins nodes in series order', () => {
-    const segs = loopSegments(statuses, positions, COLOURS);
-    expect(segs.map((s) => s.key)).toEqual(['a-b', 'b-c', 'c-d']);
-    expect(segs[1].from).toEqual([1, 0, 0]);
-    expect(segs[1].to).toEqual([2, 0, 0]);
-  });
-
-  it('colours each segment by the state of the node it leaves, as the 2D view does', () => {
-    const segs = loopSegments(statuses, positions, COLOURS);
-    expect(segs.map((s) => s.state)).toEqual(['closed', 'suspect', 'suspect']);
-    expect(segs.map((s) => s.colour)).toEqual(['#0f0', '#f00', '#f00']);
-  });
-
-  it('draws the cause thick and downstream / no-data thin, so the break reads without colour', () => {
-    const mixed = [
-      status(nodes[0], 'closed'),
-      status(nodes[1], 'suspect'),
-      status(nodes[2], 'downstream-open'),
-      status(nodes[3], 'no-data')
-    ];
-    expect(loopSegments(mixed, positions, COLOURS).map((s) => s.emphasis)).toEqual(['normal', 'strong', 'muted']);
-    const fromNoData = [status(nodes[2], 'no-data'), status(nodes[3], 'closed')];
-    expect(loopSegments(fromNoData, positions, COLOURS)[0].emphasis).toBe('muted');
-  });
-
-  it('skips a segment whose end has no position', () => {
-    const partial = new Map(positions);
-    partial.delete('c');
-    expect(loopSegments(statuses, partial, COLOURS).map((s) => s.key)).toEqual(['a-b']);
-  });
-});
-
-describe('markerStyle', () => {
-  it('gives every state its own shape', () => {
-    expect(new Set(Object.values(MARKER_SHAPES)).size).toBe(4);
-  });
-
-  it('draws unmeasured nodes hollow and measured ones solid, in their state colour', () => {
-    expect(markerStyle(status(node('x'), 'closed'), COLOURS)).toEqual({
-      shape: MARKER_SHAPES.closed,
-      hollow: true,
-      colour: '#0f0'
-    });
-    expect(markerStyle(status(node('y', 't/y'), 'suspect'), COLOURS)).toEqual({
-      shape: MARKER_SHAPES.suspect,
-      hollow: false,
-      colour: '#f00'
-    });
-  });
-});
-
-describe('nodeDetail', () => {
-  it('describes a measured node with its value and age', () => {
-    const d = nodeDetail(status(node('tsms', 'VCU/Shutdown/TSMS_GPIO'), 'suspect', { value: 0, ageMs: 2600 }));
-    expect(d).toEqual({ stateLabel: 'Open — cause', topic: 'VCU/Shutdown/TSMS_GPIO', value: '0 (open)', age: '3 s ago' });
-  });
-
-  it('says when a node has no sensor or no data', () => {
-    expect(nodeDetail(status(node('glvms'), 'closed'))).toMatchObject({ topic: 'no sensor', value: '—', age: '—' });
-    expect(nodeDetail(status(node('hvd', 't/hvd'), 'no-data'))).toMatchObject({ value: 'no data', age: '—' });
-    expect(nodeDetail(status(node('hvd', 't/hvd'), 'closed', { value: 1, ageMs: 0 })).value).toBe('1 (closed)');
+  it('places every loop node from the shipped table', () => {
+    expect(resolveNodePositions(SHUTDOWN_LOOP, NODE_POSITIONS_3D).missing).toEqual([]);
   });
 });
 
 describe('unitScaleFor', () => {
-  it('keeps a model exported in metres', () => {
-    expect(unitScaleFor(2.9)).toBe(1);
+  it.each([
+    [2.9, 1],
+    [290, 0.01],
+    [2900, 0.001],
+    [114, 0.0254]
+  ])('brings a %s-unit model to a car-sized length (scale %s)', (size, scale) => {
+    expect(unitScaleFor(size)).toEqual({ scale, fits: true });
   });
 
-  it('scales a millimetre or centimetre export down to metres', () => {
-    expect(unitScaleFor(2900)).toBe(0.001);
-    expect(unitScaleFor(290)).toBe(0.01);
-  });
-
-  it('leaves an empty model alone', () => {
-    expect(unitScaleFor(0)).toBe(1);
-    expect(unitScaleFor(Number.NaN)).toBe(1);
-  });
-});
-
-describe('fitDistanceToPoints', () => {
-  // 90° vertical field of view: tan(45°) = 1, so a point fits when its offset is at most its depth.
-  it('backs off until every point is inside the view', () => {
-    expect(fitDistanceToPoints([[1, 0, 0]], 90, 1, 1)).toBeCloseTo(1, 6);
-    expect(fitDistanceToPoints([[0, 2, 0]], 90, 1, 1)).toBeCloseTo(2, 6);
-  });
-
-  it('allows for points nearer the camera than the target', () => {
-    expect(fitDistanceToPoints([[1, 0, 0.5]], 90, 1, 1)).toBeCloseTo(1.5, 6);
-    expect(fitDistanceToPoints([[1, 0, -0.5]], 90, 1, 1)).toBeCloseTo(0.5, 6);
-  });
-
-  it('uses the wider horizontal field of view on a wide canvas', () => {
-    expect(fitDistanceToPoints([[2, 0, 0]], 90, 2, 1)).toBeCloseTo(1, 6);
-    expect(fitDistanceToPoints([[0, 2, 0]], 90, 2, 1)).toBeCloseTo(2, 6);
-  });
-
-  it('adds the margin', () => {
-    expect(fitDistanceToPoints([[1, 0, 0]], 90, 1, 1.2)).toBeCloseTo(1.2, 6);
+  it('keeps the scale at 1 and says so when no unit makes a car', () => {
+    expect(unitScaleFor(80_000)).toEqual({ scale: 1, fits: false });
+    expect(unitScaleFor(0)).toEqual({ scale: 1, fits: false });
+    expect(unitScaleFor(NaN)).toEqual({ scale: 1, fits: false });
   });
 });
 
-describe('placeBadges', () => {
-  const at = (id: string, x: number, y: number, visible = true) => ({ id, x, y, visible });
-
-  it('puts a badge up and to the right of its marker', () => {
-    expect(placeBadges([at('a', 100, 100)])).toEqual([{ id: 'a', left: 106, top: 70, visible: true }]);
-  });
-
-  it('moves a badge that would cover an earlier one to another side of its marker', () => {
-    const [a, b] = placeBadges([at('a', 100, 100), at('b', 104, 100)]);
-    expect(a).toMatchObject({ left: 106, top: 70 });
-    const overlaps = Math.abs(a.left - b.left) < 24 && Math.abs(a.top - b.top) < 24;
-    expect(overlaps).toBe(false);
-    expect(Math.abs(b.left + 12 - 104)).toBeLessThan(60);
-  });
-
-  it('fans out a tight cluster without overlaps, and still places a badge when every spot is taken', () => {
-    const cluster = Array.from({ length: 8 }, (_, i) => at(`n${i}`, 200 + i, 200));
-    const placed = placeBadges(cluster);
-    for (let i = 0; i < placed.length; i++) {
-      for (let j = i + 1; j < placed.length; j++) {
-        const overlap = Math.abs(placed[i].left - placed[j].left) < 24 && Math.abs(placed[i].top - placed[j].top) < 24;
-        expect(overlap, `${i} vs ${j}`).toBe(false);
-      }
-    }
-    expect(placeBadges(Array.from({ length: 40 }, (_, i) => at(`m${i}`, 0, 0))).every((b) => b.visible)).toBe(true);
-  });
-
-  it('leaves badges for hidden markers hidden and out of the way', () => {
-    const [a, b] = placeBadges([at('a', 100, 100, false), at('b', 100, 100)]);
-    expect(a.visible).toBe(false);
-    expect(b).toMatchObject({ left: 106, top: 70, visible: true });
+describe('modelSummary', () => {
+  it('names the anchored loop nodes, the scale and any unknown anchors', () => {
+    expect(
+      modelSummary({ file: 'car.glb', total: 19, anchored: ['tsms', 'side-brb-r', 'hvd'], scale: 1, unknownAnchors: [] })
+    ).toBe('car.glb: 3/19 loop nodes from anchors (tsms, side-brb-r, hvd), scale ×1, unknown: none');
+    expect(modelSummary({ file: 'car.glb', total: 19, anchored: [], scale: 0.001, unknownAnchors: ['shutdown:tsm'] })).toBe(
+      'car.glb: 0/19 loop nodes from anchors, scale ×0.001, unknown: shutdown:tsm'
+    );
   });
 });
 
-describe('isWebGLAvailable', () => {
-  const doc = (ctx: unknown) =>
-    ({ createElement: () => ({ getContext: () => ctx }) }) as unknown as Pick<Document, 'createElement'>;
-
-  it('is true when a WebGL context can be made', () => {
-    expect(isWebGLAvailable(doc({}))).toBe(true);
+describe('sceneStatus', () => {
+  it('keeps only what the scene draws, with wire states from the shared segmentState', () => {
+    const s = sceneStatus(BREAK_AT_TSMS);
+    expect(s.nodes[TSMS]).toEqual({ id: 'tsms', state: 'suspect', measured: true, mismatch: false });
+    expect(s.nodes[0].measured).toBe(false);
+    expect(s.segments).toEqual(BREAK_AT_TSMS.slice(0, -1).map((_, i) => segmentState(BREAK_AT_TSMS, i)));
+    // The wire out of the break is already dead.
+    expect(s.segments[TSMS]).toBe('downstream-open');
   });
 
-  it('is false without a context, or when asking throws', () => {
-    expect(isWebGLAvailable(doc(null))).toBe(false);
-    const throwing = {
-      createElement: () => {
-        throw new Error('no canvas');
-      }
-    } as unknown as Pick<Document, 'createElement'>;
-    expect(isWebGLAvailable(throwing)).toBe(false);
+  it('is unchanged when only values and ages tick, so the scene is not touched', () => {
+    const later = BREAK_AT_TSMS.map((s) => ({ ...s, ageMs: (s.ageMs ?? 0) + 1000, value: s.value }));
+    expect(sameSceneStatus(sceneStatus(BREAK_AT_TSMS), sceneStatus(later))).toBe(true);
+  });
+
+  it('changes when a state or a mismatch changes', () => {
+    const mismatch = BREAK_AT_TSMS.map((s, i) => (i === TSMS + 2 ? { ...s, mismatch: true } : s));
+    expect(sameSceneStatus(sceneStatus(BREAK_AT_TSMS), sceneStatus(mismatch))).toBe(false);
+    const closed = BREAK_AT_TSMS.map((s) => ({ ...s, state: 'closed' as const }));
+    expect(sameSceneStatus(sceneStatus(BREAK_AT_TSMS), sceneStatus(closed))).toBe(false);
+  });
+});
+
+describe('change keys', () => {
+  it('gives every state its own marker shape and key', () => {
+    expect(new Set(Object.values(MARKER_SHAPES)).size).toBe(4);
+    const key = (state: NodeState, measured = true, mismatch = false) => markerKey({ id: 'x', state, measured, mismatch });
+    expect(key('closed')).not.toBe(key('suspect'));
+    expect(key('closed')).not.toBe(key('closed', false));
+    expect(key('closed')).not.toBe(key('closed', true, true));
+  });
+
+  it('lists only the ids whose key changed', () => {
+    const before = new Map([
+      ['a', '1'],
+      ['b', '1']
+    ]);
+    const after = new Map([
+      ['a', '1'],
+      ['b', '2'],
+      ['c', '1']
+    ]);
+    expect(changedKeys(before, after)).toEqual(['b', 'c']);
+    expect(changedKeys(after, after)).toEqual([]);
+  });
+
+  it('keys a wire by its colour, emphasis and dash', () => {
+    expect(segmentKey('closed')).not.toBe(segmentKey('suspect'));
+    expect(segmentKey('downstream-open')).not.toBe(segmentKey('no-data'));
+  });
+});
+
+describe('segmentStyle', () => {
+  it('follows the 2D wire language: the cause strong and solid, closed solid, dead wire dashed', () => {
+    expect(segmentStyle('suspect')).toEqual({ emphasis: 'strong', dash: null });
+    expect(segmentStyle('closed')).toEqual({ emphasis: 'normal', dash: null });
+    expect(segmentStyle('downstream-open').emphasis).toBe(NODE_STATE_DISPLAY['downstream-open'].emphasis);
+    expect(segmentStyle('downstream-open').dash).not.toBeNull();
+    expect(segmentStyle('no-data').dash).not.toBeNull();
+  });
+
+  it('draws downstream (dashed) and no data (dotted) with different piece lengths', () => {
+    const [downDash] = segmentStyle('downstream-open').dash!;
+    const [noDataDash] = segmentStyle('no-data').dash!;
+    expect(downDash).toBeGreaterThan(noDataDash * 2);
+  });
+});
+
+describe('dashPieces', () => {
+  it('splits a line into dashes and gaps, ending on the line', () => {
+    const pieces = dashPieces([0, 0, 0], [0, 0, 1], 0.3, 0.2);
+    expect(pieces.length).toBe(2);
+    expect(pieces[0]).toEqual([
+      [0, 0, 0],
+      [0, 0, 0.3]
+    ]);
+    expect(pieces[1][0][2]).toBeCloseTo(0.5);
+    expect(pieces[1][1][2]).toBeCloseTo(0.8);
+  });
+
+  it('returns nothing for a zero-length line', () => {
+    expect(dashPieces([1, 1, 1], [1, 1, 1], 0.1, 0.1)).toEqual([]);
+  });
+});
+
+describe('badgeModels', () => {
+  it('numbers badges in loop order with the state glyph', () => {
+    const badges = badgeModels(BREAK_AT_TSMS);
+    expect(badges.map((b) => b.order)).toEqual(BREAK_AT_TSMS.map((_, i) => i + 1));
+    expect(badges[0].icon).toBe(NODE_STATE_DISPLAY.closed.icon);
+    expect(badges[TSMS + 1].icon).toBe(NODE_STATE_DISPLAY['downstream-open'].icon);
+  });
+
+  it('names only the suspect, so the cause reads without colour', () => {
+    const badges = badgeModels(BREAK_AT_TSMS);
+    expect(badges[TSMS]).toMatchObject({ suspect: true, name: 'TSMS', icon: NODE_STATE_DISPLAY.suspect.icon });
+    expect(badges.filter((b) => b.name !== null).map((b) => b.id)).toEqual(['tsms']);
+  });
+
+  it('gives no data its own glyph, apart from downstream', () => {
+    const [noData] = badgeModels([status(node('a', 't'), 'no-data')]);
+    const [down] = badgeModels([status(node('a', 't'), 'downstream-open')]);
+    expect(noData.icon).not.toBe(down.icon);
+  });
+
+  it('flags a mismatch, and draws unmeasured loop nodes hollow', () => {
+    const [measured, unmeasured] = badgeModels([
+      status(node('a', 't'), 'downstream-open', { mismatch: true }),
+      status(node('b'), 'downstream-open')
+    ]);
+    expect(measured.mismatch).toBe(true);
+    expect(measured.classes).toBe(NODE_STATE_DISPLAY['downstream-open'].marker.measured);
+    expect(unmeasured.classes).toBe(NODE_STATE_DISPLAY['downstream-open'].marker.unmeasured);
   });
 });
 
@@ -294,46 +232,29 @@ describe('fallbackReasonFor', () => {
   it('maps scene errors to their reason and anything else to init', () => {
     expect(fallbackReasonFor(new CarSceneError('webgl'))).toBe('webgl');
     expect(fallbackReasonFor(new CarSceneError('model'))).toBe('model');
-    expect(fallbackReasonFor(new Error('chunk failed'))).toBe('init');
+    expect(fallbackReasonFor(new CarSceneError('init'))).toBe('init');
+    expect(fallbackReasonFor(new Error('boom'))).toBe('init');
   });
 });
 
-describe('view mode storage', () => {
-  it('defaults to 3D and reads a stored choice', () => {
-    expect(readViewMode(() => ({ getItem: () => null }))).toBe('3d');
-    expect(readViewMode(() => ({ getItem: () => '2d' }))).toBe('2d');
-    expect(readViewMode(() => ({ getItem: () => 'nonsense' }))).toBe('3d');
+describe('material mode storage', () => {
+  it('defaults to see-through and reads a stored choice', () => {
+    expect(readMaterialMode(() => ({ getItem: () => null }))).toBe('see-through');
+    expect(readMaterialMode(() => ({ getItem: () => 'solid' }))).toBe('solid');
+    expect(readMaterialMode(() => ({ getItem: () => 'chrome' }))).toBe('see-through');
   });
 
   it('survives storage that throws', () => {
-    const broken = () => {
-      throw new Error('denied');
+    const throwing = () => {
+      throw new Error('SecurityError');
     };
-    expect(readViewMode(broken)).toBe('3d');
-    expect(() => writeViewMode(broken, '2d')).not.toThrow();
+    expect(readMaterialMode(throwing)).toBe('see-through');
+    expect(() => writeMaterialMode(throwing, 'solid')).not.toThrow();
   });
 
-  it('writes the choice', () => {
+  it('writes under its own key', () => {
     const setItem = vi.fn();
-    writeViewMode(() => ({ setItem }), '2d');
-    expect(setItem).toHaveBeenCalledWith('shutdown-car-view', '2d');
-  });
-});
-
-describe('nearestPoint', () => {
-  const points = [
-    { id: 'a', x: 100, y: 100, visible: true },
-    { id: 'b', x: 110, y: 100, visible: true },
-    { id: 'c', x: 300, y: 300, visible: false }
-  ];
-
-  it('picks the closest visible point within reach', () => {
-    expect(nearestPoint(points, 107, 101, 16)).toBe('b');
-    expect(nearestPoint(points, 98, 99, 16)).toBe('a');
-  });
-
-  it('returns null when nothing is close enough or the nearest is hidden', () => {
-    expect(nearestPoint(points, 200, 200, 16)).toBeNull();
-    expect(nearestPoint(points, 300, 300, 16)).toBeNull();
+    writeMaterialMode(() => ({ setItem }), 'original');
+    expect(setItem).toHaveBeenCalledWith(MATERIAL_MODE_KEY, 'original');
   });
 });

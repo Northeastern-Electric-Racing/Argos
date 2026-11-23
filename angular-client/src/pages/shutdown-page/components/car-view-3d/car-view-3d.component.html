@@ -1,85 +1,86 @@
-<!-- Hidden: each state's class, read for its --sd-color so the 3D colours follow shutdown-states.css -->
-<div #probes class="probes" aria-hidden="true">
-  @for (c of states; track c) {
-    <span [class]="c"></span>
+<div
+  #stage
+  class="relative h-[clamp(240px,60vw,min(50vh,480px))] overflow-hidden rounded-md border border-solid border-border bg-page"
+  role="img"
+  [attr.aria-label]="label()"
+>
+  <canvas
+    #canvas
+    class="block size-full"
+    (pointerdown)="onPointerDown($event)"
+    (pointermove)="onPointerMove($event)"
+    (pointerleave)="preview(null)"
+    (click)="onCanvasClick($event)"
+  ></canvas>
+  <!-- Badges and leaders label the markers for pointer users; the loop strip is the keyboard and screen reader path. -->
+  <svg class="pointer-events-none absolute inset-0 size-full" aria-hidden="true">
+    @for (b of badges(); track b.id) {
+      <line #leader class="invisible stroke-fg-muted" stroke-width="1" [attr.data-node-id]="b.id" />
+    }
+  </svg>
+  <div class="pointer-events-none absolute inset-0" aria-hidden="true">
+    @for (b of badges(); track b.id) {
+      <div
+        #badge
+        [class]="badgeClass(b)"
+        [attr.data-node-id]="b.id"
+        [attr.data-highlighted]="active() === b.id"
+        (click)="interactive() && toggle(b.id)"
+        (mouseenter)="interactive() && preview(b.id)"
+        (mouseleave)="interactive() && preview(null)"
+      >
+        <ui-icon [name]="b.icon" class="text-[1.1em]" />
+        <span>{{ b.order }}</span>
+        @if (b.name) {
+          <span class="font-sans">{{ b.name }}</span>
+        }
+        @if (b.mismatch) {
+          <span
+            class="absolute -top-1.5 -right-1.5 inline-flex size-3.5 items-center justify-center rounded-full bg-warn font-sans text-[10px] leading-none font-black text-on-status"
+            >!</span
+          >
+        }
+      </div>
+    }
+  </div>
+  @switch (phase()) {
+    @case ('loading') {
+      <p class="absolute bottom-2 left-2 m-0 rounded-sm bg-surface-1/80 px-2 py-1 text-xs text-fg-label">
+        {{ loadingText() }}
+      </p>
+    }
+    @case ('absent') {
+      <p class="absolute bottom-2 left-2 m-0 rounded-sm bg-surface-1/80 px-2 py-1 text-xs text-fg-label">
+        {{ absentNotice }}
+      </p>
+    }
   }
 </div>
 
-@if (phase() === 'fallback') {
-  <p class="notice" role="status">{{ notice() }}</p>
-  <car-view [nodes]="nodes()" />
-} @else {
-  <div
-    #stage
-    class="stage"
-    role="group"
-    aria-label="3D car view with shutdown nodes"
-    (keydown.escape)="selectedId.set(null)"
-  >
-    <canvas #canvas aria-hidden="true" (pointerdown)="onPointerDown($event)" (click)="onCanvasClick($event)"></canvas>
-    <div class="badges" [class.pending]="phase() !== 'ready'">
-      @for (b of badges(); track b.id) {
-        <button
-          type="button"
-          class="badge"
-          [class]="'badge ' + b.cssClass"
-          [class.unmeasured]="b.unmeasured"
-          [attr.data-node-id]="b.id"
-          [attr.aria-label]="b.ariaLabel"
-          [attr.aria-pressed]="selectedId() === b.id"
-          (click)="select(b.id)"
-        >
-          {{ b.order }}
-        </button>
-      }
-    </div>
-    @if (phase() === 'loading') {
-      <p class="loading" role="status">Loading car model…</p>
+<div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+  <div role="group" aria-label="View" class="flex items-center gap-1.5">
+    <span class="text-xs font-semibold text-fg-muted" aria-hidden="true">View</span>
+    @for (p of viewPresets; track p.id) {
+      <button type="button" [class]="presetClass" (click)="setView(p.id)">{{ p.label }}</button>
     }
   </div>
-
-  <div class="toolbar">
-    <div class="seg" role="group" aria-label="Camera view">
-      @for (p of viewPresets; track p.id) {
-        <button type="button" (click)="setView(p.id)">{{ p.label }}</button>
-      }
-    </div>
-    <div class="seg" role="group" aria-label="Model colours">
-      @for (m of materialModes; track m.id) {
-        <button type="button" [attr.aria-pressed]="materialMode() === m.id" (click)="materialMode.set(m.id)">
-          {{ m.label }}
-        </button>
-      }
-    </div>
-  </div>
-
-  <div class="detail" aria-live="polite">
-    @if (selected(); as sel) {
-      <p class="head" [class]="'head ' + sel.cssClass">
-        <status-glyph class="glyph" [state]="sel.status.state" />
-        <strong>{{ sel.order }}. {{ sel.status.node.label }}</strong>
-        <span>{{ sel.detail.stateLabel }}</span>
-        @if (sel.status.mismatch) {
-          <span class="tag">mismatch</span>
+  @if (phase() !== 'absent') {
+    <div role="group" aria-label="Model colours" class="flex items-center gap-1.5">
+      <span class="text-xs font-semibold text-fg-muted" aria-hidden="true">Model</span>
+      <div [class]="modelListClass">
+        @for (m of materialModes; track m.id) {
+          <button
+            type="button"
+            [class]="modelItemClass"
+            [attr.aria-pressed]="materialMode() === m.id"
+            [disabled]="phase() !== 'ready'"
+            (click)="setMaterialMode(m.id)"
+          >
+            {{ m.label }}
+          </button>
         }
-        @if (sel.status.node.placeholder) {
-          <span class="tag">{{ placeholderTag }}</span>
-        }
-      </p>
-      <dl>
-        <dt>Topic</dt>
-        <dd>{{ sel.detail.topic }}</dd>
-        <dt>Value</dt>
-        <dd>{{ sel.detail.value }}</dd>
-        <dt>Updated</dt>
-        <dd>{{ sel.detail.age }}</dd>
-        <dt>Position</dt>
-        <dd>{{ sel.source }}</dd>
-      </dl>
-    } @else {
-      <p class="hint">
-        Select a node (click it, or tab to its number) to see its reading. Drag to orbit, scroll to zoom, right-drag to pan.
-      </p>
-    }
-  </div>
-}
+      </div>
+    </div>
+  }
+  <p class="m-0 text-xs text-fg-muted">{{ hint }}</p>
+</div>

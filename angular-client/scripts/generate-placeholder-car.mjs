@@ -1,9 +1,11 @@
-// Builds the placeholder car model at src/assets/models/car.glb, a rough open-wheel car in the
-// model convention documented in src/assets/models/README.md (metres, +X forward, +Y up, +Z to the
-// driver's right, origin on the ground under the rear axle centre).
+// Builds the placeholder car model at src/assets/models/car.glb: a rough open-wheel car in the shared frame
+// (shutdown-loop.positions-3d.ts, docs/spec/shutdown-loop-page/car-model.md): metres, +X to the driver's left,
+// +Y up, +Z forward, origin on the ground under the rear axle centre. It carries three loop node anchors, each a
+// few cm off its table entry, so the load summary shows "from the model" working.
+//
+// Stand-in for the throwaway only; the asset strategy for real CAD is decided at adoption (ADR 0010).
 //
 // Run from angular-client/:  node scripts/generate-placeholder-car.mjs
-// Replace the output with the real CAD export once the team has one; this script is only for the stand-in.
 import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import * as THREE from 'three';
@@ -204,6 +206,38 @@ for (const side of [-1, 1]) {
   );
 }
 box('rear-wing', carbonMat, [-0.38, 0.86, -0.46], [0, 0.96, 0.46]);
+
+// The parts above are drawn with +X forward and +Z to the driver's right. Bake a quarter turn into every part so
+// the file is in the shared frame with no node rotations: x' = -z, z' = x.
+const toSharedFrame = new THREE.Matrix4().makeRotationY(-Math.PI / 2);
+for (const mesh of car.children) {
+  mesh.updateMatrix();
+  mesh.geometry = mesh.geometry.clone().applyMatrix4(new THREE.Matrix4().multiplyMatrices(toSharedFrame, mesh.matrix));
+  mesh.position.set(0, 0, 0);
+  mesh.rotation.set(0, 0, 0);
+  mesh.scale.set(1, 1, 1);
+}
+
+// Loop node anchors, in the shared frame. An empty named as documented, an empty named the way Blender exports a
+// duplicate, and a small two-material part (a group anchor, placed at its bounding-box centre).
+const empty = (name, [x, y, z]) => {
+  const anchor = new THREE.Object3D();
+  anchor.name = name;
+  anchor.position.set(x, y, z);
+  car.add(anchor);
+};
+empty('shutdown:tsms', [-0.2, 0.78, 0.69]);
+empty('Shutdown_Side_BRB_R.001', [-0.36, 0.92, 0.66]);
+const hvd = new THREE.Group();
+hvd.name = 'shutdown:hvd';
+const hvdBody = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.08, 0.1), steelMat);
+hvdBody.name = 'hvd-body';
+const hvdHandle = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.03, 0.06), mat('hvd-handle', 0xff6f00));
+hvdHandle.name = 'hvd-handle';
+hvdHandle.position.set(0.04, 0, 0);
+hvd.add(hvdBody, hvdHandle);
+hvd.position.set(0.25, 0.44, 0.42);
+car.add(hvd);
 
 const exporter = new GLTFExporter();
 exporter.parse(
