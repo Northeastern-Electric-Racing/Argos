@@ -33,6 +33,7 @@ use scylla_server::{
     },
     mqtt_processor::pub_handle,
     rule_structs::RuleManager,
+    shutdown_handler::shutdown_handler,
     socket_handler::{socket_handler, socket_handler_with_metadata},
     track_handler::{LiveRunHandle, TracksChanged, track_handler},
     zenoh_processor::ZenohProcessor,
@@ -301,6 +302,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     task_tracker.spawn(async move {
         let res = tokio::spawn(fut).await;
         warn!(task = "track_handler", "task ended: {:?}", res);
+    });
+
+    // works out the shutdown loop status and publishes it as datapoints alongside the car's (ADR 0009)
+    let fut = shutdown_handler(
+        token.clone(),
+        mqtt_send_socket.subscribe(),
+        mqtt_send_socket.clone(),
+        mqtt_send_db.clone(),
+    );
+    task_tracker.spawn(async move {
+        let res = tokio::spawn(fut).await;
+        warn!(task = "shutdown_handler", "task ended: {:?}", res);
     });
 
     if cli.no_metadata {
