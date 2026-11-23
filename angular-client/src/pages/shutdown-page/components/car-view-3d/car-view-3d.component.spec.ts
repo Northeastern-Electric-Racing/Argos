@@ -1,21 +1,21 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import type { Mock } from 'vitest';
-import { SHUTDOWN_LOOP } from '../../shutdown-loop.model';
+import { LOOP_VIEW_CONTRACT_NODES, expectLoopViewContract } from '../../loop-view/loop-view.contract';
+import { LoopView } from '../../loop-view/loop-view';
+import { loopOf, loopSummary } from '../../shutdown-loop.display';
 import { NodeStatus } from '../../shutdown-loop.utils';
 import { CarView3dComponent } from './car-view-3d.component';
-import { CarScene, CarSceneFactory, CarSceneOptions } from './car-view-3d.model';
+import { CarScene, CarSceneFactory, CarSceneOptions } from './car-scene.types';
+import { ScreenPoint } from './car-view-3d.projection';
+import { CarSceneError, FallbackReason } from './car-view-3d.utils';
 import { CAR_SCENE_LOADER, WEBGL_SUPPORT } from './car-view-3d.tokens';
 
-const TSMS = SHUTDOWN_LOOP.findIndex((n) => n.id === 'tsms');
-const NODES: NodeStatus[] = SHUTDOWN_LOOP.map((node, i) => ({
-  node,
-  state: i < TSMS ? 'closed' : i === TSMS ? 'suspect' : 'downstream-open',
-  value: node.topic ? (i < TSMS ? 1 : 0) : undefined,
-  ageMs: node.topic ? 3000 : undefined,
-  mismatch: false
-}));
+const NODES = LOOP_VIEW_CONTRACT_NODES;
 
 type FakeScene = { [K in keyof CarScene]: Mock<CarScene[K]> };
+
+/** Every loop node's marker on screen, 40 px apart in a row. */
+const POINTS: ScreenPoint[] = NODES.map((s, i) => ({ id: s.node.id, x: 30 + i * 40, y: 120, z: 0.5, visible: true }));
 
 describe('CarView3dComponent', () => {
   let fixture: ComponentFixture<CarView3dComponent>;
@@ -23,12 +23,15 @@ describe('CarView3dComponent', () => {
   let scene: FakeScene;
   let options: CarSceneOptions | undefined;
   let loader: Mock<() => Promise<CarSceneFactory>>;
+  let unavailable: FallbackReason[];
 
-  const setup = async (webgl: boolean, load?: () => Promise<CarSceneFactory>) => {
+  const configure = async (webgl: boolean, load?: () => Promise<CarSceneFactory>) => {
     scene = {
-      update: vi.fn<CarScene['update']>(),
-      setSelected: vi.fn<CarScene['setSelected']>(),
+      setStatuses: vi.fn<CarScene['setStatuses']>(),
+      setHighlight: vi.fn<CarScene['setHighlight']>(),
+      focus: vi.fn<CarScene['focus']>(),
       setView: vi.fn<CarScene['setView']>(),
+      setInteractive: vi.fn<CarScene['setInteractive']>(),
       dispose: vi.fn<CarScene['dispose']>()
     };
     options = undefined;
@@ -44,115 +47,163 @@ describe('CarView3dComponent', () => {
         { provide: CAR_SCENE_LOADER, useValue: loader }
       ]
     }).compileComponents();
+  };
+
+  /** A started 3D view with one rendered frame, so its badges are on screen. */
+  const create = async (nodes: NodeStatus[] = NODES) => {
     fixture = TestBed.createComponent(CarView3dComponent);
-    fixture.componentRef.setInput('nodes', NODES);
+    unavailable = [];
+    fixture.componentInstance.unavailable.subscribe((r) => unavailable.push(r));
+    fixture.componentRef.setInput('nodes', nodes);
     fixture.detectChanges();
     await fixture.whenStable();
+    options?.onFrame(POINTS);
     fixture.detectChanges();
     el = fixture.nativeElement;
+    return fixture;
   };
-  const nodeButton = (order: number) => el.querySelectorAll<HTMLButtonElement>('[data-node-button]')[order - 1];
-  const info = () => el.querySelector('[data-node-info]');
+  const badge = (id: string) => el.querySelector<HTMLElement>(`[data-badge][data-node-id="${id}"]`);
 
-  describe('without WebGL', () => {
-    beforeEach(() => setup(false));
+  describe('with a scene', () => {
+    beforeEach(() => configure(true));
 
-    it('falls back to the 2D car view and never loads three.js', () => {
-      expect(el.querySelector('car-view')).toBeTruthy();
-      expect(el.querySelector('canvas')).toBeNull();
-      expect(loader).not.toHaveBeenCalled();
-      expect(el.textContent).toContain('3D view unavailable');
-    });
-  });
-
-  describe('when the scene fails to load', () => {
-    beforeEach(() => {
-      vi.spyOn(console, 'warn').mockImplementation(() => undefined);
-      return setup(true, () => Promise.reject(new Error('chunk failed')));
+    expectLoopViewContract(() => create() as Promise<ComponentFixture<LoopView>>, {
+      options: false,
+      click: (f, id) => {
+        badge(id)!.click();
+        f.detectChanges();
+      },
+      hover: (_, id) => badge(id)!.dispatchEvent(new MouseEvent('mouseenter')),
+      leave: (_, id) => badge(id)!.dispatchEvent(new MouseEvent('mouseleave')),
+      highlighted: (_, id) => badge(id)?.dataset['highlighted'] === 'true' && scene.setHighlight.mock.lastCall?.[0] === id
     });
 
-    it('falls back to the 2D car view', () => {
-      expect(el.querySelector('car-view')).toBeTruthy();
-      expect(el.querySelector('canvas')).toBeNull();
-    });
-  });
-
-  describe('with WebGL', () => {
-    beforeEach(() => setup(true));
-    afterEach(() => fixture.destroy());
-
-    it('builds the scene on its canvas and hands it the nodes', () => {
-      expect(el.querySelector('car-view')).toBeNull();
-      expect(options!.canvas).toBe(el.querySelector('canvas'));
-      expect(scene.update).toHaveBeenLastCalledWith(NODES);
+    it('loads the scene once and hands it the loop', async () => {
+      await create();
+      expect(loader).toHaveBeenCalledOnce();
+      expect(scene.setStatuses).toHaveBeenLastCalledWith(NODES);
     });
 
-    it('passes new statuses to the scene', () => {
-      const next = NODES.map((n) => ({ ...n, state: 'closed' as const }));
-      fixture.componentRef.setInput('nodes', next);
+    it('is an image labelled with the loop summary, its badges hidden from assistive tech', async () => {
+      await create();
+      const img = el.querySelector('[role="img"]')!;
+      expect(img.getAttribute('aria-label')).toContain(loopSummary(loopOf(NODES)));
+      expect(badge('tsms')!.closest('[aria-hidden="true"]')).toBeTruthy();
+      expect(el.querySelectorAll('[role="option"], [tabindex="0"]').length).toBe(0);
+    });
+
+    it('reads its colours from theme tokens', async () => {
+      document.documentElement.style.setProperty('--color-danger', 'rgb(1, 2, 3)');
+      await create();
+      document.documentElement.style.removeProperty('--color-danger');
+      expect(options!.colours.states.suspect).toBe('rgb(1, 2, 3)');
+    });
+
+    it('names the cause on its badge and rings it with a halo', async () => {
+      await create();
+      expect(badge('tsms')!.textContent).toContain('TSMS');
+      expect(badge('tsms')!.dataset['suspect']).toBe('true');
+      expect(el.querySelector('[data-ring="halo"]')).toBeTruthy();
+      expect(badge('hvd')!.querySelector('ui-icon + span')!.textContent!.trim()).toBe(
+        String(NODES.findIndex((s) => s.node.id === 'hvd') + 1)
+      );
+    });
+
+    it('toggles the pin on a canvas pick and clears it on an empty-canvas click', async () => {
+      await create();
+      const selected: (string | null)[] = [];
+      fixture.componentInstance.nodeSelect.subscribe((id) => selected.push(id));
+      options!.onPick('bots');
+      fixture.componentRef.setInput('selectedId', 'bots');
+      options!.onPick(null);
+      options!.onPick('bots');
+      expect(selected).toEqual(['bots', null, null]);
+    });
+
+    it('previews on canvas hover', async () => {
+      await create();
+      const previewed: (string | null)[] = [];
+      fixture.componentInstance.nodePreview.subscribe((id) => previewed.push(id));
+      options!.onHover('hvd');
+      options!.onHover(null);
+      expect(previewed).toEqual(['hvd', null]);
+    });
+
+    it('moves the camera to the pinned loop node, never to a preview', async () => {
+      await create();
+      fixture.componentRef.setInput('previewId', 'hvd');
       fixture.detectChanges();
-      expect(scene.update).toHaveBeenLastCalledWith(next);
+      expect(scene.focus).not.toHaveBeenCalledWith('hvd');
+      fixture.componentRef.setInput('selectedId', 'bots');
+      fixture.detectChanges();
+      expect(scene.focus).toHaveBeenLastCalledWith('bots');
     });
 
-    it('moves the camera to a preset', () => {
+    it('clears the pin on Escape', async () => {
+      await create();
+      fixture.componentRef.setInput('selectedId', 'bots');
+      fixture.detectChanges();
+      const selected: (string | null)[] = [];
+      fixture.componentInstance.nodeSelect.subscribe((id) => selected.push(id));
+      el.querySelector('button')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      expect(selected).toEqual([null]);
+    });
+
+    it('as an overview (not interactive) shows only the active badge and ignores picks', async () => {
+      await create();
+      fixture.componentRef.setInput('interactive', false);
+      fixture.detectChanges();
+      expect(scene.setInteractive).toHaveBeenLastCalledWith(false);
+      expect([...el.querySelectorAll<HTMLElement>('[data-badge]')].map((b) => b.dataset['nodeId'])).toEqual(['tsms']);
+      const selected: (string | null)[] = [];
+      fixture.componentInstance.nodeSelect.subscribe((id) => selected.push(id));
+      options!.onPick('bots');
+      expect(selected).toEqual([]);
+    });
+
+    it('sets camera presets', async () => {
+      await create();
       el.querySelector<HTMLButtonElement>('[data-view="top"]')!.click();
       expect(scene.setView).toHaveBeenCalledWith('top');
     });
 
-    it('labels each node button with its order, name and state', () => {
-      expect(el.querySelectorAll('[data-node-button]').length).toBe(SHUTDOWN_LOOP.length);
-      expect(nodeButton(TSMS + 1).getAttribute('aria-label')).toBe(`${TSMS + 1} TSMS: Open — cause`);
-    });
-
-    it('shows a node’s label, topic, value and age when its button is pressed', () => {
-      expect(info()).toBeNull();
-      nodeButton(TSMS + 1).click();
-      fixture.detectChanges();
-      expect(scene.setSelected).toHaveBeenLastCalledWith('tsms');
-      expect(nodeButton(TSMS + 1).getAttribute('aria-pressed')).toBe('true');
-      const text = info()!.textContent!;
-      expect(text).toContain('TSMS');
-      expect(text).toContain('Open — cause');
-      expect(text).toContain('VCU/Shutdown/TSMS_GPIO');
-      expect(text).toContain('3 s ago');
-    });
-
-    it('selects the node the scene reports as clicked, and clears on empty space', () => {
-      options!.onPick('glvms');
-      fixture.detectChanges();
-      expect(info()!.textContent).toContain('GLV master switch');
-      expect(info()!.textContent).toContain('no sensor');
-      options!.onPick(null);
-      fixture.detectChanges();
-      expect(info()).toBeNull();
-    });
-
-    it('steps through nodes with the arrow keys and clears with Escape', () => {
-      const key = (target: HTMLElement, k: string) => {
-        target.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true }));
-        fixture.detectChanges();
-      };
-      nodeButton(1).click();
-      fixture.detectChanges();
-      key(nodeButton(1), 'ArrowRight');
-      expect(info()!.textContent).toContain('Side BRB R');
-      expect(document.activeElement).toBe(nodeButton(2));
-      key(nodeButton(2), 'End');
-      expect(info()!.textContent).toContain('AIRs');
-      key(nodeButton(SHUTDOWN_LOOP.length), 'Escape');
-      expect(info()).toBeNull();
-    });
-
-    it('falls back to 2D if the WebGL context is lost', () => {
+    it('falls back when the WebGL context is lost', async () => {
+      await create();
       options!.onContextLost();
-      fixture.detectChanges();
-      expect(scene.dispose).toHaveBeenCalled();
-      expect(el.querySelector('car-view')).toBeTruthy();
+      expect(scene.dispose).toHaveBeenCalledOnce();
+      expect(unavailable).toEqual(['context-lost']);
     });
 
-    it('disposes the scene when destroyed', () => {
+    it('disposes the scene when destroyed', async () => {
+      await create();
       fixture.destroy();
-      expect(scene.dispose).toHaveBeenCalled();
+      expect(scene.dispose).toHaveBeenCalledOnce();
+      expect(unavailable).toEqual([]);
     });
+  });
+
+  it('without WebGL emits unavailable and never loads three.js', async () => {
+    await configure(false);
+    await create();
+    expect(loader).not.toHaveBeenCalled();
+    expect(unavailable).toEqual(['webgl']);
+  });
+
+  it('emits unavailable when the scene fails to load', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    await configure(true, () => Promise.reject(new Error('chunk failed')));
+    await create();
+    expect(unavailable).toEqual(['init']);
+  });
+
+  it('reports no WebGL when the scene could not get a context', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    await configure(true, () =>
+      Promise.resolve(() => {
+        throw new CarSceneError();
+      })
+    );
+    await create();
+    expect(unavailable).toEqual(['webgl']);
   });
 });

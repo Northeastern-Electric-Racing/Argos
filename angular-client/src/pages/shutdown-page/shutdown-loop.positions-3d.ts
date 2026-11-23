@@ -1,45 +1,49 @@
 /**
- * A point on the car in metres: `x` aft of the front bulkhead, `y` above the ground, `z` towards the
- * car's left of the centreline (negative is the right side). The nose points to -x.
+ * Where each shutdown loop node sits on the 3D car, keyed by `LoopNode.id`. One table and one frame for every 3D
+ * car view (procedural or glTF), so either can take the other's markers as they are.
+ *
+ * | Frame  | Meaning                                                                       |
+ * | ------ | ----------------------------------------------------------------------------- |
+ * | units  | metres                                                                        |
+ * | +Y     | up                                                                            |
+ * | +Z     | forward, towards the nose (glTF's native forward: a Blender model exports as is) |
+ * | +X     | to the driver's left                                                          |
+ * | origin | on the ground, directly under the centre of the rear axle                    |
+ *
+ * Rough schematic placements read off the 2D side view, not CAD. The latch row (E-box) and the sense row
+ * (accumulator) are kept apart sideways so that every pair of markers is at least 12 px apart in each camera
+ * preset (see car-view-3d.projection.spec.ts). A model node named `shutdown:<node id>` (NODE_ANCHOR_PREFIX)
+ * may override an entry where the car comes from a model.
  */
-export interface CarPoint3d {
-  x: number;
-  y: number;
-  z: number;
-}
+export type Vec3 = readonly [x: number, y: number, z: number];
 
-/** The box the procedural car (nose to rear frame, wheels included) fits in, per axis as [min, max]. */
-export const CAR_EXTENT_3D: Readonly<Record<keyof CarPoint3d, readonly [number, number]>> = {
-  x: [-0.4, 2.45],
-  y: [0, 1.3],
-  z: [-0.75, 0.75]
-};
+/** A model node named `shutdown:<node id>` (e.g. `shutdown:tsms`) marks where that loop node sits. */
+export const NODE_ANCHOR_PREFIX = 'shutdown:';
 
-/**
- * Where each shutdown-loop node sits on the 3D car, keyed by `LoopNode.id`. Rough positions after the
- * spec's "Left to the builder" notes and the side-view frame drawing: GLVMS and TSMS on the right-hand
- * main hoop brace, the side BRBs either side of the main hoop, the latches in the E-box behind it, the
- * MC at the rear, BOTS at the pedal box, the inertia switch and cockpit BRB on the dash, HVD and the
- * energy meter interlock on the accumulator side, and the BMS sense points and AIRs in the accumulator.
- */
-export const NODE_POSITIONS_3D: Readonly<Record<string, CarPoint3d>> = {
-  glvms: { x: 1.79, y: 0.74, z: -0.27 },
-  'side-brb-r': { x: 1.64, y: 0.92, z: -0.34 },
-  'side-brb-l': { x: 1.64, y: 0.92, z: 0.34 },
-  'bms-latch': { x: 1.63, y: 0.5, z: 0 },
-  'imd-latch': { x: 1.7, y: 0.5, z: 0 },
-  'bspd-latch': { x: 1.77, y: 0.5, z: 0 },
-  'can-latch': { x: 1.84, y: 0.5, z: 0 },
-  'mc-hvil': { x: 2.04, y: 0.37, z: 0 },
-  bots: { x: 0.2, y: 0.17, z: 0 },
-  inertia: { x: 0.93, y: 0.56, z: 0.12 },
-  'cockpit-brb': { x: 0.93, y: 0.62, z: -0.12 },
-  tsms: { x: 1.69, y: 0.74, z: -0.27 },
-  hvd: { x: 1.88, y: 0.33, z: 0.2 },
-  'em-interlock': { x: 1.91, y: 0.47, z: 0.12 },
-  'acc-sense': { x: 1.52, y: 0.22, z: 0 },
-  'tsip-sense': { x: 1.59, y: 0.22, z: 0 },
-  'ts-minus': { x: 1.66, y: 0.22, z: 0 },
-  'ts-plus': { x: 1.73, y: 0.22, z: 0 },
-  airs: { x: 1.82, y: 0.22, z: 0 }
+export const NODE_POSITIONS_3D: Readonly<Record<string, Vec3>> = {
+  // Main hoop, behind the driver.
+  glvms: [-0.2, 0.75, 0.57],
+  'side-brb-r': [-0.33, 0.92, 0.68],
+  'side-brb-l': [0.33, 0.92, 0.68],
+  // E-box behind the main hoop, left of the centreline.
+  'bms-latch': [0.1, 0.55, 0.78],
+  'imd-latch': [0.1, 0.55, 0.67],
+  'bspd-latch': [0.1, 0.55, 0.56],
+  'can-latch': [0.1, 0.55, 0.45],
+  // Motor controller at the rear.
+  'mc-hvil': [0.12, 0.3, 0.1],
+  // Pedal box, then the dash.
+  bots: [0, 0.22, 2.03],
+  inertia: [0.12, 0.62, 1.45],
+  'cockpit-brb': [-0.1, 0.66, 1.4],
+  tsms: [-0.2, 0.75, 0.69],
+  // Accumulator side, near the rear. TODO(electrical lead): confirm side of the energy meter interlock.
+  hvd: [0.24, 0.46, 0.36],
+  'em-interlock': [-0.18, 0.52, 0.3],
+  // Inside the accumulator, right of the centreline.
+  'acc-sense': [-0.06, 0.25, 0.88],
+  'tsip-sense': [-0.06, 0.25, 0.77],
+  'ts-minus': [-0.06, 0.25, 0.66],
+  'ts-plus': [-0.06, 0.25, 0.55],
+  airs: [-0.06, 0.25, 0.44]
 };

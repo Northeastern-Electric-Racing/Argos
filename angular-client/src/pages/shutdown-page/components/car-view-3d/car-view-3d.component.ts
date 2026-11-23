@@ -4,90 +4,141 @@ import {
   Component,
   computed,
   DestroyRef,
+  DOCUMENT,
   effect,
   ElementRef,
   inject,
   input,
-  NgZone,
+  linkedSignal,
+  output,
   signal,
-  viewChild,
-  viewChildren
+  untracked,
+  viewChild
 } from '@angular/core';
-import { NODE_STATE_DISPLAY } from '../../shutdown-loop.display';
-import { NodeState, NodeStatus } from '../../shutdown-loop.utils';
+import { segmentedClasses } from 'src/ui/recipes/segmented';
+import { loopOf, loopSummary } from '../../shutdown-loop.display';
+import { cssVarReader } from '../../shutdown-loop.theme';
+import { NodeStatus } from '../../shutdown-loop.utils';
+import { CarLoopView } from '../../loop-view/loop-view';
 import { UiIconComponent } from 'src/ui/icon/icon.component';
-import { CarViewComponent } from '../car-view/car-view.component';
-import { StatusGlyphComponent } from '../status-glyph/status-glyph.component';
-import {
-  CarScene,
-  DEFAULT_SCENE_COLORS,
-  nodeInfo,
-  SCENE_COLOR_TOKENS,
-  SceneColors,
-  VIEW_PRESETS,
-  ViewPreset
-} from './car-view-3d.model';
+import { CarScene } from './car-scene.types';
+import { BadgePlacement, BadgePoint, placeBadges, ScreenPoint, ViewPreset } from './car-view-3d.projection';
+import { badgeModels, FallbackReason, fallbackReasonFor, readSceneColours } from './car-view-3d.utils';
 import { CAR_SCENE_LOADER, WEBGL_SUPPORT } from './car-view-3d.tokens';
 
-type Mode = 'loading' | 'ready' | 'fallback';
+const VIEW_PRESETS: readonly { id: ViewPreset; label: string }[] = [
+  { id: 'iso', label: 'Iso' },
+  { id: 'side', label: 'Side' },
+  { id: 'top', label: 'Top' }
+];
 
 /**
- * The car in 3D (three.js, loaded on demand) with each shutdown node where it sits and the loop wired
- * through them in order. Orbit, zoom and pan with the pointer; presets and a node toolbar for the keyboard.
- * Falls back to the 2D car view without WebGL, if the scene fails to load, or if the context is lost.
+ * The car in 3D (three.js, loaded on demand) with each loop node where it sits and the loop wired through them in
+ * order. A CarLoopView (loop-view/loop-view.ts): the page owns selection and the detail panel; a pick toggles the
+ * pin, hover previews, and the camera closes in on the pinned loop node. Keyboard and assistive-tech access is the
+ * loop strip: this view is an image labelled with the loop summary, and its badges take pointer clicks only.
+ * When it can't draw (no WebGL, the scene fails to start, the context is lost) it emits `unavailable` and the page
+ * shows the 2D car instead.
  */
 @Component({
   selector: 'car-view-3d',
   templateUrl: './car-view-3d.component.html',
-  styleUrls: ['../../shutdown-states.css', './car-view-3d.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CarViewComponent, StatusGlyphComponent, UiIconComponent]
+  host: { class: 'block' },
+  imports: [UiIconComponent]
 })
-export class CarView3dComponent {
-  nodes = input.required<NodeStatus[]>();
+export class CarView3dComponent implements CarLoopView {
+  readonly nodes = input.required<NodeStatus[]>();
+  readonly selectedId = input<string | null>(null);
+  readonly previewId = input<string | null>(null);
+  /** False below `sm`: an overview (only the active loop node's badge, no picking). */
+  readonly interactive = input(true);
+  readonly nodeSelect = output<string | null>();
+  readonly nodePreview = output<string | null>();
+  /** The 3D view can't draw; the page shows the 2D car instead. */
+  readonly unavailable = output<FallbackReason>();
 
-  private zone = inject(NgZone);
-  private loadScene = inject(CAR_SCENE_LOADER);
-  private canvas = viewChild<ElementRef<HTMLCanvasElement>>('canvas');
-  private stage = viewChild<ElementRef<HTMLElement>>('stage');
-  private nodeButtons = viewChildren<ElementRef<HTMLButtonElement>>('nodeButton');
-  private probes = viewChildren<ElementRef<HTMLElement>>('probe');
+  private readonly doc = inject(DOCUMENT);
+  private readonly loadScene = inject(CAR_SCENE_LOADER);
+  private readonly webgl = inject(WEBGL_SUPPORT);
+  private readonly canvas = viewChild<ElementRef<HTMLCanvasElement>>('canvas');
+  private readonly stage = viewChild<ElementRef<HTMLElement>>('stage');
   private scene?: CarScene;
   private destroyed = false;
 
-  readonly mode = signal<Mode>(inject(WEBGL_SUPPORT)() ? 'loading' : 'fallback');
-  readonly selectedId = signal<string | null>(null);
-  readonly presets = VIEW_PRESETS;
-  readonly states = Object.keys(NODE_STATE_DISPLAY) as NodeState[];
-  readonly display = NODE_STATE_DISPLAY;
+  protected readonly ready = signal(false);
+  protected readonly presets = VIEW_PRESETS;
+  protected readonly segmented = segmentedClasses;
+  protected readonly hint = this.matches('(pointer: coarse)')
+    ? 'Two fingers to rotate and zoom'
+    : 'Drag to orbit, scroll to zoom, right-drag to pan';
 
-  readonly buttons = computed(() =>
-    this.nodes().map((s, i) => ({
-      id: s.node.id,
-      order: i + 1,
-      cssClass: NODE_STATE_DISPLAY[s.state].cssClass,
-      unmeasured: !s.node.topic,
-      ariaLabel: `${i + 1} ${s.node.label}: ${NODE_STATE_DISPLAY[s.state].label}`
-    }))
+  protected readonly highlightId = computed(() => this.previewId() ?? this.selectedId());
+  protected readonly summary = computed(() => loopSummary(loopOf(this.nodes())));
+  private readonly breakId = computed(
+    () =>
+      this.nodes()
+        .filter((s) => s.state === 'suspect')
+        .at(-1)?.node.id ?? null
   );
-  readonly selected = computed(() => {
-    const id = this.selectedId();
-    const nodes = this.nodes();
-    const i = nodes.findIndex((s) => s.node.id === id);
-    if (i < 0) return null;
-    const { state } = nodes[i];
-    return { ...nodeInfo(nodes[i], i + 1), stateId: state, cssClass: NODE_STATE_DISPLAY[state].cssClass };
+
+  /** Each marker on screen after the last rendered frame. */
+  private readonly points = signal<ScreenPoint[]>([]);
+  protected readonly badges = computed(() => {
+    const all = badgeModels(this.nodes(), this.highlightId());
+    if (this.interactive()) return all;
+    const only = this.highlightId() ?? this.breakId();
+    return all.filter((b) => b.id === only);
   });
+  /** Badge spots, keeping each badge's previous spot while it is clear (no hopping while orbiting). */
+  private readonly placements = linkedSignal<BadgePoint[], BadgePlacement[]>({
+    source: () => {
+      const at = new Map(this.points().map((p) => [p.id, p]));
+      return this.badges()
+        .filter((b) => at.has(b.id))
+        .map((b) => ({ ...at.get(b.id)!, suspect: b.suspect, width: b.width }));
+    },
+    computation: (points, previous) => placeBadges(points, previous?.value)
+  });
+  protected readonly overlay = computed(() => {
+    const placed = new Map(this.placements().map((p) => [p.id, p]));
+    return this.badges()
+      .filter((b) => placed.get(b.id)?.visible)
+      .map((b) => ({ ...b, at: placed.get(b.id)! }));
+  });
+  /** Suspects' halos and the highlight ring, over the canvas so nothing in the scene can hide them. */
+  protected readonly rings = computed(() => {
+    const suspects = new Set(
+      this.nodes()
+        .filter((s) => s.state === 'suspect')
+        .map((s) => s.node.id)
+    );
+    const highlight = this.highlightId();
+    return this.points()
+      .filter((p) => p.visible && (suspects.has(p.id) || p.id === highlight))
+      .map((p) => ({ id: p.id, x: p.x, y: p.y, suspect: suspects.has(p.id), highlighted: p.id === highlight }));
+  });
+  /** Re-keys the halo's three pings when the break moves. */
+  protected readonly pingKey = computed(() => this.breakId() ?? '');
 
   constructor() {
-    afterNextRender(() => this.start());
+    afterNextRender(() => void this.start());
     effect(() => {
       const nodes = this.nodes();
-      if (this.mode() === 'ready') this.zone.runOutsideAngular(() => this.scene?.update(nodes));
+      if (this.ready()) this.scene?.setStatuses(nodes);
     });
     effect(() => {
+      const id = this.highlightId();
+      if (this.ready()) this.scene?.setHighlight(id);
+    });
+    effect(() => {
+      const on = this.interactive();
+      if (this.ready()) this.scene?.setInteractive(on);
+    });
+    // The camera follows the pin, and nothing else.
+    effect(() => {
       const id = this.selectedId();
-      if (this.mode() === 'ready') this.zone.runOutsideAngular(() => this.scene?.setSelected(id));
+      if (this.ready()) untracked(() => this.scene?.focus(id));
     });
     inject(DestroyRef).onDestroy(() => {
       this.destroyed = true;
@@ -95,94 +146,67 @@ export class CarView3dComponent {
     });
   }
 
-  setView(preset: ViewPreset): void {
-    this.zone.runOutsideAngular(() => this.scene?.setView(preset));
+  protected setView(preset: ViewPreset): void {
+    this.scene?.setView(preset);
   }
 
-  toggle(id: string): void {
-    this.selectedId.update((current) => (current === id ? null : id));
-  }
-
-  /** Roving focus over the node toolbar: arrows and Home/End move and select, Escape clears. */
-  onToolbarKey(event: KeyboardEvent, index: number): void {
-    const last = this.nodes().length - 1;
-    const next =
-      event.key === 'ArrowRight' || event.key === 'ArrowDown'
-        ? Math.min(index + 1, last)
-        : event.key === 'ArrowLeft' || event.key === 'ArrowUp'
-          ? Math.max(index - 1, 0)
-          : event.key === 'Home'
-            ? 0
-            : event.key === 'End'
-              ? last
-              : undefined;
-    if (event.key === 'Escape') {
-      this.selectedId.set(null);
-      event.preventDefault();
+  /** A pick toggles the pin (LoopView rule 2); empty canvas clears it. */
+  protected toggle(id: string | null): void {
+    if (!this.interactive()) return;
+    const selected = this.selectedId();
+    if (id === null) {
+      if (selected !== null) this.nodeSelect.emit(null);
       return;
     }
-    if (next === undefined) return;
-    event.preventDefault();
-    this.selectedId.set(this.nodes()[next].node.id);
-    this.nodeButtons()[next]?.nativeElement.focus();
+    this.nodeSelect.emit(id === selected ? null : id);
   }
 
-  /** The toolbar button that takes Tab focus: the selected node's, else the first. */
-  tabStop(index: number): number {
-    const selected = this.nodes().findIndex((s) => s.node.id === this.selectedId());
-    return index === (selected < 0 ? 0 : selected) ? 0 : -1;
+  protected preview(id: string | null): void {
+    if (this.interactive() || id === null) this.nodePreview.emit(id);
+  }
+
+  protected onEscape(): void {
+    if (this.selectedId() !== null) this.nodeSelect.emit(null);
   }
 
   private async start(): Promise<void> {
-    if (this.mode() !== 'loading') return;
+    if (!this.webgl()) return this.fallBack('webgl');
     const canvas = this.canvas()?.nativeElement;
     const container = this.stage()?.nativeElement;
-    if (!canvas || !container) return;
+    if (!canvas || !container) return this.fallBack('init');
     try {
       const create = await this.loadScene();
       if (this.destroyed) return;
-      const colors = this.readColors();
-      const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
-      this.scene = this.zone.runOutsideAngular(() =>
-        create({
-          canvas,
-          container,
-          colors,
-          reducedMotion,
-          onPick: (id) => this.selectedId.set(id),
-          onContextLost: () => this.fallBack()
-        })
-      );
-      this.mode.set('ready');
+      this.scene = create({
+        canvas,
+        container,
+        colours: readSceneColours(cssVarReader(this.doc.documentElement)),
+        reducedMotion: this.matches('(prefers-reduced-motion: reduce)'),
+        coarsePointer: this.matches('(pointer: coarse)'),
+        onFrame: (points) => this.points.set(points),
+        onPick: (id) => this.toggle(id),
+        onHover: (id) => this.preview(id),
+        onContextLost: () => this.fallBack('context-lost')
+      });
+      this.ready.set(true);
     } catch (err) {
       console.warn('3D car view unavailable, showing 2D', err);
-      this.fallBack();
+      this.fallBack(fallbackReasonFor(err));
     }
   }
 
-  private fallBack(): void {
+  private matches(query: string): boolean {
+    return this.doc.defaultView?.matchMedia?.(query).matches ?? false;
+  }
+
+  private fallBack(reason: FallbackReason): void {
     this.stop();
-    this.mode.set('fallback');
+    if (!this.destroyed) this.unavailable.emit(reason);
   }
 
   private stop(): void {
     this.scene?.dispose();
     this.scene = undefined;
-  }
-
-  /** Scene colours from the theme tokens, and state colours through the same classes the 2D view uses. */
-  private readColors(): SceneColors {
-    const root = getComputedStyle(document.documentElement);
-    const read = (style: CSSStyleDeclaration, name: string, fallback: string) =>
-      style.getPropertyValue(name).trim() || fallback;
-    const colors = { ...DEFAULT_SCENE_COLORS, states: { ...DEFAULT_SCENE_COLORS.states } };
-    for (const [key, token] of Object.entries(SCENE_COLOR_TOKENS) as [keyof typeof SCENE_COLOR_TOKENS, string][]) {
-      colors[key] = read(root, token, colors[key]);
-    }
-    this.probes().forEach((probe, i) => {
-      const state = this.states[i];
-      colors.states[state] = read(getComputedStyle(probe.nativeElement), '--sd-color', colors.states[state]);
-    });
-    return colors;
+    this.ready.set(false);
   }
 }

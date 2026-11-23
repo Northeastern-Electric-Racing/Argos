@@ -1,72 +1,92 @@
-@if (mode() === 'fallback') {
-  <p class="note">3D view unavailable on this device, showing the 2D side view.</p>
-  <car-view [nodes]="nodes()" />
-} @else {
-  <div class="view">
-    <div
-      #stage
-      class="stage"
-      role="img"
-      aria-label="3D view of the car with the shutdown loop wired through each node. Drag to orbit, scroll to zoom, right-drag to pan. Pick a node with the buttons below."
-    >
-      <canvas #canvas class="canvas" aria-hidden="true"></canvas>
-    </div>
-    @if (mode() === 'loading') {
-      <p class="loading">Loading 3D view…</p>
-    }
-    <div class="presets" role="group" aria-label="Camera view">
-      @for (p of presets; track p.id) {
-        <button type="button" class="btn" [attr.data-view]="p.id" (click)="setView(p.id)">{{ p.label }}</button>
+<!-- The stage follows the viewport (the one arbitrary size): tall enough to read, short enough to keep the strip in view. -->
+<div
+  class="relative h-[clamp(240px,56vw,min(52vh,480px))] w-full overflow-hidden rounded-sm bg-page"
+  (keydown.escape)="onEscape()"
+>
+  <div
+    #stage
+    role="img"
+    class="absolute inset-0"
+    [attr.aria-label]="'3D car view with the shutdown loop nodes. ' + summary()"
+  >
+    <canvas #canvas class="block size-full cursor-grab" aria-hidden="true"></canvas>
+
+    <!-- HTML over the canvas: constant size at any zoom, and nothing in the scene can cover it. -->
+    <div aria-hidden="true" class="pointer-events-none absolute inset-0">
+      <svg class="absolute inset-0 size-full overflow-visible" focusable="false">
+        @for (b of overlay(); track b.id) {
+          @if (b.at.leader) {
+            <line
+              class="stroke-fg-muted"
+              stroke-width="1"
+              [attr.x1]="b.at.x"
+              [attr.y1]="b.at.y"
+              [attr.x2]="b.at.left + b.at.width / 2"
+              [attr.y2]="b.at.top + 12"
+            />
+          }
+        }
+      </svg>
+
+      @for (r of rings(); track r.id) {
+        <div
+          class="absolute size-7 -translate-x-1/2 -translate-y-1/2 rounded-full"
+          [style.left.px]="r.x"
+          [style.top.px]="r.y"
+          [attr.data-ring]="r.suspect ? 'halo' : 'highlight'"
+        >
+          @if (r.suspect) {
+            @for (k of [pingKey()]; track k) {
+              <span
+                class="absolute inset-0 rounded-full border-2 border-solid border-danger motion-safe:animate-ping motion-safe:[animation-iteration-count:3]"
+              ></span>
+            }
+            <span class="absolute inset-0 rounded-full border-2 border-solid border-danger"></span>
+          }
+          @if (r.highlighted) {
+            <span class="absolute -inset-1 rounded-full border-2 border-solid border-fg"></span>
+          }
+        </div>
       }
-    </div>
-    <div class="info-slot" aria-live="polite">
-      @if (selected(); as s) {
-        <div data-node-info [class]="'info ' + s.cssClass">
-          <div class="info-head">
-            <span class="glyph"><status-glyph [state]="s.stateId" /></span>
-            <span class="info-title">{{ s.order }}. {{ s.label }}</span>
-            <button type="button" class="close" aria-label="Close node details" (click)="selectedId.set(null)">
-              <ui-icon name="close" />
-            </button>
-          </div>
-          <dl>
-            <dt>State</dt>
-            <dd>{{ s.state }}</dd>
-            <dt>Topic</dt>
-            <dd>{{ s.topic }}</dd>
-            <dt>Value</dt>
-            <dd>{{ s.value }}</dd>
-            <dt>Age</dt>
-            <dd>{{ s.age }}</dd>
-          </dl>
-          @for (note of s.notes; track note) {
-            <p class="tag">{{ note }}</p>
+
+      @for (b of overlay(); track b.id) {
+        <div
+          data-badge
+          class="pointer-events-auto absolute flex h-6 cursor-pointer items-center justify-center gap-0.5 rounded-full border-2 px-1 text-xs leading-none font-bold whitespace-nowrap tabular-nums data-[highlighted=true]:outline-2 data-[highlighted=true]:outline-offset-1 data-[highlighted=true]:outline-fg data-[highlighted=true]:outline-solid data-[suspect=true]:z-10"
+          [class]="b.classes"
+          [style.left.px]="b.at.left"
+          [style.top.px]="b.at.top"
+          [style.min-width.px]="b.at.width"
+          [attr.data-node-id]="b.id"
+          [attr.data-suspect]="b.suspect"
+          [attr.data-highlighted]="b.highlighted"
+          [attr.title]="b.title"
+          (click)="toggle(b.id)"
+          (mouseenter)="preview(b.id)"
+          (mouseleave)="preview(null)"
+        >
+          <ui-icon [name]="b.icon" size="xs" />
+          <span>{{ b.text }}</span>
+          @if (b.mismatch) {
+            <span class="grid size-3.5 place-items-center rounded-full bg-warn text-on-status" data-mismatch>
+              <ui-icon name="priority_high" size="xs" />
+            </span>
           }
         </div>
       }
     </div>
-  </div>
-  <div class="nodes" role="toolbar" aria-label="Shutdown nodes in loop order">
-    @for (b of buttons(); track b.id; let i = $index) {
-      <button
-        #nodeButton
-        type="button"
-        data-node-button
-        [class]="'node ' + b.cssClass"
-        [class.unmeasured]="b.unmeasured"
-        [attr.aria-pressed]="selectedId() === b.id"
-        [attr.aria-label]="b.ariaLabel"
-        [tabIndex]="tabStop(i)"
-        (click)="toggle(b.id)"
-        (keydown)="onToolbarKey($event, i)"
-      >
-        {{ b.order }}
-      </button>
+
+    @if (!ready()) {
+      <p class="absolute inset-0 m-0 grid place-items-center text-sm text-fg-muted">Loading 3D view…</p>
     }
   </div>
-}
-<span class="probes" aria-hidden="true">
-  @for (s of states; track s) {
-    <span #probe [class]="display[s].cssClass"></span>
-  }
-</span>
+
+  <div class="absolute top-2 left-2 flex items-center gap-2">
+    <div [class]="segmented.list" role="group" aria-label="Camera view">
+      @for (p of presets; track p.id) {
+        <button type="button" [class]="segmented.item" [attr.data-view]="p.id" (click)="setView(p.id)">{{ p.label }}</button>
+      }
+    </div>
+  </div>
+  <p class="pointer-events-none absolute right-2 bottom-1 m-0 text-xs text-fg-muted max-sm:hidden">{{ hint }}</p>
+</div>

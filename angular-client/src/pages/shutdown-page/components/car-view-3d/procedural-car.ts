@@ -17,15 +17,23 @@ import {
   TubeGeometry,
   Vector3
 } from 'three';
-import { CarPoint3d } from '../../shutdown-loop.positions-3d';
-import { SceneColors } from './car-view-3d.model';
+import { SceneColours } from './car-scene.types';
+
+/** A point in the car's own build frame: metres, `x` aft of the front bulkhead, `y` up, `z` to the driver's left. */
+interface CarPoint3d {
+  x: number;
+  y: number;
+  z: number;
+}
 
 /**
- * A low-poly FSAE-style car built from primitives, in car metres (see CarPoint3d): a tube space frame
+ * A low-poly FSAE-style car built from primitives, in its own build frame (CarPoint3d): a tube space frame
  * (front bulkhead, front hoop, main hoop with its rear braces, side impact tubes, rear frame), a nose
  * cone, a dash and steering wheel, the cockpit opening, the accumulator, E-box and motor controller as
  * see-through boxes so the nodes inside stay visible, suspension arms and four wheels.
- * Not CAD: proportions follow the side-view frame drawing loosely.
+ * Not CAD: proportions follow the side-view frame drawing loosely. buildCar returns it placed in the shared 3D
+ * frame (shutdown-loop.positions-3d.ts: +Z forward, +X to the driver's left, origin under the rear axle) by one
+ * transform on its group.
  */
 
 const UP = new Vector3(0, 1, 0);
@@ -103,9 +111,15 @@ export interface CarModel {
   dispose(): void;
 }
 
-export function buildCar(colors: SceneColors): CarModel {
+export function buildCar(colors: SceneColours): CarModel {
   const group = new Group();
-  group.name = 'car';
+  group.name = 'car-build-frame';
+  // Build frame to the shared frame: (x, y, z) -> (z, y, REAR_AXLE_X - x).
+  const placed = new Group();
+  placed.name = 'car';
+  placed.rotation.y = Math.PI / 2;
+  placed.position.z = REAR_AXLE_X;
+  placed.add(group);
   const geometries: BufferGeometry[] = [];
   const materials: Material[] = [];
   const keep = <T extends BufferGeometry>(g: T): T => (geometries.push(g), g);
@@ -193,9 +207,9 @@ export function buildCar(colors: SceneColors): CarModel {
     fill.name = name;
     group.add(fill, edges);
   };
-  box({ x: 1.46, y: 0.09, z: -0.22 }, { x: 1.92, y: 0.31, z: 0.22 }, colors.hv, 'accumulator');
-  box({ x: 1.59, y: 0.36, z: -0.13 }, { x: 1.89, y: 0.58, z: 0.13 }, colors.edge, 'e-box');
-  box({ x: 1.96, y: 0.14, z: -0.11 }, { x: 2.13, y: 0.34, z: 0.11 }, colors.edge, 'motor-controller');
+  box({ x: 1.22, y: 0.09, z: -0.22 }, { x: 1.76, y: 0.33, z: 0.22 }, colors.hv, 'accumulator');
+  box({ x: 1.32, y: 0.44, z: -0.04 }, { x: 1.75, y: 0.64, z: 0.2 }, colors.edge, 'e-box');
+  box({ x: 1.96, y: 0.14, z: -0.14 }, { x: 2.13, y: 0.36, z: 0.14 }, colors.edge, 'motor-controller');
 
   // Wheels and double-wishbone arms
   const tyreGeo = keep(new CylinderGeometry(WHEEL_R, WHEEL_R, WHEEL_W, 20));
@@ -228,8 +242,9 @@ export function buildCar(colors: SceneColors): CarModel {
     }
   }
 
+  placed.updateMatrixWorld(true);
   return {
-    group,
+    group: placed,
     dispose: () => {
       geometries.forEach((g) => g.dispose());
       materials.forEach((m) => m.dispose());
