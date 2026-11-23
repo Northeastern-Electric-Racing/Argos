@@ -29,6 +29,8 @@ export class MockPanelComponent implements OnDestroy {
   readonly nodes = MEASURED;
   readonly values = signal<Record<string, number>>(Object.fromEntries(MEASURED.map((n) => [n.topic, 1])));
   readonly publishing = signal(false);
+  /** Published as BMS/Shutdown/State, which is inverted: 0 = TS ON. */
+  readonly tsOn = signal(false);
 
   ngOnDestroy(): void {
     clearInterval(this.timer);
@@ -83,6 +85,7 @@ export class MockPanelComponent implements OnDestroy {
   private publish(): void {
     const values = this.values();
     const time = String(Date.now());
+    this.storage.addValue(SHUTDOWN_TOPICS.BMS.State, { values: [this.tsOn() ? '0' : '1'], time, unit: '' });
     for (const n of MEASURED) {
       if (n.topic === SHUTDOWN_TOPICS.VCU.CAN_LATCH) {
         // The CAN latch is derived from the critical faults: open = every fault tripped.

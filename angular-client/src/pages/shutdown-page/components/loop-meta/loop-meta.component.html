@@ -1,11 +1,20 @@
 <span data-chip="ts" [class]="ts().chip">
   <ui-icon [name]="ts().icon" size="sm" />
-  <span class="font-normal text-fg-muted">BMS:</span> {{ ts().text }}
+  <span class="font-normal text-fg-muted">BMS:</span>
+  @if (ts().known) {
+    {{ ts().text }}
+  } @else {
+    TS <span aria-hidden="true">—</span><span class="sr-only">unknown</span>
+  }
 </span>
 @for (b of boards(); track b.board) {
   <span [attr.data-chip]="b.board" [attr.data-stale]="b.stale" [class]="b.chip">
     <ui-icon [name]="b.stale ? 'schedule' : 'sensors'" size="sm" />
-    <span class="sr-only">Last update from</span>
-    <span class="font-bold">{{ b.board }}</span> {{ b.text }}
+    <span class="sr-only">Last update from&ngsp;</span>
+    <span class="font-bold">{{ b.board }}&ngsp;</span><span class="min-w-[7ch] tabular-nums">{{ b.text }}</span>
   </span>
 }
+<span data-chip="source" [class]="sourceChip" [title]="sourceInfo().title">
+  <ui-icon [name]="sourceInfo().icon" size="sm" />
+  <span class="font-normal text-fg-muted">Status:</span> {{ sourceInfo().text }}
+</span>

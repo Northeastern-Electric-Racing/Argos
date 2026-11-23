@@ -1,3 +1,4 @@
+import { Listbox, Option } from '@angular/aria/listbox';
 import {
   afterRenderEffect,
   ChangeDetectionStrategy,
@@ -6,22 +7,27 @@ import {
   ElementRef,
   input,
   output,
+  untracked,
   viewChild,
   viewChildren
 } from '@angular/core';
+import { UiIconComponent } from 'src/ui/icon/icon.component';
 import { cx, tw } from 'src/ui/recipes/tw';
 import {
   loopOf,
   loopZones,
   NODE_STATE_DISPLAY,
   nodeAriaLabel,
+  PLACEHOLDER_TAG,
+  segmentState,
   SHORT_LABEL,
   shortStateLabel,
+  WireEmphasis,
   ZoneSlot
 } from '../../shutdown-loop.display';
 import { NodeStatus } from '../../shutdown-loop.utils';
+import { LoopNodeListboxDirective } from '../../loop-view/loop-node-listbox.directive';
 import { LoopView } from '../../loop-view/loop-view';
-import { rovingIndex } from '../../loop-view/roving-index';
 import { StatusGlyphComponent } from '../status-glyph/status-glyph.component';
 
 /** The bracket drawn over a zone, per position: legs only at its ends. */
@@ -40,62 +46,104 @@ const bracketLabelZone = {
   stretch: tw('left-1 text-danger'),
   downstream: tw('right-1 text-fg-muted')
 };
+/**
+ * The wire from a loop node's centre to the next one's: top-6 is the disc's centre (pt-1.5 + half of size-9), and
+ * 100% + 4px spans the item plus its 2 px borders on both sides. Its weight follows the state's emphasis.
+ */
+const wireBase = tw('pointer-events-none absolute top-6 left-1/2 z-1 h-0 w-[calc(100%+4px)] -translate-y-1/2');
+const WIRE_WEIGHT: Record<WireEmphasis, string> = {
+  strong: tw('border-t-5'),
+  normal: tw('border-t-3'),
+  muted: tw('border-t-2')
+};
+/** A loop node that reads closed after the break: a warn ring on its disc, as well as its badge and words. */
+const mismatchRing = tw('ring-2 ring-warn ring-offset-2 ring-offset-surface-1');
+
+/** How long after the user scrolls or presses on the strip it stops following the suspect stretch by itself. */
+export const USER_SCROLL_HOLD_MS = 5000;
 
 /**
- * The shutdown loop laid out in series order: the page's main diagnostic read. A listbox with one option per
- * loop node; arrows, Home and End move focus through it (one tab stop) and preview, click, Enter or Space toggle
- * the pin. The suspect stretch is bracketed in the cause colour, the downstream run in a dashed grey marked "not
- * the cause". A LoopView (loop-view/loop-view.ts). Scrolls sideways when narrow, bringing the highlighted loop
- * node (or the stretch) into view.
+ * The shutdown loop laid out in series order: the page's main diagnostic read. An Angular Aria listbox (explicit
+ * selection) with one option per loop node, bridged to LoopView by loopNodeListbox: arrows, Home and End move focus
+ * (one tab stop) and preview, click, Enter or Space toggle the pin, Escape clears it. The suspect stretch is
+ * bracketed in the cause colour, the downstream run in a dashed grey marked "not the cause". A LoopView
+ * (loop-view/loop-view.ts). From `lg` every loop node fits; narrower it scrolls sideways, following the pinned loop
+ * node (unless the pointer is on the strip) and the start of the suspect stretch (unless the user has just
+ * scrolled it). Never on a preview: hovering never moves what is under the pointer.
  */
 @Component({
   selector: 'loop-strip',
   templateUrl: './loop-strip.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block min-w-0' },
-  imports: [StatusGlyphComponent]
+  imports: [Listbox, Option, LoopNodeListboxDirective, StatusGlyphComponent, UiIconComponent]
 })
 export class LoopStripComponent implements LoopView {
   readonly nodes = input.required<NodeStatus[]>();
   readonly selectedId = input<string | null>(null);
   readonly previewId = input<string | null>(null);
+  /** Ids of the elements that describe the strip (the page's hint), for aria-describedby. */
+  readonly describedBy = input<string>('');
   readonly nodeSelect = output<string | null>();
   readonly nodePreview = output<string | null>();
 
   protected readonly short = SHORT_LABEL;
+  protected readonly placeholderTag = PLACEHOLDER_TAG;
+  /** Whether the pointer is over the scroller; set from its pointer events. */
+  protected pointerOver = false;
+  private userScrolledAt = -Infinity;
 
   private readonly scroller = viewChild.required<ElementRef<HTMLElement>>('scroller');
   private readonly itemEls = viewChildren<ElementRef<HTMLElement>>('item');
 
+  protected readonly listboxValue = computed(() => {
+    const id = this.selectedId();
+    return id ? [id] : [];
+  });
   protected readonly zones = computed(() => loopZones(this.nodes()));
   protected readonly items = computed(() => {
+    const nodes = this.nodes();
     const zones = this.zones();
-    const loop = loopOf(this.nodes());
-    return this.nodes().map((s, i) => ({
-      s,
-      d: NODE_STATE_DISPLAY[s.state],
-      z: zones[i],
-      ariaLabel: nodeAriaLabel(s, loop),
-      stateShort: shortStateLabel(s, loop)
-    }));
+    const loop = loopOf(nodes);
+    return nodes.map((s, i) => {
+      const d = NODE_STATE_DISPLAY[s.state];
+      const wireState = i < nodes.length - 1 ? segmentState(nodes, i) : s.state;
+      const w = NODE_STATE_DISPLAY[wireState];
+      return {
+        s,
+        z: zones[i],
+        disc: cx(s.node.topic ? d.marker.measured : d.marker.unmeasured, s.mismatch ? mismatchRing : ''),
+        stateText: s.mismatch ? tw('text-warn') : d.text,
+        wire: { state: wireState, class: cx(wireBase, w.connector, WIRE_WEIGHT[w.emphasis]) },
+        ariaLabel: nodeAriaLabel(s, loop),
+        stateShort: shortStateLabel(s, loop)
+      };
+    });
   });
   protected readonly highlightId = computed(() => this.previewId() ?? this.selectedId());
-  /** The one node reachable by Tab: the selected one, else the first suspect, else the loop start. */
-  protected readonly tabStopId = computed(() => {
-    const nodes = this.nodes();
-    return this.selectedId() ?? nodes.find((s) => s.state === 'suspect')?.node.id ?? nodes[0]?.node.id;
-  });
-  private readonly scrollTargetId = computed(() => {
-    const nodes = this.nodes();
-    const stretch = this.zones().findIndex((z) => z.zone === 'stretch');
-    return this.highlightId() ?? (stretch >= 0 ? nodes[stretch].node.id : null);
+  /** The first loop node of the suspect stretch, which the strip keeps in view while the user is not scrolling it. */
+  private readonly stretchStartId = computed(() => {
+    const start = this.zones().findIndex((z) => z.zone === 'stretch');
+    return start >= 0 ? this.nodes()[start].node.id : null;
   });
 
   constructor() {
     afterRenderEffect(() => {
-      const id = this.scrollTargetId();
-      if (id) this.scrollIntoView(id);
+      const id = this.selectedId();
+      untracked(() => {
+        if (id && !this.pointerOver) this.scrollIntoView(id);
+      });
     });
+    afterRenderEffect(() => {
+      const id = this.stretchStartId();
+      untracked(() => {
+        if (id && Date.now() - this.userScrolledAt > USER_SCROLL_HOLD_MS) this.scrollIntoView(id);
+      });
+    });
+  }
+
+  protected userScrolled(): void {
+    this.userScrolledAt = Date.now();
   }
 
   protected bracketClass(z: ZoneSlot): string {
@@ -112,29 +160,7 @@ export class LoopStripComponent implements LoopView {
     return z.end ? 'Broke the loop' : 'Suspect stretch';
   }
 
-  /** Toggles the pin (LoopView rule 2). */
-  protected toggle(id: string): void {
-    this.nodeSelect.emit(id === this.selectedId() ? null : id);
-  }
-
-  protected onKeydown(event: KeyboardEvent, index: number): void {
-    const { id } = this.nodes()[index].node;
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      this.toggle(id);
-      return;
-    }
-    if (event.key === 'Escape') {
-      this.nodeSelect.emit(null);
-      return;
-    }
-    const next = rovingIndex(event.key, index, this.nodes().length);
-    if (next === undefined) return;
-    event.preventDefault();
-    this.itemEls()[next]?.nativeElement.focus();
-  }
-
-  /** Scrolls the strip (never the page) so the node is in view, if it is not already. */
+  /** Scrolls the strip (never the page) so the loop node is in view, if it is not already. */
   private scrollIntoView(id: string): void {
     const scroller = this.scroller().nativeElement;
     const item = this.itemEls().find((i) => i.nativeElement.dataset['nodeId'] === id)?.nativeElement;
