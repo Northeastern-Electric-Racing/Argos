@@ -1,16 +1,16 @@
 <div
-  role="listbox"
-  aria-label="Car side view: each loop node where it sits on the car"
-  class="relative mx-auto aspect-[1000/535] w-full max-w-5xl"
+  class="relative mx-auto aspect-1000/535 w-full max-w-5xl"
+  [attr.role]="interactive() ? null : 'img'"
+  [attr.aria-label]="interactive() ? null : summary()"
 >
-  <!-- The frame drawing, dimmed so the wiring and markers read over it. Nose faces left. -->
+  <!-- The frame drawing, grey and faint, so no part of it shares a hue with a state. Nose faces left. -->
   <img
     src="assets/images/car-frame-side.png"
     alt=""
-    class="pointer-events-none absolute inset-0 size-full object-contain opacity-40 select-none"
+    class="pointer-events-none absolute inset-0 size-full object-contain opacity-30 grayscale select-none"
   />
 
-  <!-- Loop wiring in series order: each segment carries the state of the node before it. -->
+  <!-- Loop wiring in series order between the parts, and the leader lines out to fanned badges. -->
   <svg
     class="pointer-events-none absolute inset-0 size-full overflow-visible"
     viewBox="0 0 100 100"
@@ -18,71 +18,135 @@
     aria-hidden="true"
     focusable="false"
   >
-    @for (s of segments(); track s.key) {
+    @for (w of wires(); track w.key) {
+      @if (w.casing) {
+        <line
+          class="stroke-page"
+          [attr.x1]="w.from.x"
+          [attr.y1]="w.from.y"
+          [attr.x2]="w.to.x"
+          [attr.y2]="w.to.y"
+          [attr.stroke-width]="w.casing"
+          stroke-linecap="round"
+          vector-effect="non-scaling-stroke"
+        />
+      }
       <line
-        [class]="s.stroke"
-        [attr.data-state]="s.state"
-        [attr.x1]="s.x1"
-        [attr.y1]="s.y1"
-        [attr.x2]="s.x2"
-        [attr.y2]="s.y2"
-        [attr.stroke-width]="s.width"
-        [attr.stroke-dasharray]="s.dash"
+        [class]="w.stroke"
+        [attr.data-state]="w.state"
+        [attr.x1]="w.from.x"
+        [attr.y1]="w.from.y"
+        [attr.x2]="w.to.x"
+        [attr.y2]="w.to.y"
+        [attr.stroke-width]="w.width"
+        [attr.stroke-dasharray]="w.dash"
         stroke-linecap="round"
         vector-effect="non-scaling-stroke"
       />
     }
+    @if (interactive()) {
+      @for (m of leaders(); track m.id) {
+        <line
+          data-leader
+          class="stroke-fg-dim"
+          [attr.x1]="m.anchor.x"
+          [attr.y1]="m.anchor.y"
+          [attr.x2]="m.badge.x"
+          [attr.y2]="m.badge.y"
+          stroke-width="1.5"
+          vector-effect="non-scaling-stroke"
+        />
+      }
+    }
   </svg>
 
-  @for (m of markers(); track m.id; let i = $index) {
-    <div
-      #marker
-      role="option"
-      class="group absolute size-5 -translate-x-1/2 -translate-y-1/2 cursor-pointer rounded-full transition-transform duration-150 hover:z-20 hover:scale-125 focus-visible:z-20 focus-visible:focus-ring data-[highlighted=true]:z-20 data-[highlighted=true]:scale-125 sm:size-7"
-      [style.left.%]="m.x"
-      [style.top.%]="m.y"
-      [attr.data-node-id]="m.id"
-      [attr.data-state]="m.status.state"
-      [attr.data-highlighted]="highlightId() === m.id"
-      [attr.aria-selected]="selectedId() === m.id"
-      [attr.aria-label]="m.ariaLabel"
-      [tabindex]="tabStopId() === m.id ? 0 : -1"
-      (click)="toggle(m.id)"
-      (focus)="nodePreview.emit(m.id)"
-      (blur)="nodePreview.emit(null)"
-      (keydown)="onKeydown($event, i)"
-      (mouseenter)="nodePreview.emit(m.id)"
-      (mouseleave)="nodePreview.emit(null)"
-    >
-      @if (m.status.state === 'suspect') {
-        <span aria-hidden="true" class="absolute inset-0 rounded-full bg-danger motion-safe:animate-ping"></span>
-      }
+  @if (interactive()) {
+    @for (m of markers(); track m.id) {
       <span
         aria-hidden="true"
-        class="absolute inset-0 grid place-items-center rounded-full border-2 group-aria-selected:border-fg sm:border-3"
-        [class]="m.disc"
-      >
-        <status-glyph class="max-sm:hidden" [state]="m.status.state" size="xs" />
-      </span>
-      @if (m.status.mismatch) {
-        <!-- Mismatch: a warn badge on the marker, as in the strip (its name says so too). -->
-        <span
-          aria-hidden="true"
-          class="absolute -top-1.5 -right-1.5 grid size-3 place-items-center rounded-full border border-solid border-page bg-warn text-badge leading-none font-black text-on-status sm:size-4"
-          >!</span
+        data-anchor
+        [class]="dotClass(m)"
+        [style.left.%]="m.anchor.x"
+        [style.top.%]="m.anchor.y"
+      ></span>
+    }
+    <div
+      ngListbox
+      loopNodeListbox
+      selectionMode="explicit"
+      orientation="horizontal"
+      [wrap]="false"
+      [value]="listboxValue()"
+      (loopNodeSelect)="nodeSelect.emit($event)"
+      (loopNodePreview)="nodePreview.emit($event)"
+      aria-label="Car side view: each loop node where it sits on the car"
+      class="absolute inset-0"
+    >
+      @for (m of markers(); track m.id) {
+        <div
+          ngOption
+          [value]="m.id"
+          [label]="m.status.node.label"
+          [class]="badgeClass"
+          [style.left.%]="m.badge.x"
+          [style.top.%]="m.badge.y"
+          [attr.data-node-id]="m.id"
+          [attr.data-state]="m.status.state"
+          [attr.data-highlighted]="highlightId() === m.id"
+          [attr.aria-label]="m.ariaLabel"
         >
+          @if (m.isBreak) {
+            <!-- Draws the eye to the break three times when it appears or moves, then rests. -->
+            <span
+              aria-hidden="true"
+              class="pointer-events-none absolute inset-0 rounded-full bg-danger motion-safe:animate-[ping_1s_cubic-bezier(0,0,0.2,1)_3]"
+            ></span>
+          }
+          <span aria-hidden="true" [class]="discClass(m)">
+            <status-glyph [state]="m.status.state" size="xs" />
+          </span>
+          @if (m.status.mismatch) {
+            <!-- Mismatch: a warn ring and badge, as in the strip (its name says so too). -->
+            <span
+              aria-hidden="true"
+              class="pointer-events-none absolute -inset-1 rounded-full border-2 border-solid border-warn"
+            ></span>
+            <span
+              aria-hidden="true"
+              class="absolute -top-2 -right-2 grid size-4 place-items-center rounded-full border border-solid border-page bg-warn text-on-status"
+              ><ui-icon name="priority_high" size="xs"
+            /></span>
+          }
+        </div>
       }
     </div>
+  } @else {
+    @for (m of overview(); track m.id) {
+      <span
+        aria-hidden="true"
+        [attr.data-overview]="m.big ? 'disc' : 'dot'"
+        [attr.data-node-id]="m.id"
+        [class]="m.cls"
+        [style.left.%]="m.anchor.x"
+        [style.top.%]="m.anchor.y"
+      >
+        @if (m.big) {
+          <status-glyph [state]="m.status.state" size="xs" />
+        }
+      </span>
+    }
   }
 
   @if (callout(); as c) {
     <div
       data-callout
       aria-hidden="true"
-      class="pointer-events-none absolute z-30 -translate-y-[calc(100%+18px)] rounded-sm border border-solid border-border-strong bg-surface-1 px-2 py-1 text-xs font-bold whitespace-nowrap text-fg shadow-overlay sm:text-sm"
-      [class]="c.align"
-      [style.left.%]="c.x"
-      [style.top.%]="c.y"
+      class="pointer-events-none absolute z-30 w-max max-w-64 rounded-sm border border-solid border-border-strong bg-surface-1 px-2 py-1 text-xs font-bold whitespace-normal text-fg shadow-overlay sm:text-sm"
+      [class]="c.cls"
+      [attr.data-align]="c.align"
+      [attr.data-side]="c.side"
+      [style.left.%]="c.at.x"
+      [style.top.%]="c.at.y"
     >
       <span>{{ c.order }} · {{ c.label }} · </span><span [class]="c.stateText">{{ c.stateLabel }}</span>
     </div>

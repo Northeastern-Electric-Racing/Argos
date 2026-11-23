@@ -1,21 +1,54 @@
 <div class="flex flex-col gap-4 p-5 max-md:gap-3 max-md:p-3">
   <header class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-    <typography variant="x-large-title" content="Shutdown Loop" textClass="max-md:text-title" />
-    <loop-meta [nodes]="status().nodes" [tsOn]="tsOn()" />
+    <h1 [class]="titleClass">Shutdown Loop</h1>
+    <loop-meta [nodes]="status().nodes" [tsOn]="tsOn()" [source]="status().source" />
   </header>
 
   <loop-banner [status]="status()" (nodeSelect)="selection.select($event)" />
 
-  <!-- Phones: car, strip, details. Wide: car beside the details, the strip full width below. -->
-  <div class="grid gap-4 max-md:gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,22rem)]">
+  <!-- The loop in series order, full width and above the fold: the page's main read. -->
+  <section
+    aria-labelledby="loop-order-title"
+    class="flex min-w-0 flex-col gap-1 rounded-md border border-solid border-border bg-surface-1 p-3"
+  >
+    <div class="flex flex-wrap items-baseline gap-x-3">
+      <h2 id="loop-order-title" [class]="cardTitleClass">
+        <ui-icon name="linear_scale" size="sm" class="text-fg-muted" />Loop order
+      </h2>
+      <p id="loop-order-hint" class="m-0 text-xs text-fg-muted max-md:hidden">
+        GLV source → AIR coils · arrow keys move along the loop, Enter pins, Escape unpins
+      </p>
+    </div>
+    <loop-strip
+      describedBy="loop-order-hint"
+      [nodes]="status().nodes"
+      [selectedId]="selection.selectedId()"
+      [previewId]="selection.previewId()"
+      (nodeSelect)="selection.select($event)"
+      (nodePreview)="selection.preview($event)"
+    />
+  </section>
+
+  <!-- Wide: the car beside the details. Narrow: the details first, then the car. -->
+  <div class="grid gap-4 max-md:gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,24rem)]">
+    <loop-node-detail
+      class="min-w-0 lg:col-start-2 lg:row-start-1 lg:self-start"
+      [status]="status()"
+      [nodeId]="selection.activeId()"
+      [pinnedId]="selection.selectedId()"
+      (unpin)="selection.select(null)"
+    />
+
     <section
       #carSection
       tabindex="-1"
-      aria-labelledby="car-view-title"
-      class="flex min-w-0 flex-col gap-2 rounded-md border border-solid border-border bg-surface-1 p-3 outline-none max-md:p-1.5 lg:col-start-1 lg:row-start-1"
+      aria-labelledby="car-title"
+      class="flex min-w-0 flex-col gap-2 overflow-hidden rounded-md border border-solid border-border bg-surface-1 p-3 outline-none max-md:p-2 lg:col-start-1 lg:row-start-1"
     >
-      <div class="flex flex-wrap items-center justify-between gap-2">
-        <h2 id="car-view-title" class="m-0 text-base font-bold text-fg">On the car</h2>
+      <div data-car-header class="flex flex-wrap items-center justify-between gap-2">
+        <h2 id="car-title" [class]="cardTitleClass">
+          <ui-icon name="directions_car" size="sm" class="text-fg-muted" />On the car
+        </h2>
         <car-view-mode [(mode)]="carMode" [notice]="carNotice()" (modeChange)="carNotice.set(null)" />
       </div>
       @if (carMode() === '3d') {
@@ -23,9 +56,9 @@
           [nodes]="status().nodes"
           [selectedId]="selection.selectedId()"
           [previewId]="selection.previewId()"
+          [interactive]="carInteractive()"
           (nodeSelect)="selection.select($event)"
           (nodePreview)="selection.preview($event)"
-          [interactive]="carInteractive()"
           (unavailable)="onCarUnavailable($event)"
         />
       } @else {
@@ -33,30 +66,12 @@
           [nodes]="status().nodes"
           [selectedId]="selection.selectedId()"
           [previewId]="selection.previewId()"
+          [interactive]="carInteractive()"
           (nodeSelect)="selection.select($event)"
           (nodePreview)="selection.preview($event)"
         />
       }
     </section>
-
-    <section
-      aria-labelledby="loop-order-title"
-      class="flex min-w-0 flex-col gap-1 rounded-md border border-solid border-border bg-surface-1 p-3 lg:col-span-2 lg:row-start-2"
-    >
-      <h2 id="loop-order-title" class="m-0 flex flex-wrap items-baseline gap-x-2 text-base font-bold text-fg">
-        Loop order
-        <span class="text-xs font-normal text-fg-muted">GLV source → AIR coils · arrow keys move between loop nodes</span>
-      </h2>
-      <loop-strip
-        [nodes]="status().nodes"
-        [selectedId]="selection.selectedId()"
-        [previewId]="selection.previewId()"
-        (nodeSelect)="selection.select($event)"
-        (nodePreview)="selection.preview($event)"
-      />
-    </section>
-
-    <loop-node-detail class="min-w-0 lg:col-start-2 lg:row-start-1" [status]="status()" [nodeId]="selection.activeId()" />
   </div>
 
   @if (devMode) {

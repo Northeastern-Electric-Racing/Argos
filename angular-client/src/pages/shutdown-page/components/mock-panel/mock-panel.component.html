@@ -4,11 +4,14 @@
 >
   <h2 id="shutdown-mock-title" class="m-0 flex flex-wrap items-baseline gap-x-2 text-base font-bold text-fg-label">
     Mock readings
-    <span class="text-xs font-normal text-fg-muted">dev mode only · stale after 60 s without publishing</span>
+    <span class="text-xs font-normal text-fg-muted">dev mode only · stale a few seconds after publishing stops</span>
   </h2>
   <div class="flex flex-wrap gap-2">
     <button type="button" uiButton variant="tonal" size="sm" [attr.aria-pressed]="publishing()" (click)="togglePublishing()">
       {{ publishing() ? 'Stop publishing' : 'Publish' }}
+    </button>
+    <button type="button" uiButton variant="tonal" size="sm" [attr.aria-pressed]="tsOn()" (click)="tsOn.set(!tsOn())">
+      {{ tsOn() ? 'TS ON' : 'TS OFF' }}
     </button>
     <button type="button" uiButton variant="neutral" size="sm" (click)="allClosed()">All closed</button>
     <button type="button" uiButton variant="neutral" size="sm" (click)="breakAtTsms()">Break at TSMS</button>

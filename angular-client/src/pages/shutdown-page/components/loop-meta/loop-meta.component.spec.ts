@@ -16,9 +16,10 @@ describe('LoopMetaComponent', () => {
   let fixture: ComponentFixture<LoopMetaComponent>;
   let el: HTMLElement;
 
-  const render = (n: NodeStatus[], tsOn?: boolean): string => {
+  const render = (n: NodeStatus[], tsOn?: boolean, source?: 'local' | 'server'): string => {
     fixture.componentRef.setInput('nodes', n);
     fixture.componentRef.setInput('tsOn', tsOn);
+    fixture.componentRef.setInput('source', source);
     fixture.detectChanges();
     return el.textContent!.replace(/\s+/g, ' ');
   };
@@ -36,7 +37,23 @@ describe('LoopMetaComponent', () => {
     render(nodes(), false);
     expect(chip('ts').textContent!.replace(/\s+/g, ' ')).toContain('BMS: TS OFF');
     render(nodes(), undefined);
-    expect(chip('ts').textContent!.replace(/\s+/g, ' ')).toContain('BMS: TS —');
+    expect(chip('ts').textContent!.replace(/\s+/g, ' ')).toContain('BMS: TS —unknown');
+    expect(chip('ts').querySelector('[aria-hidden="true"]:not(ui-icon)')!.textContent).toBe('—');
+  });
+
+  it('shows who decided the loop node states', () => {
+    render(nodes(), undefined, 'server');
+    expect(chip('source').textContent!.replace(/\s+/g, ' ').trim()).toContain('Status: scylla');
+    render(nodes(), undefined, 'local');
+    expect(chip('source').textContent).toContain('this client');
+    render(nodes(), undefined, undefined);
+    expect(chip('source').textContent).toContain('this client');
+  });
+
+  it('counts a board’s stale loop nodes while some are still live', () => {
+    const partly = nodes(1000, 1000).map((n) => (n.node.id === 'acc-sense' ? { ...n, state: 'no-data' as const } : n));
+    expect(render(partly)).toContain('BMS 1 s ago · 1 stale');
+    expect(chip('BMS').dataset['stale']).toBe('false');
   });
 
   it('shows when each board last updated', () => {

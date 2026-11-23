@@ -1,22 +1,35 @@
 <section
   aria-label="Loop node details"
-  class="flex h-full flex-col gap-3 rounded-md border border-solid border-border bg-surface-1 p-4 max-md:p-3"
+  class="flex flex-col gap-3 rounded-md border border-solid border-border bg-surface-1 p-4 max-md:p-3"
 >
   @if (detail(); as x) {
-    <p class="m-0 text-xs font-bold tracking-wide text-fg-muted uppercase">
-      {{ x.isDefault ? 'Where the loop broke' : 'Selected loop node' }}
-    </p>
+    <div class="flex items-center justify-between gap-2">
+      <p class="m-0 text-xs font-bold tracking-wide text-fg-muted uppercase">{{ x.kicker }}</p>
+      @if (pinnedId()) {
+        <button
+          type="button"
+          uiIconButton
+          size="sm"
+          data-unpin
+          [attr.aria-label]="unpinLabel()"
+          [title]="unpinLabel()"
+          (click)="unpin.emit()"
+        >
+          <ui-icon name="close" size="sm" />
+        </button>
+      }
+    </div>
     <div class="flex items-center gap-3">
       <span aria-hidden="true" [class]="x.disc"><status-glyph [state]="x.s.state" size="md" /></span>
       <div class="flex min-w-0 flex-col gap-0.5">
         <h2 class="m-0 text-lg leading-tight font-bold text-fg">
           <span class="text-fg-muted tabular-nums">{{ x.order }}</span> {{ x.s.node.label }}
         </h2>
-        <span data-field="state" class="text-sm font-bold" [class]="x.d.text">{{ x.stateLabel }}</span>
+        <span data-field="state" class="text-sm font-bold" [class]="x.stateText">{{ x.stateLabel }}</span>
       </div>
     </div>
 
-    <p class="m-0 text-base text-fg">{{ x.why }}</p>
+    <p data-field="why" class="m-0 text-base text-fg">{{ x.why }}</p>
 
     <dl class="m-0 grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1.5 text-sm">
       <dt class="text-fg-muted">Kind</dt>
@@ -35,6 +48,11 @@
       }
     </dl>
 
+    @if (x.serverNote; as note) {
+      <p class="m-0 flex items-start gap-2 text-sm text-fg-label">
+        <ui-icon class="shrink-0" name="dns" size="sm" /><span data-field="server-note">{{ note }}</span>
+      </p>
+    }
     @for (note of x.notes; track note) {
       <p class="m-0 flex items-start gap-2 text-sm text-fg-label">
         <ui-icon class="shrink-0" name="info" size="sm" />{{ note }}
@@ -45,5 +63,39 @@
       <ui-icon class="shrink-0" name="touch_app" size="sm" />
       Select a loop node in the loop or on the car to see its reading, age and why it is in its state.
     </p>
+    <!-- How to read the page, while there is nothing to explain. -->
+    <div data-legend class="flex flex-col gap-2">
+      <h3 class="m-0 text-xs font-bold tracking-wide text-fg-muted uppercase">Key</h3>
+      <ul class="m-0 flex list-none flex-col gap-1.5 p-0 text-sm text-fg">
+        @for (k of legend; track k.state) {
+          <li class="flex items-center gap-3">
+            <span aria-hidden="true" class="flex w-16 shrink-0 items-center gap-1.5">
+              <span [class]="k.disc"><status-glyph [state]="k.state" size="xs" /></span>
+              <svg class="h-2 w-8 overflow-visible" viewBox="0 0 32 8" focusable="false">
+                @if (k.casing) {
+                  <line x1="0" y1="4" x2="32" y2="4" class="stroke-page" [attr.stroke-width]="k.casing" />
+                }
+                <line
+                  x1="0"
+                  y1="4"
+                  x2="32"
+                  y2="4"
+                  [class]="k.stroke"
+                  [attr.stroke-width]="k.width"
+                  [attr.stroke-dasharray]="k.dash"
+                />
+              </svg>
+            </span>
+            <span>{{ k.label }}</span>
+          </li>
+        }
+        <li class="flex items-center gap-3">
+          <span aria-hidden="true" class="flex w-16 shrink-0 items-center gap-1.5">
+            <span [class]="measuredKey"></span><span [class]="unmeasuredKey"></span>
+          </span>
+          <span>Filled: has a sensor · hollow: no sensor (inferred)</span>
+        </li>
+      </ul>
+    </div>
   }
 </section>

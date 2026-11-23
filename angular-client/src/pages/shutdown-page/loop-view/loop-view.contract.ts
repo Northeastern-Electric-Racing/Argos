@@ -39,17 +39,37 @@ export interface LoopViewContractOptions {
   highlighted?: (fixture: Fixture, id: string) => boolean;
 }
 
-const option = (fixture: Fixture, id: string): HTMLElement => {
-  const el = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>(`[role="option"][data-node-id="${id}"]`);
+type AnyFixture = ComponentFixture<unknown>;
+const rootOf = (fixture: AnyFixture, root?: Element): Element => root ?? (fixture.nativeElement as HTMLElement);
+const option = (fixture: AnyFixture, id: string, root?: Element): HTMLElement => {
+  const el = rootOf(fixture, root).querySelector<HTMLElement>(`[role="option"][data-node-id="${id}"]`);
   if (!el) throw new Error(`No option for loop node ${id}`);
   return el;
 };
-const options = (fixture: Fixture): HTMLElement[] =>
-  Array.from((fixture.nativeElement as HTMLElement).querySelectorAll<HTMLElement>('[role="option"][data-node-id]'));
-const key = (fixture: Fixture, id: string, k: string) => {
-  option(fixture, id).dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }));
+const options = (fixture: AnyFixture, root?: Element): HTMLElement[] =>
+  Array.from(rootOf(fixture, root).querySelectorAll<HTMLElement>('[role="option"][data-node-id]'));
+const press = (fixture: AnyFixture, el: Element, k: string) => {
+  el.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }));
   fixture.detectChanges();
 };
+/**
+ * Moves keyboard focus to a loop node the way a user does: Tab lands on the view's tab stop (unless focus is
+ * already inside), then arrows walk along the loop to it. Works for any roving-focus listbox. `root` narrows the
+ * search to one view when the fixture holds several (a page).
+ */
+export function focusLoopNode(fixture: AnyFixture, id: string, root?: Element): HTMLElement {
+  const all = options(fixture, root);
+  const target = option(fixture, id, root);
+  if (!all.includes(document.activeElement as HTMLElement)) all.find((o) => o.tabIndex === 0)?.focus();
+  for (let step = 0; step < all.length && document.activeElement !== target; step++) {
+    const at = all.indexOf(document.activeElement as HTMLElement);
+    if (at < 0) break;
+    press(fixture, all[at], at < all.indexOf(target) ? 'ArrowRight' : 'ArrowLeft');
+  }
+  if (document.activeElement !== target) throw new Error(`The keyboard cannot reach loop node ${id}`);
+  return target;
+}
+const key = (fixture: Fixture, id: string, k: string) => press(fixture, focusLoopNode(fixture, id), k);
 
 /**
  * Registers the LoopView contract's specs (loop-view.ts, rules 1-3) for a view. Call it inside the view's
@@ -147,12 +167,22 @@ export function expectLoopViewContract(create: () => Fixture | Promise<Fixture>,
       expect(selected).toEqual(['bots', null, null]);
     });
 
-    it('never selects on focus alone', async () => {
-      const { fixture, selected } = await setup();
-      option(fixture, 'hvd').focus();
-      option(fixture, 'hvd').dispatchEvent(new FocusEvent('focus'));
+    it('never selects on focus alone: Tab in, arrow along and Tab out select nothing', async () => {
+      const { fixture, selected, previewed } = await setup();
+      focusLoopNode(fixture, 'hvd');
+      (document.activeElement as HTMLElement).blur();
       fixture.detectChanges();
       expect(selected).toEqual([]);
+      expect(previewed.at(-1)).toBeNull();
+    });
+
+    it('previews the loop node the keyboard moves to, over a resting pointer', async () => {
+      const { fixture, previewed } = await setup();
+      hover(fixture, 'tsms');
+      focusLoopNode(fixture, 'bots');
+      expect(previewed.at(-1)).toBe('bots');
+      leave(fixture, 'tsms');
+      expect(previewed.at(-1)).toBe('bots');
     });
   });
 }
