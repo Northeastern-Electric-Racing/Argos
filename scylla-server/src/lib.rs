@@ -22,6 +22,8 @@ pub mod zenoh_processor;
 
 pub mod metadata_structs;
 pub mod rule_structs;
+pub mod shutdown_handler;
+pub mod shutdown_loop;
 pub mod socket_handler;
 pub mod track_handler;
 

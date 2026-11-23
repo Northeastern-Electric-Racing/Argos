@@ -1,7 +1,68 @@
-<div class="banner" [class]="stateClass()" role="status" aria-live="polite">
-  <span class="headline">{{ headline() }}</span>
-  <span class="ts-chip">{{ tsText() }}</span>
+<!-- One sentence for screen readers; its text changes only with the verdict, so it is not re-announced every tick. -->
+<p class="sr-only" role="status" aria-live="polite" aria-atomic="true">{{ announcement() }}</p>
+
+<div [class]="boxClass()">
+  <ui-icon class="shrink-0" [name]="verdict().icon" size="xl" />
+  <div class="flex min-w-0 flex-col gap-2" [attr.data-verdict]="status().verdict">
+    <p class="m-0 text-xl leading-none font-black tracking-wide max-md:text-title" [class]="verdict().title">
+      {{ verdict().label }}
+    </p>
+    @switch (status().verdict) {
+      @case ('open') {
+        <div class="flex flex-wrap items-center gap-2 text-lg max-md:text-base">
+          <span>{{ single() ? 'Cause:' : 'Cause is one of:' }}</span>
+          @for (n of status().suspects; track n.id) {
+            <button
+              type="button"
+              [class]="chipSuspect"
+              [attr.data-node-id]="n.id"
+              [attr.aria-label]="'Show ' + n.label"
+              (click)="nodeSelect.emit(n.id)"
+            >
+              {{ n.label }}
+            </button>
+          }
+          @for (n of status().noDataInStretch; track n.id) {
+            <button
+              type="button"
+              [class]="chipNoData"
+              [attr.data-node-id]="n.id"
+              [attr.aria-label]="'Show ' + n.label + ', no data'"
+              (click)="nodeSelect.emit(n.id)"
+            >
+              {{ n.label }} · no data
+            </button>
+          }
+        </div>
+      }
+      @case ('closed') {
+        <p class="m-0 text-base text-fg-label">Every reading is live and closed.</p>
+      }
+      @case ('unknown') {
+        <p class="m-0 text-base text-fg-label">No data from {{ boards() }}. Waiting for live readings.</p>
+      }
+    }
+  </div>
 </div>
-@if (mismatchText(); as text) {
-  <div class="mismatch" role="alert">{{ text }}</div>
+
+@if (mismatchText() || silentText()) {
+  <ul class="m-0 flex list-none flex-col gap-2 p-0">
+    @if (mismatchText(); as text) {
+      <li class="flex items-start gap-2 rounded-md border border-solid border-warn bg-surface-1 px-3 py-2 text-sm text-warn">
+        <ui-icon class="shrink-0" name="warning" size="sm" />
+        <span
+          ><strong class="font-bold">{{ text }}.</strong> Check its wiring or sensor; the cause is still the first open
+          reading.</span
+        >
+      </li>
+    }
+    @if (silentText(); as text) {
+      <li
+        class="flex items-start gap-2 rounded-md border border-dashed border-fg-muted bg-surface-1 px-3 py-2 text-sm text-fg-label"
+      >
+        <ui-icon class="shrink-0" name="signal_wifi_off" size="sm" />
+        <span>{{ text }}</span>
+      </li>
+    }
+  </ul>
 }

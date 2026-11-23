@@ -1,55 +1,64 @@
 import { computed, inject, Injectable, OnDestroy, signal } from '@angular/core';
 import { Subscription } from 'rxjs';
 import Storage from 'src/services/storage.service';
-import { Board, SHUTDOWN_LOOP } from './shutdown-loop.model';
-import { BoardLastSeen, computeLoopStatus, Reading, STALE_AFTER_MS } from './shutdown-loop.utils';
-import { SHUTDOWN_TOPICS, VCU_CRITICAL_FAULT_TOPICS } from './shutdown-page.topics';
+import { DataValue } from 'src/utils/socket.utils';
+import { SHUTDOWN_LOOP } from './shutdown-loop.model';
+import { parseServerNodeStates, resolveLoopStatus, ServerNodeStates } from './shutdown-loop.server';
+import { computeLoopStatus, isLive, nextReading, Reading, withDerivedReadings } from './shutdown-loop.utils';
+import { SHUTDOWN_SERVER_TOPICS, SHUTDOWN_TOPICS, VCU_CRITICAL_FAULT_TOPICS } from './shutdown-page.topics';
 
+/** Re-evaluates staleness, grace windows and ages while no messages arrive. */
 const CLOCK_TICK_MS = 1000;
 
 /**
  * Live shutdown-loop state for the Shutdown page. Provided by the page (not root) so its
  * subscriptions and clock stop when the page is left.
+ *
+ * Messages only update a mutable map and bump a version signal, so each costs O(1); `status` is a
+ * lazy `computed`, so it runs at most once per change detection pass (which zoneless Angular
+ * coalesces to one per frame) however many messages arrived, plus once per clock tick.
  */
 @Injectable()
 export class ShutdownLoopService implements OnDestroy {
   private storage = inject(Storage);
   private subscriptions: Subscription[] = [];
 
-  private readings = signal<ReadonlyMap<string, Reading>>(new Map());
-  private lastSeen = signal<BoardLastSeen>({});
-  private now = signal(Date.now());
-  private tsState = signal<number | undefined>(undefined);
-  /** Latest value of each critical VCU fault received so far. */
-  private criticalFaults = new Map<string, number>();
-  private timer = setInterval(() => this.now.set(Date.now()), CLOCK_TICK_MS);
+  /** Latest reading per topic. Mutated in place; `version` signals each change. */
+  private readings = new Map<string, Reading>();
+  private serverStates: ServerNodeStates | undefined;
+  private version = signal(0);
+  private clock = signal(0);
+  private timer = setInterval(() => this.clock.update((n) => n + 1), CLOCK_TICK_MS);
 
-  readonly status = computed(() => computeLoopStatus(SHUTDOWN_LOOP, this.readings(), this.lastSeen(), this.now()));
-  /** From BMS/Shutdown/State, which is inverted: 0 = TS ON, 1 = TS OFF. Undefined while BMS is silent. */
+  readonly status = computed(() => {
+    this.version();
+    this.clock();
+    // Read the time here rather than from the clock signal, so a reading never looks newer than now.
+    const now = Date.now();
+    const local = computeLoopStatus(SHUTDOWN_LOOP, withDerivedReadings(this.readings, now), now);
+    return resolveLoopStatus(local, this.serverStates, now);
+  });
+
+  /** From BMS/Shutdown/State, which is inverted: 0 = TS ON, 1 = TS OFF. Undefined while it is stale. */
   readonly tsOn = computed(() => {
-    const state = this.tsState();
-    const seen = this.lastSeen().BMS;
-    if (state === undefined || seen === undefined || this.now() - seen > STALE_AFTER_MS) return undefined;
-    return state === 0;
+    this.version();
+    this.clock();
+    const state = this.readings.get(SHUTDOWN_TOPICS.BMS.State);
+    return isLive(state, Date.now()) ? state.value === 0 : undefined;
   });
 
   constructor() {
-    for (const node of SHUTDOWN_LOOP) {
-      const { topic, board } = node;
-      if (topic && board && topic !== SHUTDOWN_TOPICS.VCU.CAN_LATCH) {
-        this.subscribe(topic, (value) => this.record(topic, board, value));
-      }
+    const topics = new Set<string>([...VCU_CRITICAL_FAULT_TOPICS, SHUTDOWN_TOPICS.BMS.State]);
+    for (const { topic } of SHUTDOWN_LOOP) {
+      // The CAN latch is derived from the critical faults, not published.
+      if (topic && topic !== SHUTDOWN_TOPICS.VCU.CAN_LATCH) topics.add(topic);
     }
-    for (const fault of VCU_CRITICAL_FAULT_TOPICS) {
-      this.subscribe(fault, (value) => {
-        this.criticalFaults.set(fault, value);
-        const anyTripped = [...this.criticalFaults.values()].some((v) => v !== 0);
-        this.record(SHUTDOWN_TOPICS.VCU.CAN_LATCH, 'VCU', anyTripped ? 0 : 1);
-      });
-    }
-    this.subscribe(SHUTDOWN_TOPICS.BMS.State, (value) => {
-      this.tsState.set(value);
-      this.markSeen('BMS', Date.now());
+    for (const topic of topics) this.subscribe(topic, (data) => this.record(topic, data));
+    this.subscribe(SHUTDOWN_SERVER_TOPICS.NodeStates, (data) => {
+      const states = parseServerNodeStates(data.values, Date.now());
+      if (!states) return;
+      this.serverStates = states;
+      this.version.update((n) => n + 1);
     });
   }
 
@@ -59,31 +68,17 @@ export class ShutdownLoopService implements OnDestroy {
     this.subscriptions = [];
   }
 
-  private subscribe(topic: string, onValue: (value: number) => void): void {
-    this.subscriptions.push(
-      this.storage.get(topic).subscribe((data) => {
-        const [raw] = data.values;
-        // Number('') and Number(' ') are 0, which would read as an open loop: reject blanks outright.
-        if (raw === undefined || raw === null || String(raw).trim() === '') return;
-        const value = Number(raw);
-        if (!Number.isFinite(value)) return;
-        onValue(value);
-      })
-    );
+  private subscribe(topic: string, onData: (data: DataValue) => void): void {
+    this.subscriptions.push(this.storage.get(topic).subscribe(onData));
   }
 
-  private record(topic: string, board: Board, value: number): void {
-    const now = Date.now();
-    const prev = this.readings().get(topic);
-    const changedAt = prev && prev.value === value ? prev.changedAt : now;
-    const next = new Map(this.readings());
-    next.set(topic, { value, receivedAt: now, changedAt });
-    this.readings.set(next);
-    this.markSeen(board, now);
-  }
-
-  private markSeen(board: Board, now: number): void {
-    this.lastSeen.update((seen) => ({ ...seen, [board]: now }));
-    this.now.set(now);
+  private record(topic: string, data: DataValue): void {
+    const [raw] = data.values;
+    // Number('') and Number(' ') are 0, which would read as an open loop: reject blanks outright.
+    if (raw === undefined || raw === null || String(raw).trim() === '') return;
+    const value = Number(raw);
+    if (!Number.isFinite(value)) return;
+    this.readings.set(topic, nextReading(this.readings.get(topic), value, Date.now()));
+    this.version.update((n) => n + 1);
   }
 }
