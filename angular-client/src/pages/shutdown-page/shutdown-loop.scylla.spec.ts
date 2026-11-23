@@ -1,5 +1,5 @@
 import { SHUTDOWN_LOOP } from './shutdown-loop.model';
-import { NODE_STATE_CODE, parseServerNodeStates, resolveLoopStatus, SERVER_FRESH_MS } from './shutdown-loop.server';
+import { NODE_STATE_CODE, parseServerNodeStates, resolveLoopStatus, SERVER_FRESH_MS } from './shutdown-loop.scylla';
 import { computeLoopStatus, LoopStatus, Reading } from './shutdown-loop.utils';
 
 const NOW = 1_000_000;
@@ -40,6 +40,12 @@ describe('resolveLoopStatus', () => {
     const status = resolveLoopStatus(localClosed(), { codes: breakAt('tsms'), receivedAt: NOW - SERVER_FRESH_MS - 1 }, NOW);
     expect(status.source).toBe('local');
     expect(status.verdict).toBe('closed');
+  });
+
+  // The heartbeat is 1 s and the largest gap seen live was 1.36 s, so 2 s is enough.
+  it('falls back to local within 2 s of the last server status', () => {
+    expect(resolveLoopStatus(localClosed(), { codes: breakAt('tsms'), receivedAt: NOW - 2000 }, NOW).source).toBe('server');
+    expect(resolveLoopStatus(localClosed(), { codes: breakAt('tsms'), receivedAt: NOW - 2001 }, NOW).source).toBe('local');
   });
 
   it('falls back to local when the server loop does not match this client', () => {

@@ -1,7 +1,7 @@
 import { Board, LoopNode } from './shutdown-loop.model';
 import { SHUTDOWN_TOPICS, VCU_CRITICAL_FAULT_TOPICS } from './shutdown-page.topics';
 
-/** Latest value of one topic. Times are ms since epoch, taken when the client received the message. */
+/** Latest value of one topic. Times are ms on a monotonic clock, taken when the client received the message. */
 export interface Reading {
   value: number;
   receivedAt: number;
@@ -20,6 +20,8 @@ export interface NodeStatus {
   value?: number;
   /** now - receivedAt; set only for measured nodes with a reading. */
   ageMs?: number;
+  /** How long this reading stays live without a new message: staleAfterMs(reading). Set only for measured loop nodes with a reading. */
+  staleAfterMs?: number;
   /** Reads closed after the break, persisting past MISMATCH_GRACE_MS. */
   mismatch: boolean;
 }
@@ -33,7 +35,7 @@ export interface LoopStatus {
   silentBoards: Board[];
   mismatch: boolean;
   airsEnergized: boolean;
-  /** Who worked out the node states: this client, or scylla-server (see shutdown-loop.server.ts). */
+  /** Who worked out the node states: this client, or scylla-server (see shutdown-loop.scylla.ts). */
   source?: 'local' | 'server';
 }
 
@@ -109,14 +111,23 @@ export function withDerivedReadings(readings: Readings, now: number): Readings {
  * Works out where the series shutdown loop is broken. Each reading is the loop voltage just after
  * its node, so the first live reading of 0 marks the break; every node between the previous live
  * reading and that one is a suspect, and everything after it is open only because of the break.
+ * An `openOnly` node (the CAN latch) is a measurement point only while its live reading is 0;
+ * otherwise it is treated exactly like an unmeasured node. scylla-server's `compute_loop_status`
+ * (`scylla-server/src/shutdown_loop/status.rs`) is a port of this: change both together
+ * (`shutdown-loop.vectors.json` runs in both test suites).
  */
 export function computeLoopStatus(nodes: readonly LoopNode[], readings: Readings, now: number): LoopStatus {
+  // The live measurement points, by node index.
   const live = nodes.map((node) => {
     if (!node.topic || !node.board) return undefined;
     const reading = readings.get(node.topic);
-    return isLive(reading, now) ? reading : undefined;
+    if (!isLive(reading, now) || (node.openOnly && reading.value !== 0)) return undefined;
+    return reading;
   });
-  const boardLive = (board: Board): boolean => nodes.some((n, i) => n.board === board && live[i] !== undefined);
+  /** Measured by a reading of the loop voltage (not merely able to show an opening). */
+  const measured = (node: LoopNode): boolean => !!node.topic && !node.openOnly;
+  const boardLive = (board: Board): boolean =>
+    nodes.some((n, i) => n.board === board && measured(n) && live[i] !== undefined);
 
   const breakIdx = live.findIndex((r) => r !== undefined && r.value === 0);
   // With no reading before the break, the first node (GLV master switch) is still known closed while
@@ -131,10 +142,10 @@ export function computeLoopStatus(nodes: readonly LoopNode[], readings: Readings
     }
   }
   const breakReading = breakIdx >= 0 ? live[breakIdx] : undefined;
-  const breakBoard = breakIdx >= 0 ? nodes[breakIdx].board : undefined;
+  const breakNode = breakIdx >= 0 ? nodes[breakIdx] : undefined;
   // Without a break, an unmeasured node is only known closed if a live reading after it shows
   // voltage, or if every reading is live (which covers the AIRs at the very end).
-  const allLive = nodes.every((n, i) => !n.topic || live[i] !== undefined);
+  const allLive = nodes.every((n, i) => !measured(n) || live[i] !== undefined);
   let lastLiveIdx = -1;
   live.forEach((r, i) => {
     if (r !== undefined) lastLiveIdx = i;
@@ -146,14 +157,18 @@ export function computeLoopStatus(nodes: readonly LoopNode[], readings: Readings
       node,
       value: reading?.value,
       ageMs: reading ? now - reading.receivedAt : undefined,
+      staleAfterMs: reading ? staleAfterMs(reading) : undefined,
       mismatch: false
     };
-    if (node.topic && live[i] === undefined) return { ...base, state: 'no-data' };
-    if (!breakReading && !node.topic && !allLive && i > lastLiveIdx) return { ...base, state: 'no-data' };
+    const unmeasured = live[i] === undefined && !measured(node);
+    if (measured(node) && live[i] === undefined) return { ...base, state: 'no-data' };
+    if (!breakReading && unmeasured && !allLive && i > lastLiveIdx) return { ...base, state: 'no-data' };
     if (!breakReading || i <= lastClosedIdx) return { ...base, state: 'closed' };
     if (i <= breakIdx) return { ...base, state: 'suspect' };
     const r = live[i];
-    const mismatch = r !== undefined && isMismatch(r, breakReading, node.board === breakBoard, now);
+    // The derived CAN latch is its own source: it is sampled apart from the GPIOs on the same board.
+    const sameSource = node.board === breakNode?.board && !breakNode?.openOnly && !node.openOnly;
+    const mismatch = r !== undefined && isMismatch(r, breakReading, sameSource, now);
     return { ...base, state: 'downstream-open', mismatch };
   });
 
@@ -162,13 +177,13 @@ export function computeLoopStatus(nodes: readonly LoopNode[], readings: Readings
 
 /**
  * A downstream reading of closed contradicts the break once both values have held for the grace
- * window. A reading from another board must also have been received at least the grace window after
- * the break appeared: the boards sample independently, so until the other board sends a fresh
- * sample its last one may predate the break.
+ * window. A reading from another source (another board, or the CAN latch's own frame) must also have
+ * been received at least the grace window after the break appeared: sources sample independently, so
+ * until the other one sends a fresh sample its last one may predate the break.
  */
-function isMismatch(reading: Reading, breakReading: Reading, sameBoard: boolean, now: number): boolean {
+function isMismatch(reading: Reading, breakReading: Reading, sameSource: boolean, now: number): boolean {
   if (reading.value === 0) return false;
-  const sampledAfterBreak = sameBoard || reading.receivedAt - breakReading.changedAt >= MISMATCH_GRACE_MS;
+  const sampledAfterBreak = sameSource || reading.receivedAt - breakReading.changedAt >= MISMATCH_GRACE_MS;
   return sampledAfterBreak && now - Math.max(breakReading.changedAt, reading.changedAt) >= MISMATCH_GRACE_MS;
 }
 
@@ -177,7 +192,8 @@ export function summarizeLoop(statuses: NodeStatus[]): Omit<LoopStatus, 'source'
   const silentBoards: Board[] = [];
   for (const s of statuses) {
     const { board } = s.node;
-    if (s.state === 'no-data' && board && !silentBoards.includes(board)) silentBoards.push(board);
+    // A silent board is one with a measured loop node in no-data; the CAN latch never makes one.
+    if (s.state === 'no-data' && board && !s.node.openOnly && !silentBoards.includes(board)) silentBoards.push(board);
   }
   const suspects = statuses.filter((s) => s.state === 'suspect').map((s) => s.node);
   const breakIdx = statuses.map((s) => s.state).lastIndexOf('suspect');
