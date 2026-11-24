@@ -11,11 +11,11 @@ const PAGE_LABELS: Record<string, string> = {
 };
 
 /** The name of the page at `url`: its nav item's label, else its own (the notification log, a BMS segment). */
-export function pageLabel(url: string, navItems: readonly { id: string; label: string }[]): string | undefined {
+export function pageLabel(url: string, navItems: readonly { route?: string; label: string }[]): string | undefined {
   const [path] = url.split(/[?#]/);
   const segment = /^\/bms\/segment\/(\d+)$/.exec(path);
   if (segment) return `BMS Segment ${segment[1]}`;
-  return navItems.find((item) => item.id && item.id === path)?.label ?? PAGE_LABELS[path];
+  return navItems.find((item) => item.route === path)?.label ?? PAGE_LABELS[path];
 }
 
 /** Focus has gone nowhere: to `<body>`, or it stayed on an element that has left the document. */

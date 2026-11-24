@@ -4,14 +4,12 @@ import { appRoutes } from './app-routes';
 // Lazy-loaded routes: each page is split into its own chunk to reduce initial bundle size (#199).
 export const routes: Routes = [
   {
-    path: 'landing',
-    loadComponent: () => import('src/pages/landing-page/landing-page.component')
-  },
-  {
     path: 'graph',
     loadComponent: () => import('src/pages/graph-page/graph-page.component')
   },
-  { path: '', redirectTo: appRoutes.landingRoute(), pathMatch: 'full' },
+  { path: '', redirectTo: appRoutes.graphRoute(), pathMatch: 'full' },
+  // The landing page was removed in #847; keep old links and bookmarks working.
+  { path: 'landing', redirectTo: appRoutes.graphRoute() },
   {
     path: 'map',
     loadComponent: () => import('src/pages/map/map.component')

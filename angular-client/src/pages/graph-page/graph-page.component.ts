@@ -30,8 +30,10 @@ import GraphSidebarComponent from './graph-sidebar/graph-sidebar.component';
 import CustomGraphComponent from './graph/graph.component';
 import LiveValueStripComponent from './live-value-strip/live-value-strip.component';
 import LoadingPageComponent from 'src/components/loading-page/loading-page.component';
+import SidebarToggleComponent from 'src/components/sidebar-toggle/sidebar-toggle.component';
 import ErrorPageComponent from 'src/components/error-page/error-page.component';
 import { numberInputClass } from 'src/ui/recipes/number-input';
+import { injectIsMobile } from 'src/ui/layout/mobile';
 import { UiInputDirective } from 'src/ui/field/field.directive';
 import { FormsModule, NgModel } from '@angular/forms';
 
@@ -43,6 +45,7 @@ import { FormsModule, NgModel } from '@angular/forms';
   changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     LoadingPageComponent,
+    SidebarToggleComponent,
     ErrorPageComponent,
     ButtonComponent,
     FaultButtonsComponent,
@@ -87,6 +90,9 @@ export default class GraphPageComponent implements OnInit, OnDestroy {
   runsIsLoading = true;
 
   // UI state variables
+  // Picks which sidebar is rendered, so only one exists (and subscribes to live values) at a time. Topic selection
+  // lives in TopicSelectionService, so it survives the switch.
+  protected readonly isMobile = injectIsMobile();
   showSideBar = true;
   toggleSideBar = () => {
     this.showSideBar = !this.showSideBar;

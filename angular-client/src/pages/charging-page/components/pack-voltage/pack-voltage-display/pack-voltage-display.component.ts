@@ -38,7 +38,7 @@ export default class PackVoltageDisplayComponent implements OnInit {
     ariaLabel: 'Reset the pack voltage graph'
   };
   mobileThreshold = 1070;
-  isDesktop = window.innerWidth > this.mobileThreshold;
+  isDesktop = window.innerWidth >= this.mobileThreshold;
 
   onResize() {
     this.isDesktop = window.innerWidth >= this.mobileThreshold;

@@ -1,5 +1,5 @@
 <info-background title="Battery" svgIcon="battery_charging_full" [graphTopics]="graphTopics">
-  @if (isMobile) {
+  @if (isMobile()) {
   <battery-info-mobile
     class="w-full"
     [voltage]="voltage"

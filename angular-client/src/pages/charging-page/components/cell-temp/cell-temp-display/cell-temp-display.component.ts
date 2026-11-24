@@ -45,7 +45,7 @@ export default class CellTempDisplayComponent implements OnInit {
   };
   cellTempData: GraphData[] = [];
   mobileThreshold = 1070;
-  isDesktop = window.innerWidth > this.mobileThreshold;
+  isDesktop = window.innerWidth >= this.mobileThreshold;
 
   onResize() {
     this.isDesktop = window.innerWidth >= this.mobileThreshold;

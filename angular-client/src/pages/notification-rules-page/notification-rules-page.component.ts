@@ -1,13 +1,11 @@
 import { DialogRef } from '@angular/cdk/dialog';
-import { BreakpointObserver } from '@angular/cdk/layout';
-import { toSignal } from '@angular/core/rxjs-interop';
 import { ToastService } from 'src/ui/toast/toast.service';
 import { UiDialogService } from 'src/ui/dialog/dialog.service';
 import { ConfirmService } from 'src/ui/confirm/confirm.service';
 import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { UiIconComponent } from 'src/ui/icon/icon.component';
-import { map, take } from 'rxjs';
+import { take } from 'rxjs';
 import { appRoutes } from 'src/app/app-routes';
 import TypographyComponent from 'src/components/typography/typography.component';
 import { ButtonComponent } from 'src/components/argos-button/argos-button.component';
@@ -28,12 +26,14 @@ import { NotificationListComponent } from 'src/components/notification-list/noti
 import { downloadAsFile, FileReadError, readTextFile } from 'src/utils/file.utils';
 import { UiInputDirective } from 'src/ui/field/field.directive';
 import { injectFocusAfterRender } from 'src/ui/focus/focus-after-render';
+import { injectIsMobile } from 'src/ui/layout/mobile';
 
 const CLIENT_ID_KEY = 'notification_rules_client_id';
 
-/** CSV columns: id, topic, expr, debounce_time */
-// TODO: add description and uploaded_by columns once backend supports them
+/** Required CSV columns: id, topic, expr, debounce_time */
 const CSV_HEADERS = ['id', 'topic', 'expr', 'debounce_time'] as const;
+/** Optional so older exports still import; uploaded_by is left out because the server sets it */
+const CSV_DESCRIPTION_HEADER = 'description';
 
 @Component({
   selector: 'notification-rules-page',
@@ -65,12 +65,7 @@ export default class NotificationRulesPageComponent implements OnInit {
   /** Whether the right-side notification stream rail is visible. */
   protected streamRailOpen = signal(true);
   /** Below Tailwind's md (768px) the rail is always shown and has no toggle. */
-  private isPhone = toSignal(
-    inject(BreakpointObserver)
-      .observe('(max-width: 767.98px)')
-      .pipe(map((state) => state.matches)),
-    { initialValue: false }
-  );
+  private isPhone = injectIsMobile();
   /** Whether the rail is on screen, so aria-hidden and inert follow what is drawn (hidden on a desktop only). */
   protected streamRailShown = computed(() => this.streamRailOpen() || this.isPhone());
 
@@ -289,6 +284,7 @@ export default class NotificationRulesPageComponent implements OnInit {
     const topicIdx = headers.indexOf('topic');
     const exprIdx = headers.indexOf('expr');
     const debounceIdx = headers.indexOf('debounce_time');
+    const descriptionIdx = headers.indexOf(CSV_DESCRIPTION_HEADER);
 
     const rules: RulePayload[] = [];
     const errors: string[] = [];
@@ -317,7 +313,8 @@ export default class NotificationRulesPageComponent implements OnInit {
         continue;
       }
 
-      rules.push({ id, topic, expr, debounce_time: debounceTime });
+      const description = descriptionIdx >= 0 ? cols[descriptionIdx].trim() : '';
+      rules.push({ id, topic, expr, debounce_time: debounceTime, ...(description && { description }) });
     }
 
     if (errors.length > 0) {
@@ -423,12 +420,15 @@ export default class NotificationRulesPageComponent implements OnInit {
         return;
       }
 
-      // TODO: add description and uploaded_by columns once backend supports them
-      const header = CSV_HEADERS.join(',');
+      const header = [...CSV_HEADERS, CSV_DESCRIPTION_HEADER].join(',');
       const rows = rules.map((r) =>
-        [this.escapeCsvCell(r.id), this.escapeCsvCell(r.topic), this.escapeCsvCell(r.expr), String(r.debounce_time)].join(
-          ','
-        )
+        [
+          this.escapeCsvCell(r.id),
+          this.escapeCsvCell(r.topic),
+          this.escapeCsvCell(r.expr),
+          String(r.debounce_time),
+          this.escapeCsvCell(r.description ?? '')
+        ].join(',')
       );
 
       const csvContent = [header, ...rows].join('\n');

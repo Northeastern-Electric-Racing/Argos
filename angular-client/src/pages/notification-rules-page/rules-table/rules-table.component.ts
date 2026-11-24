@@ -80,7 +80,9 @@ export class RulesTableComponent implements OnInit {
   filteredRules = computed(() => {
     const term = this.searchTerm().trim().toLowerCase();
     if (!term) return this.rules();
-    return this.rules().filter((r) => [r.expr, r.topic, r.id].some((field) => field.toLowerCase().includes(term)));
+    return this.rules().filter((r) =>
+      [r.expr, r.topic, r.id, r.description, r.uploaded_by].some((field) => field?.toLowerCase().includes(term))
+    );
   });
   private selectedIds = computed(() => new Set(this.selectedRules().map((r) => r.id)));
   allSelected = computed(() => {
@@ -166,7 +168,7 @@ export class RulesTableComponent implements OnInit {
     this.editRef = this.dialogService.open<EditRuleResult | null>(EditRuleDialogComponent, {
       header: `Edit Rule: ${rule.id}`,
       width: '450px',
-      data: { expr: rule.expr, debounce_time: rule.debounce_time }
+      data: { expr: rule.expr, debounce_time: rule.debounce_time, description: rule.description }
     });
 
     // eslint-disable-next-line rxjs-angular-x/prefer-takeuntil -- one-shot dialog result; take(1) ends it, and tying it to destroy could drop the result
@@ -177,7 +179,11 @@ export class RulesTableComponent implements OnInit {
         const response = await editRule(rule.id, result);
         if (response.ok) {
           this.rules.update((rules) =>
-            rules.map((r) => (r.id === rule.id ? { ...r, expr: result.expr, debounce_time: result.debounce_time } : r))
+            rules.map((r) =>
+              r.id === rule.id
+                ? { ...r, expr: result.expr, debounce_time: result.debounce_time, description: result.description }
+                : r
+            )
           );
           this.messageService.add({ severity: 'success', summary: 'Updated', detail: `Rule "${rule.id}" updated` });
         } else {

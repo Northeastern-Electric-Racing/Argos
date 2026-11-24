@@ -1,7 +1,8 @@
 import { Injectable, inject } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { ALPHA_THERM_CELL_MAP, BETA_THERM_CELL_MAP, BMS_CONFIG } from 'src/utils/bms.config';
-import { Chip, numToSegmentType, Segment } from 'src/utils/bms.utils';
-import Storage from './storage.service';
+import { allSegments, Chip, numToSegmentType, Segment } from 'src/utils/bms.utils';
+import Storage, { TOPIC_SWEEP_MS } from './storage.service';
 import {
   allAlphaBurnValues,
   allAlphaCvsValues,
@@ -62,17 +63,65 @@ export class CellService {
   private perSegmentAlphaCells: CellReading[][] = startingPerSegmentAlphaCells;
   private perSegmentBetaCells: CellReading[][] = startingPerSegmentBetaCells;
 
-  updateCellInfo = () => {
-    this.subscribeToAlphaCellInfo();
-    this.subscribeToBetaCellInfo();
+  /** Per segment: how many hold its cell topics, their subscriptions, and a pending teardown. */
+  private segments = allSegments.map(() => ({
+    readers: 0,
+    subscription: undefined as Subscription | undefined,
+    teardown: undefined as ReturnType<typeof setTimeout> | undefined
+  }));
+
+  /**
+   * Subscribes the given segments' cell topics (144 each; all ~720 by default) until the returned
+   * release is called, so a client reads only the segments something shows. A segment's last
+   * release tears it down after TOPIC_SWEEP_MS, cancelled if it is read again first, so a BMS page
+   * switch keeps its readings; teardown clears them, as they would otherwise go stale.
+   */
+  updateCellInfo = (segments: readonly Segment[] = allSegments): (() => void) => {
+    segments.forEach(this.retain);
+    let released = false;
+    return () => {
+      if (released) return;
+      released = true;
+      segments.forEach(this.release);
+    };
   };
 
-  private subscribeToAlphaCellInfo = () => {
-    this.perSegmentAlphaCells.map((segmentAlphaCells, index) => {
-      const segmentNumber = numToSegmentType(index);
+  private retain = (segment: Segment) => {
+    const held = this.segments[segment];
+    clearTimeout(held.teardown);
+    held.teardown = undefined;
+    held.readers++;
+    if (held.subscription) return;
+    held.subscription = new Subscription();
+    this.subscribeToAlphaCellInfo(segment, held.subscription);
+    this.subscribeToBetaCellInfo(segment, held.subscription);
+  };
 
-      // Therms: apply temperature to cells defined in ALPHA_THERM_CELL_MAP
-      allAlphaThermValues.forEach((therm, thermIndex) => {
+  private release = (segment: Segment) => {
+    const held = this.segments[segment];
+    if (--held.readers > 0) return;
+    held.teardown = setTimeout(() => {
+      held.teardown = undefined;
+      held.subscription?.unsubscribe();
+      held.subscription = undefined;
+      this.clearReadings(segment);
+    }, TOPIC_SWEEP_MS);
+  };
+
+  private clearReadings = (segment: Segment) => {
+    for (const cell of [...this.perSegmentAlphaCells[segment], ...this.perSegmentBetaCells[segment]]) {
+      cell.temp = cell.voltage = cell.svolts = undefined;
+      cell.balancing = cell.cvs = cell.ow = undefined;
+    }
+  };
+
+  private subscribeToAlphaCellInfo = (index: Segment, subscription: Subscription) => {
+    const segmentAlphaCells = this.perSegmentAlphaCells[index];
+    const segmentNumber = numToSegmentType(index);
+
+    // Therms: apply temperature to cells defined in ALPHA_THERM_CELL_MAP
+    allAlphaThermValues.forEach((therm, thermIndex) => {
+      subscription.add(
         this.storageService.get(topics.alphaTemp(segmentNumber, therm)).subscribe((data) => {
           const temp = parseFloat(data.values[0]);
           const cellIndices = ALPHA_THERM_CELL_MAP[thermIndex] ?? [];
@@ -81,52 +130,63 @@ export class CellService {
               segmentAlphaCells[cellIdx].temp = temp;
             }
           }
-        });
-      });
+        })
+      );
+    });
 
-      // Volts: one per cell (C-ADC voltage)
-      allAlphaVoltValues.forEach((volt, voltIndex) => {
+    // Volts: one per cell (C-ADC voltage)
+    allAlphaVoltValues.forEach((volt, voltIndex) => {
+      subscription.add(
         this.storageService.get(topics.alphaVolt(segmentNumber, volt)).subscribe((data) => {
           segmentAlphaCells[voltIndex].voltage = parseFloat(data.values[0]);
-        });
-      });
+        })
+      );
+    });
 
-      // S Volts: one per cell (S-ADC voltage, mirrors Volts)
-      allAlphaSVoltValues.forEach((sVolt, sVoltIndex) => {
+    // S Volts: one per cell (S-ADC voltage, mirrors Volts)
+    allAlphaSVoltValues.forEach((sVolt, sVoltIndex) => {
+      subscription.add(
         this.storageService.get(topics.alphaSVolt(segmentNumber, sVolt)).subscribe((data) => {
           segmentAlphaCells[sVoltIndex].svolts = parseFloat(data.values[0]);
-        });
-      });
+        })
+      );
+    });
 
-      // Burns: one per cell
-      allAlphaBurnValues.forEach((burn, burnIndex) => {
+    // Burns: one per cell
+    allAlphaBurnValues.forEach((burn, burnIndex) => {
+      subscription.add(
         this.storageService.get(topics.alphaBurning(segmentNumber, burn)).subscribe((data) => {
           segmentAlphaCells[burnIndex].balancing = parseInt(data.values[0]) === 1;
-        });
-      });
+        })
+      );
+    });
 
-      // CvS: one per cell
-      allAlphaCvsValues.forEach((cvs, cvsIndex) => {
+    // CvS: one per cell
+    allAlphaCvsValues.forEach((cvs, cvsIndex) => {
+      subscription.add(
         this.storageService.get(topics.alphaCvs(segmentNumber, cvs)).subscribe((data) => {
           segmentAlphaCells[cvsIndex].cvs = parseInt(data.values[0]) === 1;
-        });
-      });
+        })
+      );
+    });
 
-      // Open Wire: one per cell (mirrors CvS)
-      allAlphaOwValues.forEach((ow, owIndex) => {
+    // Open Wire: one per cell (mirrors CvS)
+    allAlphaOwValues.forEach((ow, owIndex) => {
+      subscription.add(
         this.storageService.get(topics.alphaOw(segmentNumber, ow)).subscribe((data) => {
           segmentAlphaCells[owIndex].ow = parseInt(data.values[0]) === 1;
-        });
-      });
+        })
+      );
     });
   };
 
-  private subscribeToBetaCellInfo = () => {
-    this.perSegmentBetaCells.map((segmentBetaCells, index) => {
-      const segmentNumber = numToSegmentType(index);
+  private subscribeToBetaCellInfo = (index: Segment, subscription: Subscription) => {
+    const segmentBetaCells = this.perSegmentBetaCells[index];
+    const segmentNumber = numToSegmentType(index);
 
-      // Therms: apply temperature to cells defined in BETA_THERM_CELL_MAP
-      allBetaThermValues.map((therm, thermIndex) => {
+    // Therms: apply temperature to cells defined in BETA_THERM_CELL_MAP
+    allBetaThermValues.map((therm, thermIndex) => {
+      subscription.add(
         this.storageService.get(topics.betaTemp(segmentNumber, therm)).subscribe((data) => {
           const temp = parseFloat(data.values[0]);
           const cellIndices = BETA_THERM_CELL_MAP[thermIndex] ?? [];
@@ -135,43 +195,53 @@ export class CellService {
               segmentBetaCells[cellIdx].temp = temp;
             }
           }
-        });
-      });
+        })
+      );
+    });
 
-      // Volts: one per cell (C-ADC voltage)
-      allBetaVoltValues.map((volt, voltIndex) => {
+    // Volts: one per cell (C-ADC voltage)
+    allBetaVoltValues.map((volt, voltIndex) => {
+      subscription.add(
         this.storageService.get(topics.betaVolt(segmentNumber, volt)).subscribe((data) => {
           segmentBetaCells[voltIndex].voltage = parseFloat(data.values[0]);
-        });
-      });
+        })
+      );
+    });
 
-      // S Volts: one per cell (S-ADC voltage, mirrors Volts)
-      allBetaSVoltValues.map((sVolt, sVoltIndex) => {
+    // S Volts: one per cell (S-ADC voltage, mirrors Volts)
+    allBetaSVoltValues.map((sVolt, sVoltIndex) => {
+      subscription.add(
         this.storageService.get(topics.betaSVolt(segmentNumber, sVolt)).subscribe((data) => {
           segmentBetaCells[sVoltIndex].svolts = parseFloat(data.values[0]);
-        });
-      });
+        })
+      );
+    });
 
-      // Burns: one per cell
-      allBetaBurnValues.map((burn, burnIndex) => {
+    // Burns: one per cell
+    allBetaBurnValues.map((burn, burnIndex) => {
+      subscription.add(
         this.storageService.get(topics.betaBurning(segmentNumber, burn)).subscribe((data) => {
           segmentBetaCells[burnIndex].balancing = parseInt(data.values[0]) === 1;
-        });
-      });
+        })
+      );
+    });
 
-      // CvS: one per cell
-      allBetaCvsValues.forEach((cvs, cvsIndex) => {
+    // CvS: one per cell
+    allBetaCvsValues.forEach((cvs, cvsIndex) => {
+      subscription.add(
         this.storageService.get(topics.betaCvs(segmentNumber, cvs)).subscribe((data) => {
           segmentBetaCells[cvsIndex].cvs = parseInt(data.values[0]) === 1;
-        });
-      });
+        })
+      );
+    });
 
-      // Open Wire: one per cell (mirrors CvS)
-      allBetaOwValues.forEach((ow, owIndex) => {
+    // Open Wire: one per cell (mirrors CvS)
+    allBetaOwValues.forEach((ow, owIndex) => {
+      subscription.add(
         this.storageService.get(topics.betaOw(segmentNumber, ow)).subscribe((data) => {
           segmentBetaCells[owIndex].ow = parseInt(data.values[0]) === 1;
-        });
-      });
+        })
+      );
     });
   };
 

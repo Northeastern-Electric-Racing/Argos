@@ -56,6 +56,25 @@ describe('AddRuleDialogComponent', () => {
     }
   });
 
+  it('includes the description in the new rule', async () => {
+    const { controls } = fixture.componentInstance.form;
+    controls.id.setValue('high-voltage');
+    controls.topic.setValue('BMS/Pack/Voltage');
+    controls.expr.setValue('a > 5');
+    input('rule-description').value = ' Pack overvoltage ';
+    input('rule-description').dispatchEvent(new Event('input'));
+    fixture.nativeElement.querySelector('button[type="submit"]').click();
+    await fixture.whenStable();
+
+    expect(close).toHaveBeenCalledWith({
+      id: 'high-voltage',
+      topic: 'BMS/Pack/Voltage',
+      expr: 'a > 5',
+      debounce_time: 60,
+      description: 'Pack overvoltage'
+    });
+  });
+
   describe('topic autocomplete', () => {
     const topics = ['BMS/Pack/Voltage', 'BMS/Pack/Current', 'BMS/Status/Temp_Average', 'VCU/Speed'];
 

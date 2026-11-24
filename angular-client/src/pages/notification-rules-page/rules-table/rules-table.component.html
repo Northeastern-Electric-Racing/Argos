@@ -34,16 +34,14 @@
         <td cdk-cell *cdkCellDef="let rule" [class]="td">{{ rule.topic }}</td>
       </ng-container>
 
-      <!-- TODO: Uploaded By column once backend supports it -->
       <ng-container cdkColumnDef="uploadedBy">
         <th cdk-header-cell *cdkHeaderCellDef [class]="th" class="max-md:hidden">Uploaded By</th>
-        <td cdk-cell *cdkCellDef="let rule" [class]="td" class="max-md:hidden">-</td>
+        <td cdk-cell *cdkCellDef="let rule" [class]="td" class="max-md:hidden">{{ rule.uploaded_by || '-' }}</td>
       </ng-container>
 
-      <!-- TODO: Description column once backend supports it -->
       <ng-container cdkColumnDef="description">
         <th cdk-header-cell *cdkHeaderCellDef [class]="th" class="max-md:hidden">Description</th>
-        <td cdk-cell *cdkCellDef="let rule" [class]="td" class="max-md:hidden">-</td>
+        <td cdk-cell *cdkCellDef="let rule" [class]="td" class="max-md:hidden">{{ rule.description || '-' }}</td>
       </ng-container>
 
       <ng-container cdkColumnDef="subscribed">
