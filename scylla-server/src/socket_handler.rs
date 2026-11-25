@@ -164,38 +164,41 @@ pub async fn socket_handler_with_metadata(
     // client sends as soon as it is acked finds its handler.
     let mw_subscriptions = subscriptions.clone();
     let register_subscriptions =
-        move |socket: SocketRef, SubscribesTopics(subscribes): SubscribesTopics| {
+        move |socket: SocketRef,
+              SubscribesTopics(subscribes): SubscribesTopics,
+              SocketClientId(client_id): SocketClientId| {
             let subscriptions = mw_subscriptions.clone();
+            let socket_map = writable_socket_map.clone();
             async move {
-                subscriptions.register(&socket, subscribes).await;
+                // Attached before the socket is counted or mapped, so whenever it drops after this
+                // middleware, both are cleaned up. A connect handler runs after the ack: a socket that
+                // drops before it attached its disconnect handler would stay counted.
+                let gone_subscriptions = subscriptions.clone();
+                let gone_socket_map = socket_map.clone();
+                let gone_client_id = client_id.clone();
+                socket.on_disconnect(async move |socket: SocketRef| {
+                    gone_subscriptions.unregister(&socket);
+                    if !gone_client_id.is_empty() {
+                        gone_socket_map.write().await.remove(&gone_client_id);
+                    }
+                });
+                if !client_id.is_empty() {
+                    debug!(
+                        "Establishing client connection with {} on socket_id {}",
+                        client_id, socket.id
+                    );
+                    socket_map.write().await.insert(client_id, socket.id);
+                }
+                subscriptions.register(&socket, subscribes);
                 Ok::<(), Infallible>(())
             }
         };
-    let ns_subscriptions = subscriptions.clone();
     io.ns(
         "/",
-        (|socket: SocketRef, SocketClientId(client_id): SocketClientId| async move {
-            // unfortunate locking and ref counting due to the async closures
-            let mut owned = writable_socket_map.write().await;
+        (async |SocketClientId(client_id): SocketClientId| {
             if client_id.is_empty() {
                 warn!("Could not extract clientId query parameter, client unauthenticated");
-                socket.on_disconnect(async move |socket: SocketRef| {
-                    ns_subscriptions.unregister(socket.id).await;
-                });
-                return;
             }
-
-            debug!(
-                "Establishing client connection with {} on socket_id {}",
-                client_id, socket.id
-            );
-            owned.insert(client_id.clone(), socket.id);
-            drop(owned);
-
-            socket.on_disconnect(async move |socket: SocketRef| {
-                ns_subscriptions.unregister(socket.id).await;
-                writable_socket_map.write().await.remove(&client_id);
-            });
         })
         .with(register_subscriptions),
     );
