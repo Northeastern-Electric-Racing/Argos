@@ -3,7 +3,8 @@ use chrono::Utc;
 use derive_more::AsRef;
 use derive_more::Display;
 use evalexpr::{
-    ContextWithMutableVariables, DefaultNumericTypes, HashMapContext, eval_boolean_with_context,
+    ContextWithMutableVariables, DefaultNumericTypes, HashMapContext, build_operator_tree,
+    eval_boolean_with_context,
 };
 use rustc_hash::FxHashMap;
 use rustc_hash::FxHashSet;
@@ -264,6 +265,33 @@ impl Rule {
         }
     }
 
+    /// Checks that an expression parses, only reads values `a`-`z`, and evaluates to a boolean,
+    /// so a rule that could never fire is rejected when it's added rather than failing on every message.
+    /// Which letters a topic actually has isn't known here, so `b` on a single-value topic still passes.
+    pub fn validate_expr(expr: &str) -> Result<(), RuleManagerError> {
+        let invalid = |reason: String| RuleManagerError::InvalidExpression(reason);
+        let tree = build_operator_tree::<DefaultNumericTypes>(expr)
+            .map_err(|err| invalid(format!("Could not parse expression {expr:?}: {err}")))?;
+
+        let mut context = HashMapContext::<DefaultNumericTypes>::new();
+        for identifier in tree.iter_variable_identifiers() {
+            let is_value_letter =
+                identifier.len() == 1 && identifier.chars().all(|c| ASCII_LOWER.contains(&c));
+            if !is_value_letter {
+                return Err(invalid(format!(
+                    "Unknown value {identifier:?} in {expr:?}; values are named a-z in order"
+                )));
+            }
+            context
+                .set_value(identifier.to_owned(), evalexpr::Value::from_float(1.0))
+                .map_err(|err| invalid(err.to_string()))?;
+        }
+
+        tree.eval_boolean_with_context(&context)
+            .map(|_| ())
+            .map_err(|err| invalid(format!("Expression {expr:?} must be true or false: {err}")))
+    }
+
     /// process an event of seeing this topic, with the given values
     fn process_seen(&self, values: &[f32]) -> Option<bool> {
         let mut context: HashMapContext<DefaultNumericTypes> =
@@ -350,6 +378,8 @@ pub enum RuleManagerError {
     NoMatchingRule,
     NoSuchClient,
     RuleFailure,
+    /// the rule's expression can't be evaluated, with a reason to show the user
+    InvalidExpression(String),
     Failure,
 }
 
@@ -414,11 +444,17 @@ impl RuleManager {
                 .map(|rule| rule.tick(&data.values))
             {
                 Some(Some(val)) => val,
-                // Rule tick failed
-                Some(None) => return Err(RuleManagerError::RuleFailure),
+                // Skip only this rule, so one bad rule can't stop the others on the topic
+                Some(None) => {
+                    warn!(
+                        "Rule {} failed to evaluate on {}, skipping it",
+                        rule_id, data.name
+                    );
+                    continue;
+                }
                 None => {
-                    warn!("Could not find rule in rules map: {}", rule_id);
-                    return Err(RuleManagerError::NoMatchingRule);
+                    warn!("Could not find rule in rules map: {}, skipping it", rule_id);
+                    continue;
                 }
             };
 
@@ -449,6 +485,7 @@ impl RuleManager {
 
     /// Adds a rule, creating or activating the client if needed
     pub async fn add_rule(&self, client: ClientId, mut rule: Rule) -> Result<(), RuleManagerError> {
+        Rule::validate_expr(&rule.expr)?;
         rule.uploaded_by = Some(client.0.clone());
 
         // Add to subscriptions bimap
@@ -561,6 +598,7 @@ impl RuleManager {
         debounce_time: Duration,
         description: Option<String>,
     ) -> Result<(), RuleManagerError> {
+        Rule::validate_expr(&expr)?;
         let mut rules_guard = self.rules.write().await;
         let Some(old_rule) = rules_guard.remove(&rule_id) else {
             warn!("Could not find rule with rule_id: {rule_id} to edit!");

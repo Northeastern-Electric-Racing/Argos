@@ -1112,6 +1112,126 @@ async fn test_subscribe_rules_concurrent() -> Result<(), RuleManagerError> {
 }
 
 #[tokio::test]
+async fn test_handle_msg_failing_rule_does_not_block_others_on_topic()
+-> Result<(), RuleManagerError> {
+    let rule_manager = RuleManager::new();
+    let client = ClientId("test_client".to_string());
+    let topic = "test/topic".to_string();
+
+    // `b` is undefined for a single-value topic, so these fail to evaluate on every message.
+    // Several of them, so the good rule is not the first one evaluated.
+    for i in 0..5 {
+        let broken = Rule::new(
+            RuleId(format!("broken_{i}")),
+            Topic(topic.clone()),
+            core::time::Duration::from_secs(0),
+            format!("b > {i}"),
+        );
+        rule_manager.add_rule(client.clone(), broken).await?;
+    }
+    let good = Rule::new(
+        RuleId("good".to_string()),
+        Topic(topic.clone()),
+        core::time::Duration::from_secs(0),
+        "a > 10".to_owned(),
+    );
+    rule_manager.add_rule(client.clone(), good).await?;
+
+    let client_data = ClientData {
+        run_id: 1,
+        name: topic,
+        unit: "test_unit".to_string(),
+        values: vec![15.0],
+        timestamp: Utc::now(),
+    };
+
+    let notifications = rule_manager
+        .handle_msg(&client_data)
+        .await?
+        .expect("the good rule should still notify");
+    assert_eq!(notifications.len(), 1);
+    assert_eq!(notifications[0].1.id.0, "good");
+
+    Ok(())
+}
+
+fn rule_with_expr(id: &str, expr: &str) -> Rule {
+    Rule::new(
+        RuleId(id.to_string()),
+        Topic("test/topic".to_string()),
+        core::time::Duration::from_secs(0),
+        expr.to_owned(),
+    )
+}
+
+#[tokio::test]
+async fn test_add_rule_rejects_invalid_expressions() {
+    let rule_manager = RuleManager::new();
+    let client = ClientId("test_client".to_string());
+
+    for expr in [
+        "a >",        // does not parse
+        "",           // empty
+        "speed > 10", // values are named a-z, not by name
+        "a + 1",      // not a boolean
+        "a = 5",      // assignment
+    ] {
+        let result = rule_manager
+            .add_rule(client.clone(), rule_with_expr("rule", expr))
+            .await;
+        assert!(
+            matches!(result, Err(RuleManagerError::InvalidExpression(_))),
+            "expected {expr:?} to be rejected"
+        );
+    }
+    assert!(rule_manager.get_all_rules().await.is_empty());
+}
+
+#[tokio::test]
+async fn test_add_rule_accepts_valid_expressions() -> Result<(), RuleManagerError> {
+    let rule_manager = RuleManager::new();
+    let client = ClientId("test_client".to_string());
+
+    for (i, expr) in ["a > 10", "a > 10 && b < 5", "(a - b) >= 2.5 || z == 0"]
+        .iter()
+        .enumerate()
+    {
+        rule_manager
+            .add_rule(client.clone(), rule_with_expr(&format!("rule_{i}"), expr))
+            .await?;
+    }
+    assert_eq!(rule_manager.get_all_rules().await.len(), 3);
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_edit_rule_rejects_invalid_expression_and_keeps_old() -> Result<(), RuleManagerError> {
+    let rule_manager = RuleManager::new();
+    let client = ClientId("test_client".to_string());
+    rule_manager
+        .add_rule(client, rule_with_expr("rule", "a > 10"))
+        .await?;
+
+    let result = rule_manager
+        .edit_rule(
+            RuleId("rule".to_string()),
+            "a >".to_owned(),
+            core::time::Duration::from_secs(0),
+            None,
+        )
+        .await;
+    assert!(matches!(
+        result,
+        Err(RuleManagerError::InvalidExpression(_))
+    ));
+
+    let rules = rule_manager.get_all_rules().await;
+    assert_eq!(rules.len(), 1);
+    assert_eq!(rules[0].expr, "a > 10");
+    Ok(())
+}
+
+#[tokio::test]
 async fn test_add_rule_sets_uploaded_by_from_client() -> Result<(), RuleManagerError> {
     let rule_manager = RuleManager::new();
     let client = ClientId("uploader_client".to_string());

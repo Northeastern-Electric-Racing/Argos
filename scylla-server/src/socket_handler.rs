@@ -312,8 +312,13 @@ async fn handle_rule_processing(
     client_socket_map: &Arc<RwLock<FxHashMap<String, Sid>>>,
     io: &SocketIo,
 ) {
-    let Ok(Some(notifs)) = rule_manager.handle_msg(data).await else {
-        return;
+    let notifs = match rule_manager.handle_msg(data).await {
+        Ok(Some(notifs)) => notifs,
+        Ok(None) => return,
+        Err(err) => {
+            warn!("Rule processing failed for {}: {:?}", data.name, err);
+            return;
+        }
     };
 
     for notification in notifs {
