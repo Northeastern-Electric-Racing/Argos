@@ -211,6 +211,11 @@ export class AppNavBarComponent implements OnInit {
       icon: 'error'
     },
     {
+      label: 'Shutdown',
+      route: appRoutes.shutdownRoute(),
+      icon: 'bolt'
+    },
+    {
       label: 'Map',
       route: appRoutes.mapRoute(),
       icon: 'map'

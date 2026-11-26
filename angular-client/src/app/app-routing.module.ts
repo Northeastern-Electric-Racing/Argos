@@ -58,5 +58,9 @@ export const routes: Routes = [
   {
     path: 'lap-timer',
     loadComponent: () => import('src/pages/lap-timer-page/lap-timer-page.component')
+  },
+  {
+    path: 'shutdown',
+    loadComponent: () => import('src/pages/shutdown-page/shutdown-page.component')
   }
 ];

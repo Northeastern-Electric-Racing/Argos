@@ -1,0 +1,19 @@
+/* Shared shutdown-loop state colours. Imported by each shutdown-page component stylesheet. */
+:host {
+  --sd-closed: #2fd35a;
+  --sd-suspect: #ff4d4d;
+  --sd-downstream: #8a8a8a;
+  --sd-no-data: #8b93a1;
+}
+.state-closed {
+  --sd-color: var(--sd-closed);
+}
+.state-suspect {
+  --sd-color: var(--sd-suspect);
+}
+.state-downstream {
+  --sd-color: var(--sd-downstream);
+}
+.state-no-data {
+  --sd-color: var(--sd-no-data);
+}

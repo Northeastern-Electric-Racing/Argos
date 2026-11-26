@@ -17,6 +17,7 @@ const rulesRoute = () => `/rules`;
 const efusesRoute = () => `/efuses`;
 const notificationLogRoute = () => `/notification-log`;
 const lapTimerRoute = () => `/lap-timer`;
+const shutdownRoute = () => `/shutdown`;
 
 export const appRoutes = {
   graphRoute,
@@ -31,5 +32,6 @@ export const appRoutes = {
   rulesRoute,
   efusesRoute,
   notificationLogRoute,
-  lapTimerRoute
+  lapTimerRoute,
+  shutdownRoute
 };

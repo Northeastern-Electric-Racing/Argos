@@ -1,0 +1,16 @@
+<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+  @switch (state()) {
+    @case ('closed') {
+      <path d="M5 12.5l4.5 4.5L19 7.5" />
+    }
+    @case ('suspect') {
+      <path d="M6 6l12 12M18 6L6 18" />
+    }
+    @case ('downstream-open') {
+      <path d="M12 4v15M6 13l6 6 6-6" />
+    }
+    @default {
+      <path d="M9 9a3 3 0 1 1 4.5 2.6c-1 .6-1.5 1.2-1.5 2.4M12 18h.01" />
+    }
+  }
+</svg>

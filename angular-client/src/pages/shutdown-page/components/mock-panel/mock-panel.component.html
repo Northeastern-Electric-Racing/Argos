@@ -1,0 +1,17 @@
+<section class="mock" aria-label="Mock readings (dev mode only)">
+  <h2 class="title">Mock readings <span class="hint">dev mode only · stale after 60 s without publishing</span></h2>
+  <div class="row">
+    <button type="button" class="btn primary" [attr.aria-pressed]="publishing()" (click)="togglePublishing()">
+      {{ publishing() ? 'Stop publishing' : 'Publish' }}
+    </button>
+    <button type="button" class="btn" (click)="allClosed()">All closed</button>
+    <button type="button" class="btn" (click)="breakAtTsms()">Break at TSMS</button>
+  </div>
+  <div class="row">
+    @for (n of nodes; track n.topic) {
+      <button type="button" class="btn small" [attr.aria-pressed]="values()[n.topic] === 1" (click)="toggle(n.topic)">
+        {{ n.label }} = {{ values()[n.topic] }}
+      </button>
+    }
+  </div>
+</section>

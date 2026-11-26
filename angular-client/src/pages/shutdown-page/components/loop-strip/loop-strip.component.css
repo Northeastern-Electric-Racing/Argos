@@ -1,0 +1,76 @@
+:host {
+  display: block;
+  overflow-x: auto;
+}
+.strip {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 8px 0 12px;
+  min-width: max-content;
+}
+.item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 88px;
+  text-align: center;
+}
+.marker {
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 3px solid var(--sd-color);
+  background: var(--sd-color);
+  color: var(--color-background-page);
+  font-size: 18px;
+}
+.unmeasured .marker {
+  background: var(--color-background-page);
+  color: var(--sd-color);
+}
+.state-downstream .marker {
+  border-style: dashed;
+}
+.connector {
+  position: absolute;
+  top: 16px;
+  left: calc(50% + 16px);
+  width: calc(100% - 32px);
+  height: 3px;
+  background: var(--sd-color);
+}
+.state-downstream .connector,
+.state-no-data .connector {
+  background: repeating-linear-gradient(90deg, var(--sd-color) 0 6px, transparent 6px 10px);
+}
+.label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+}
+.state {
+  font-size: var(--font-size-xs);
+  color: var(--sd-color);
+}
+.state-suspect .label,
+.state-suspect .state {
+  font-weight: 700;
+}
+.tag {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+.mismatch-tag {
+  color: #ffd166;
+}
+.order {
+  color: var(--color-text-secondary);
+  font-weight: 700;
+}

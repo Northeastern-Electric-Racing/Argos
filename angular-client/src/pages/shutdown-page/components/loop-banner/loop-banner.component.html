@@ -1,0 +1,7 @@
+<div class="banner" [class]="stateClass()" role="status" aria-live="polite">
+  <span class="headline">{{ headline() }}</span>
+  <span class="ts-chip">{{ tsText() }}</span>
+</div>
+@if (mismatchText(); as text) {
+  <div class="mismatch" role="alert">{{ text }}</div>
+}

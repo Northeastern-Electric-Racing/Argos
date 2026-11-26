@@ -1,0 +1,27 @@
+<ol class="strip" aria-label="Shutdown loop in series order">
+  @for (s of nodes(); track s.node.id; let last = $last, i = $index) {
+    <li
+      class="item"
+      [class]="display[s.state].cssClass"
+      [class.unmeasured]="!s.node.topic"
+      [class.mismatch]="s.mismatch"
+      [attr.data-node-id]="s.node.id"
+      [attr.aria-label]="s.node.label + ': ' + display[s.state].label + (s.node.topic ? '' : ' (no sensor)')"
+    >
+      <span class="marker"><status-glyph [state]="s.state" /></span>
+      <span class="label"
+        ><span class="order">{{ i + 1 }}</span> {{ s.node.label }}</span
+      >
+      <span class="state">{{ display[s.state].label }}</span>
+      @if (s.node.placeholder) {
+        <span class="tag">{{ placeholderTag }}</span>
+      }
+      @if (s.mismatch) {
+        <span class="tag mismatch-tag">mismatch</span>
+      }
+      @if (!last) {
+        <span class="connector" aria-hidden="true"></span>
+      }
+    </li>
+  }
+</ol>
