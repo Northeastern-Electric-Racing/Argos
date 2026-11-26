@@ -161,25 +161,28 @@ pub async fn socket_handler_with_metadata(
     let subscriptions = Arc::new(Subscriptions::default());
     // `data`: every topic, or only the topics of the socket's `set_subscriptions` lists. Registered
     // in connect middleware, which socketioxide awaits before it acks the connection, so a list the
-    // client sends as soon as it is acked finds its handler.
+    // client sends as soon as it is acked finds its handler. Counted only from the connect handler:
+    // socketioxide accepts the socket after middleware returns, and drops one whose transport
+    // closes before that without running its disconnect handler.
     let mw_subscriptions = subscriptions.clone();
     let register_subscriptions =
-        move |socket: SocketRef,
-              SubscribesTopics(subscribes): SubscribesTopics,
-              SocketClientId(client_id): SocketClientId| {
+        move |socket: SocketRef, SocketClientId(client_id): SocketClientId| {
             let subscriptions = mw_subscriptions.clone();
             let socket_map = writable_socket_map.clone();
             async move {
-                // Attached before the socket is counted or mapped, so whenever it drops after this
-                // middleware, both are cleaned up. A connect handler runs after the ack: a socket that
-                // drops before it attached its disconnect handler would stay counted.
+                // Attached before the socket is mapped or started, so once it is accepted, whenever it
+                // drops, both are undone, even before its connect handler has run.
                 let gone_subscriptions = subscriptions.clone();
                 let gone_socket_map = socket_map.clone();
                 let gone_client_id = client_id.clone();
                 socket.on_disconnect(async move |socket: SocketRef| {
                     gone_subscriptions.unregister(&socket);
                     if !gone_client_id.is_empty() {
-                        gone_socket_map.write().await.remove(&gone_client_id);
+                        unmap_if_current(
+                            &mut *gone_socket_map.write().await,
+                            &gone_client_id,
+                            socket.id,
+                        );
                     }
                 });
                 if !client_id.is_empty() {
@@ -189,16 +192,20 @@ pub async fn socket_handler_with_metadata(
                     );
                     socket_map.write().await.insert(client_id, socket.id);
                 }
-                subscriptions.register(&socket, subscribes);
+                subscriptions.register(&socket);
                 Ok::<(), Infallible>(())
             }
         };
+    let start_subscriptions = subscriptions.clone();
     io.ns(
         "/",
-        (async |SocketClientId(client_id): SocketClientId| {
+        (async move |socket: SocketRef,
+                     SubscribesTopics(subscribes): SubscribesTopics,
+                     SocketClientId(client_id): SocketClientId| {
             if client_id.is_empty() {
                 warn!("Could not extract clientId query parameter, client unauthenticated");
             }
+            start_subscriptions.start(&socket, !subscribes);
         })
         .with(register_subscriptions),
     );
@@ -324,6 +331,14 @@ pub async fn socket_handler_with_metadata(
                 last_instant = tokio::time::Instant::now();
             }
         }
+    }
+}
+
+/// Removes `client_id` from the client map if it still maps to `sid`: a reconnect with the same
+/// `clientId` may already have mapped it to its new socket.
+fn unmap_if_current(client_socket_map: &mut FxHashMap<String, Sid>, client_id: &str, sid: Sid) {
+    if client_socket_map.get(client_id) == Some(&sid) {
+        client_socket_map.remove(client_id);
     }
 }
 
@@ -527,5 +542,21 @@ fn log_broadcast_err(err: &socketioxide::BroadcastError) {
         socketioxide::BroadcastError::Adapter(_) => {
             warn!("Socket: Adapter error: {}", err);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn client_is_unmapped_only_from_its_current_socket() {
+        let (old, new) = (Sid::new(), Sid::new());
+        let mut map = FxHashMap::default();
+        map.insert("client".to_string(), new);
+        unmap_if_current(&mut map, "client", old); // the old socket's late disconnect
+        assert_eq!(map.get("client"), Some(&new));
+        unmap_if_current(&mut map, "client", new);
+        assert!(map.is_empty());
     }
 }

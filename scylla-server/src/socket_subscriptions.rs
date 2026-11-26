@@ -4,10 +4,17 @@
 //! room like any other: a socket is in it while `#` is in its list. A client
 //! that reads topics connects with `subscriptions=1` in its query string
 //! ([`SubscribesTopics`]) and starts with an empty list; a socket without the
-//! flag (old clients) starts with the list `#` and gets every topic, as
-//! before. Each [`SET_SUBSCRIPTIONS_EVENT`] list replaces the socket's list,
-//! `#` included, so a socket whose flag was lost still ends up on its own
-//! topics after its first list (with a warning).
+//! flag (old clients) gets the list `#` once its connection is accepted, and
+//! every topic, as before. Each [`SET_SUBSCRIPTIONS_EVENT`] list replaces the
+//! socket's list, `#` included, so a socket whose flag was lost still ends up
+//! on its own topics after its first list.
+//!
+//! A socket is registered in connect middleware ([`Subscriptions::register`]),
+//! so a list it sends as soon as it is acked finds its handler, but counted
+//! only from the connect handler ([`Subscriptions::start`]). socketioxide
+//! accepts a socket into its namespace after middleware returns, and drops one
+//! whose transport closes before that without running its disconnect handler:
+//! anything counted in middleware could stay counted.
 //!
 //! A list with `#` in it is just `#`: socketioxide does not dedupe a socket in
 //! two target rooms, so a socket in `#` and a topic room would get that topic
@@ -103,8 +110,9 @@ fn subscribes_topics(query: Option<&str>) -> bool {
 }
 
 /// A connected socket's rooms, from its list numbered `seq` (0 at connect).
-/// `gone` once the socket is unregistered, so a list still in flight is
-/// dropped instead of counting a socket that is no longer there.
+/// `gone` once the socket is unregistered, so a list or a
+/// [`Subscriptions::start`] still in flight counts nothing for a socket that
+/// is no longer there.
 #[derive(Default)]
 struct Delivery {
     topics: FxHashSet<String>,
@@ -127,9 +135,9 @@ impl DeliveryHandle {
 
 /// How many sockets are in each room for `data`.
 ///
-/// Shared by the connect middleware, which registers sockets, and the data
-/// loop, which emits through it. Each socket's own list lives in its
-/// extensions, not here.
+/// Shared by the connect middleware, which registers sockets, the connect
+/// handler, which starts them, and the data loop, which emits through it.
+/// Each socket's own list lives in its extensions, not here.
 #[derive(Default)]
 pub struct Subscriptions {
     /// Rooms with at least one socket, and how many each has. Read by every
@@ -138,26 +146,17 @@ pub struct Subscriptions {
 }
 
 impl Subscriptions {
-    /// Gives a newly connected socket the list [`EVERY_TOPIC_ROOM`], or an
-    /// empty one when it `subscribes` to topics, and listens for its
-    /// `set_subscriptions`.
+    /// Gives a newly connected socket an empty list and listens for its
+    /// `set_subscriptions`. Counts nothing and joins no room.
     ///
     /// Call it from connect middleware, which socketioxide awaits before it
     /// acks the connection. The connect handler runs after the ack, and a
     /// client sends its first list as soon as it is acked: an event that
-    /// arrives before its handler is registered is dropped. Attach the
-    /// disconnect handler that calls [`Self::unregister`] first, in the same
-    /// middleware, so no socket is counted without one.
-    pub fn register(self: &Arc<Self>, socket: &SocketRef, subscribes: bool) {
-        {
-            let handle = DeliveryHandle::default();
-            let mut delivery = handle.lock();
-            socket.extensions.insert(handle.clone());
-            if !subscribes {
-                delivery.topics = std::iter::once(EVERY_TOPIC_ROOM.to_string()).collect();
-                self.join(socket, vec![EVERY_TOPIC_ROOM.to_string()]);
-            }
-        }
+    /// arrives before its handler is registered is dropped. In the same
+    /// middleware, attach the disconnect handler that calls
+    /// [`Self::unregister`]; then call [`Self::start`] from the connect handler.
+    pub fn register(self: &Arc<Self>, socket: &SocketRef) {
+        socket.extensions.insert(DeliveryHandle::default());
         let subscriptions = self.clone();
         #[expect(
             clippy::disallowed_methods,
@@ -188,9 +187,36 @@ impl Subscriptions {
         );
     }
 
-    /// Forgets a disconnected socket: its rooms no longer count it.
-    /// socketioxide removes it from the rooms themselves. Calling it again
-    /// does nothing.
+    /// Gives an accepted socket that connected without the flag
+    /// (`old_client`) the list [`EVERY_TOPIC_ROOM`].
+    ///
+    /// Call it from the connect handler, which socketioxide runs only once it
+    /// has accepted the socket, so its disconnect handler is sure to run and
+    /// uncount it. Does nothing if the socket was unregistered first, or
+    /// already applied a list sent before this handler ran (a socket whose
+    /// flag was lost keeps the topics it listed). The check and the join run
+    /// under the socket's [`DeliveryHandle`] lock, which [`Self::unregister`]
+    /// also takes, so they cannot interleave with it.
+    pub fn start(&self, socket: &SocketRef, old_client: bool) {
+        if !old_client {
+            return;
+        }
+        let Some(handle) = socket.extensions.get::<DeliveryHandle>() else {
+            // disconnected before the connect handler ran
+            return;
+        };
+        let mut delivery = handle.lock();
+        if delivery.gone || delivery.seq != 0 {
+            return;
+        }
+        delivery.topics = std::iter::once(EVERY_TOPIC_ROOM.to_string()).collect();
+        self.join(socket, vec![EVERY_TOPIC_ROOM.to_string()]);
+    }
+
+    /// Forgets a disconnected socket: its rooms no longer count it, and a
+    /// list or [`Self::start`] still in flight counts nothing. socketioxide
+    /// removes it from the rooms themselves, once its disconnect handler has
+    /// run. Calling it again does nothing.
     pub fn unregister(&self, socket: &SocketRef) {
         let Some(handle) = socket.extensions.remove::<DeliveryHandle>() else {
             return;
@@ -375,6 +401,7 @@ mod tests {
     use socketioxide::handler::ConnectHandler;
     use std::time::Duration;
     use tokio::sync::mpsc::{Receiver, Sender};
+    use tokio::sync::watch;
 
     fn client_data(name: &str) -> ClientData {
         ClientData {
@@ -405,6 +432,8 @@ mod tests {
     struct Server {
         io: SocketIo,
         subs: Arc<Subscriptions>,
+        /// Sockets whose connect handler has called `start`.
+        started: watch::Sender<FxHashSet<Sid>>,
     }
 
     impl Server {
@@ -413,37 +442,79 @@ mod tests {
         }
 
         /// Registers sockets the way `socket_handler_with_metadata` does: in
-        /// connect middleware, after attaching the disconnect handler, with a
-        /// connect handler that takes `handler_delay` to run. Dummy sockets carry no query string, so
-        /// the flag comes in the auth payload, `{"subscriptions": 1}`.
+        /// connect middleware, which attaches the disconnect handler and
+        /// registers, and a connect handler that takes `handler_delay`, then
+        /// starts the socket. Dummy sockets carry no query string, so the flag
+        /// comes in the auth payload, `{"subscriptions": 1}`.
         fn with(builder: socketioxide::SocketIoBuilder, handler_delay: Duration) -> Self {
             let (_svc, io) = builder.build_svc();
             let subs = Arc::new(Subscriptions::default());
+            let (started, _) = watch::channel(FxHashSet::default());
             let mw_subs = subs.clone();
-            let register = move |socket: SocketRef, TryData(auth): TryData<serde_json::Value>| {
+            let register = move |socket: SocketRef| {
                 let subs = mw_subs.clone();
                 async move {
-                    let flag = auth
-                        .ok()
-                        .and_then(|auth| auth.get(SUBSCRIPTIONS_QUERY_KEY).cloned());
                     let gone_subs = subs.clone();
                     socket.on_disconnect(async move |socket: SocketRef| {
                         gone_subs.unregister(&socket);
                     });
-                    subs.register(&socket, flag == Some(json!(1)));
+                    subs.register(&socket);
                     Ok::<(), Infallible>(())
                 }
             };
-            io.ns(
-                "/",
-                (async move || tokio::time::sleep(handler_delay).await).with(register),
-            );
-            Server { io, subs }
+            let start_subs = subs.clone();
+            let start_started = started.clone();
+            let start =
+                async move |socket: SocketRef, TryData(auth): TryData<serde_json::Value>| {
+                    tokio::time::sleep(handler_delay).await;
+                    let flag = auth
+                        .ok()
+                        .and_then(|auth| auth.get(SUBSCRIPTIONS_QUERY_KEY).cloned());
+                    start_subs.start(&socket, flag != Some(json!(1)));
+                    start_started.send_modify(|started| {
+                        started.insert(socket.id);
+                    });
+                };
+            io.ns("/", start.with(register));
+            Server { io, subs, started }
         }
 
-        async fn connect(&self, auth: serde_json::Value) -> (Sender<Packet>, Receiver<Packet>) {
+        /// Connects and returns once the connection is acked, with the
+        /// socket's id; its connect handler may not have run yet.
+        async fn connect_unstarted(
+            &self,
+            auth: serde_json::Value,
+        ) -> (Sender<Packet>, Receiver<Packet>, Sid) {
             let (tx, mut rx) = self.io.new_dummy_sock("/", auth).await;
-            rx.recv().await.unwrap(); // namespace connect packet
+            let sid = match rx.recv().await {
+                // namespace connect packet: `0{"sid":"..."}`
+                Some(Packet::Message(msg)) => {
+                    let connect: serde_json::Value =
+                        serde_json::from_str(msg.trim_start_matches(|c: char| c.is_ascii_digit()))
+                            .unwrap();
+                    connect["sid"].as_str().unwrap().parse().unwrap()
+                }
+                other => panic!("expected a connect packet, got {other:?}"),
+            };
+            (tx, rx, sid)
+        }
+
+        /// Waits until the socket's connect handler has called `start`.
+        async fn wait_started(&self, sid: Sid) {
+            let mut started = self.started.subscribe();
+            tokio::time::timeout(
+                Duration::from_secs(1),
+                started.wait_for(|started| started.contains(&sid)),
+            )
+            .await
+            .expect("connect handler did not run")
+            .unwrap();
+        }
+
+        /// Connects and returns once the socket is started.
+        async fn connect(&self, auth: serde_json::Value) -> (Sender<Packet>, Receiver<Packet>) {
+            let (tx, rx, sid) = self.connect_unstarted(auth).await;
+            self.wait_started(sid).await;
             (tx, rx)
         }
 
@@ -454,7 +525,7 @@ mod tests {
 
         /// Connects with the flag, like a client that sends its topics.
         async fn connect_subscriber(&self) -> (Sender<Packet>, Receiver<Packet>) {
-            self.connect(json!({ SUBSCRIPTIONS_QUERY_KEY: 1 })).await
+            self.connect(subscriber_auth()).await
         }
 
         async fn emit(&self, topic: &str) {
@@ -476,6 +547,10 @@ mod tests {
             rooms.sort();
             rooms
         }
+    }
+
+    fn subscriber_auth() -> serde_json::Value {
+        json!({ SUBSCRIPTIONS_QUERY_KEY: 1 })
     }
 
     /// A `set_subscriptions` packet for list `seq` of `topics` (a JSON array).
@@ -548,9 +623,27 @@ mod tests {
     #[tokio::test]
     async fn list_sent_right_after_connecting_is_applied() {
         let srv = Server::with(SocketIo::builder(), Duration::from_millis(100));
-        let (tx, mut rx) = srv.connect_subscriber().await;
+        let (tx, mut rx, _) = srv.connect_unstarted(subscriber_auth()).await;
         let ack = send_set(&tx, &mut rx, 1, r#"["VCU/Speed"]"#).await;
         assert_eq!(ack, r#"30[{"count":1,"seq":1}]"#);
+        assert_eq!(srv.rooms().await, ["VCU/Speed"]);
+    }
+
+    /// A client whose flag was lost and whose first list is applied before
+    /// its connect handler runs keeps that list: starting it adds no `#`.
+    #[tokio::test]
+    async fn list_applied_before_the_connect_handler_runs_is_kept() {
+        let srv = Server::with(SocketIo::builder(), Duration::from_millis(100));
+        let (tx, mut rx, sid) = srv.connect_unstarted(json!({})).await;
+        send_set(&tx, &mut rx, 1, r#"["VCU/Speed"]"#).await;
+        srv.wait_started(sid).await;
+        srv.emit("BMS/Pack/SOC").await;
+        srv.emit("VCU/Speed").await;
+        assert_eq!(received_topics(&mut rx).await, ["VCU/Speed"]);
+        assert_eq!(
+            srv.subs.reader_counts(),
+            (0, vec![("VCU/Speed".to_string(), 1)])
+        );
         assert_eq!(srv.rooms().await, ["VCU/Speed"]);
     }
 
@@ -765,22 +858,43 @@ mod tests {
         assert_eq!(srv.rooms().await, Vec::<String>::new());
     }
 
-    /// A client that drops after the ack but before the connect handler has
-    /// run is still forgotten: its disconnect handler was attached in the
-    /// middleware, before it was counted.
+    /// Clients that drop after the ack but before their connect handler has
+    /// run are forgotten: the disconnect handler attached in middleware
+    /// uncounts the subscriber's list, and the old client's handler, running
+    /// after its disconnect, counts nothing.
     #[tokio::test]
     async fn socket_dropped_before_the_connect_handler_runs_is_forgotten() {
         let srv = Server::with(SocketIo::builder(), Duration::from_millis(100));
-        let (tx, _rx) = srv.connect_old().await;
-        let (sub_tx, mut sub_rx) = srv.connect_subscriber().await;
+        let (tx, _rx, old) = srv.connect_unstarted(json!({})).await;
+        let (sub_tx, mut sub_rx, sub) = srv.connect_unstarted(subscriber_auth()).await;
         send_set(&sub_tx, &mut sub_rx, 1, r#"["VCU/Speed"]"#).await;
         assert_eq!(
             srv.subs.reader_counts(),
-            (1, vec![("VCU/Speed".to_string(), 1)])
+            (0, vec![("VCU/Speed".to_string(), 1)])
         );
         tx.send(Packet::Close).await.unwrap();
         sub_tx.send(Packet::Close).await.unwrap();
         tokio::time::sleep(Duration::from_millis(50)).await; // handlers still asleep
+        assert_eq!(srv.subs.reader_counts(), (0, vec![]));
+        srv.wait_started(old).await;
+        srv.wait_started(sub).await;
+        assert!(srv.io.sockets().is_empty());
+        assert_eq!(srv.subs.reader_counts(), (0, vec![]));
+        assert_eq!(srv.rooms().await, Vec::<String>::new());
+    }
+
+    /// A connect handler that got the socket's handle before its disconnect
+    /// ran, but starts it only after, counts nothing.
+    #[tokio::test]
+    async fn start_after_unregister_counts_nothing() {
+        // the real connect handler never runs during the test
+        let srv = Server::with(SocketIo::builder(), Duration::from_mins(1));
+        let (_tx, _rx, _) = srv.connect_unstarted(json!({})).await;
+        let socket = srv.io.sockets().pop().unwrap();
+        let handle = socket.extensions.get::<DeliveryHandle>().unwrap();
+        srv.subs.unregister(&socket);
+        socket.extensions.insert(handle); // as if the handler got it first
+        srv.subs.start(&socket, true);
         assert_eq!(srv.subs.reader_counts(), (0, vec![]));
         assert_eq!(srv.rooms().await, Vec::<String>::new());
     }
