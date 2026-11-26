@@ -1,7 +1,7 @@
 use chrono::Utc;
 use regex::Regex;
 use ringbuffer::{AllocRingBuffer, RingBuffer};
-use rustc_hash::FxHashMap;
+use rustc_hash::{FxHashMap, FxHashSet};
 use serde::Serialize;
 use socketioxide::SocketIo;
 use socketioxide::adapter::Adapter;
@@ -21,7 +21,10 @@ use crate::metadata_structs::{
     METADATA_SOCKET_KEY, Node, TIMER_SOCKET_KEY, TIMERS_TOPICS, TimerData, TotalTimerData,
     map_dti_flt,
 };
-use crate::rule_structs::{RULE_SOCKET_KEY, RuleManager};
+use crate::rule_structs::{CLIENT_GRACE_PERIOD, ClientGrace, RULE_SOCKET_KEY, RuleManager};
+
+/// How often the delivery loop checks which subscribed clients are without a socket.
+const CLIENT_GRACE_SWEEP_INTERVAL: Duration = Duration::from_secs(5);
 use crate::{ClientData, SOCKET_DISCARD_PERCENT};
 
 pub async fn socket_handler(
@@ -187,6 +190,9 @@ pub async fn socket_handler_with_metadata(
     let mut iter_count: u64 = 0;
     let mut msgs_since_hb: u64 = 0;
 
+    let mut client_grace = ClientGrace::new(CLIENT_GRACE_PERIOD);
+    let mut client_grace_interval = tokio::time::interval(CLIENT_GRACE_SWEEP_INTERVAL);
+
     loop {
         iter_count = iter_count.wrapping_add(1);
         tokio::select! {
@@ -230,6 +236,9 @@ pub async fn socket_handler_with_metadata(
                         break;
                     }
                 }
+            }
+            _ = client_grace_interval.tick() => {
+                expire_disconnected_clients(&mut client_grace, &rules_manager, &client_socket_map).await;
             }
             _ = heartbeat.tick() => {
                 info!(
@@ -305,6 +314,29 @@ pub async fn socket_handler_with_metadata(
     }
 }
 
+/// Removes the subscriptions of clients that have been without a socket for the grace period.
+async fn expire_disconnected_clients(
+    client_grace: &mut ClientGrace,
+    rule_manager: &Arc<RuleManager>,
+    client_socket_map: &Arc<RwLock<FxHashMap<String, Sid>>>,
+) {
+    let subscribed = rule_manager.get_all_clients().await;
+    // copy who is connected and drop the read lock before deleting anything
+    let connected: FxHashSet<String> = client_socket_map.read().await.keys().cloned().collect();
+    let expired = client_grace.sweep(
+        &subscribed,
+        |client| connected.contains(&client.0),
+        tokio::time::Instant::now(),
+    );
+    for client in expired {
+        info!(
+            "Client {} disconnected for over {:?}, removing its Rule subscriptions",
+            client, CLIENT_GRACE_PERIOD
+        );
+        let _ = rule_manager.delete_client(client).await;
+    }
+}
+
 /// Handles triggering rules based on a recieved datapoint
 async fn handle_rule_processing(
     data: &ClientData,
@@ -322,12 +354,13 @@ async fn handle_rule_processing(
             let read_clients = client_socket_map.read().await;
             read_clients.get(&notification.0.0).copied()
         };
+        // A client without a socket is reconnecting or away; it keeps its subscriptions until
+        // the grace sweep in the delivery loop removes them (see ClientGrace).
         let Some(sid) = sid_opt else {
             warn!(
-                "Could not find client to deliver notification, deleting client {}",
-                notification.0.0
+                "Client {} is not connected, could not deliver notification of {}",
+                notification.0, notification.1.topic
             );
-            let _ = rule_manager.delete_client(notification.0).await;
             continue;
         };
         debug!(
@@ -336,10 +369,9 @@ async fn handle_rule_processing(
         );
         let Some(socket) = io.get_socket(sid) else {
             warn!(
-                "Could not find client socket, deleting client {}",
-                notification.0.0
+                "Socket for client {} is gone, could not deliver notification of {}",
+                notification.0, notification.1.topic
             );
-            let _ = rule_manager.delete_client(notification.0).await;
             continue;
         };
         if let Err(err) = socket.emit(RULE_SOCKET_KEY, &notification.1) {

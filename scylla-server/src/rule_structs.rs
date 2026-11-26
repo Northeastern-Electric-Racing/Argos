@@ -195,7 +195,7 @@ pub const RULE_SOCKET_KEY: &str = "rule_notify";
 // since client IDs, rule IDs, and topics are scattered about, wrap them here
 
 /// a `client_id`, add to derives to get more string features
-#[derive(PartialEq, Eq, Hash, Display, Clone, AsRef, Serialize)]
+#[derive(PartialEq, Eq, Hash, Display, Clone, AsRef, Serialize, Debug)]
 pub struct ClientId(pub String);
 
 /// a Rule ID, add to derives to get more string features
@@ -351,6 +351,56 @@ pub enum RuleManagerError {
     NoSuchClient,
     RuleFailure,
     Failure,
+}
+
+/// How long a subscribed client may stay disconnected before its Rule subscriptions are removed.
+/// Long enough to ride out a page reload, a dropped connection, or a laptop waking from sleep.
+pub const CLIENT_GRACE_PERIOD: Duration = Duration::from_mins(5);
+
+/// Tracks how long each subscribed client has been without a socket, so a client keeps its
+/// subscriptions while it reconnects and loses them only once it has been away for the grace period.
+pub struct ClientGrace {
+    grace_period: Duration,
+    /// <`client_id`, when it was first seen without a socket>
+    disconnected_since: FxHashMap<ClientId, tokio::time::Instant>,
+}
+
+impl ClientGrace {
+    #[must_use]
+    pub fn new(grace_period: Duration) -> Self {
+        Self {
+            grace_period,
+            disconnected_since: FxHashMap::default(),
+        }
+    }
+
+    /// Checks each subscribed client against whether it has a socket now, and returns the clients
+    /// that have been without one for at least the grace period. A client seen with a socket starts
+    /// over, so only an unbroken absence counts.
+    pub fn sweep(
+        &mut self,
+        subscribed: &[ClientId],
+        is_connected: impl Fn(&ClientId) -> bool,
+        now: tokio::time::Instant,
+    ) -> Vec<ClientId> {
+        // forget clients that are no longer subscribed, e.g. ones already expired
+        self.disconnected_since
+            .retain(|client, _| subscribed.contains(client));
+
+        let mut expired = Vec::new();
+        for client in subscribed {
+            if is_connected(client) {
+                self.disconnected_since.remove(client);
+                continue;
+            }
+            let since = *self.disconnected_since.entry(client.clone()).or_insert(now);
+            if now.saturating_duration_since(since) >= self.grace_period {
+                self.disconnected_since.remove(client);
+                expired.push(client.clone());
+            }
+        }
+        expired
+    }
 }
 
 /// the rule manager
