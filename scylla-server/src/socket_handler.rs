@@ -6,7 +6,7 @@ use serde::Serialize;
 use socketioxide::SocketIo;
 use socketioxide::adapter::Adapter;
 use socketioxide::extract::SocketRef;
-use socketioxide::handler::{FromConnectParts, Value};
+use socketioxide::handler::{ConnectHandler, FromConnectParts, Value};
 use socketioxide::socket::{Sid, Socket};
 use std::convert::Infallible;
 use std::sync::Arc;
@@ -156,28 +156,46 @@ pub async fn socket_handler_with_metadata(
     // a map of client_ids to their respective socket IDs for identifying where notifications go
     let client_socket_map: Arc<RwLock<FxHashMap<String, Sid>>> =
         Arc::new(RwLock::new(FxHashMap::default()));
-    let writable_socket_map = client_socket_map.clone();
+    // Map the client in connect middleware, which socketioxide awaits before it sends the
+    // CONNECT ack. Mapping in the handler instead runs after the ack, so a Rule firing in
+    // between finds no socket for an already-connected client and drops its subscriptions.
+    let mapping_socket_map = client_socket_map.clone();
+    let map_client = move |socket: SocketRef, SocketClientId(client_id): SocketClientId| {
+        let socket_map = mapping_socket_map.clone();
+        async move {
+            if client_id.is_empty() {
+                // still connect: telemetry doesn't need a client id, only Rule notifications do
+                warn!("Could not extract clientId query parameter, client unauthenticated");
+            } else {
+                debug!(
+                    "Establishing client connection with {} on socket_id {}",
+                    client_id, socket.id
+                );
+                socket_map.write().await.insert(client_id, socket.id);
+            }
+            Ok::<(), Infallible>(())
+        }
+    };
+    let unmapping_socket_map = client_socket_map.clone();
     io.ns(
         "/",
-        |socket: SocketRef, SocketClientId(client_id): SocketClientId| async move {
-            // unfortunate locking and ref counting due to the async closures
-            let mut owned = writable_socket_map.write().await;
-            if client_id.is_empty() {
-                warn!("Could not extract clientId query parameter, client unauthenticated");
-                return;
+        (move |socket: SocketRef, SocketClientId(client_id): SocketClientId| {
+            let socket_map = unmapping_socket_map.clone();
+            async move {
+                if client_id.is_empty() {
+                    return;
+                }
+                let sid = socket.id;
+                socket.on_disconnect(async move || {
+                    let mut socket_map = socket_map.write().await;
+                    // a reconnect may already have mapped this client to a newer socket
+                    if socket_map.get(&client_id) == Some(&sid) {
+                        socket_map.remove(&client_id);
+                    }
+                });
             }
-
-            debug!(
-                "Establishing client connection with {} on socket_id {}",
-                client_id, socket.id
-            );
-            owned.insert(client_id.clone(), socket.id);
-            drop(owned);
-
-            socket.on_disconnect(async move || {
-                writable_socket_map.write().await.remove(&client_id);
-            });
-        },
+        })
+        .with(map_client),
     );
 
     let mut msg_cnt = 0u64;
