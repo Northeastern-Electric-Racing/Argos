@@ -202,7 +202,7 @@ pub struct ClientId(pub String);
 #[derive(PartialEq, Eq, Hash, Display, Debug, Clone, Serialize, Deserialize)]
 pub struct RuleId(pub String);
 
-/// a MQTT topic to trigger on, add to derives to get more string features
+/// a siren topic to trigger on, add to derives to get more string features
 #[derive(PartialEq, Eq, Hash, Display, Clone, Serialize, Deserialize)]
 pub struct Topic(pub String);
 

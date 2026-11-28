@@ -1,8 +1,4 @@
 services:
-    scylla-server:
-        environment:
-            - SCYLLA_ZENOH=true
-
     siren:
         extends:
             file: ../siren-base/compose.zenohd.yml

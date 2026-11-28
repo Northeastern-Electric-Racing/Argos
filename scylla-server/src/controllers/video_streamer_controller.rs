@@ -1,4 +1,4 @@
-use std::{fs, io::SeekFrom, sync::Arc, vec};
+use std::{fs, io::SeekFrom, vec};
 
 use axum::{
     Extension, Json,
@@ -6,7 +6,6 @@ use axum::{
     extract::Path,
     http::{HeaderMap, Response, StatusCode, header},
 };
-use rumqttc::v5::AsyncClient;
 use tokio::{
     fs::File as TokioFile,
     io::{AsyncReadExt, AsyncSeekExt},
@@ -14,10 +13,7 @@ use tokio::{
 use tokio_util::io::ReaderStream;
 use tracing::info;
 
-use crate::{
-    error::ScyllaError,
-    proto::serverdata::{self},
-};
+use crate::error::ScyllaError;
 
 use super::{OutputDirectory, VideoSuffix};
 
@@ -105,23 +101,4 @@ pub async fn get_videos(
     }
 
     Ok(Json::from(file_paths))
-}
-
-pub async fn request_updated_videos(
-    Extension(mqtt_client): Extension<Arc<AsyncClient>>,
-) -> Result<Json<String>, ScyllaError> {
-    let mut payload = serverdata::ServerData::new();
-    payload.values = vec![1.0];
-    mqtt_client
-        .publish(
-            "Scylla/Video/Send",
-            rumqttc::v5::mqttbytes::QoS::ExactlyOnce,
-            false,
-            protobuf::Message::write_to_bytes(&payload)
-                .unwrap_or_else(|e| format!("failed to serialize {e}").as_bytes().to_vec()),
-        )
-        .await
-        .map_err(|err| ScyllaError::MqttError(format!("Failed to send mqtt message: {err}")))?;
-
-    Ok(Json::from("Sent Request to update videos".to_string()))
 }

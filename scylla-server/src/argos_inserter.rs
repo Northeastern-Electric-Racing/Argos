@@ -4,8 +4,8 @@ use tracing::warn;
 use crate::ClientData;
 
 /// Use this anywhere the server itself needs to insert a datapoint into the DB
-/// (i.e. anything that isn't coming from MQTT). Publishes into the same
-/// broadcast the MQTT processor uses, so points flow through `handling_loop`
+/// (i.e. anything that isn't coming from siren). Publishes into the same
+/// broadcast the Zenoh processor uses, so points flow through `handling_loop`
 /// and `batching_loop` like any other datapoint.
 #[derive(Clone)]
 pub struct ArgosInserter {
