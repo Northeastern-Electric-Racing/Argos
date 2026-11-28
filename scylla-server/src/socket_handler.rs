@@ -6,7 +6,7 @@ use serde::Serialize;
 use socketioxide::SocketIo;
 use socketioxide::adapter::Adapter;
 use socketioxide::extract::SocketRef;
-use socketioxide::handler::{FromConnectParts, Value};
+use socketioxide::handler::{ConnectHandler, FromConnectParts, Value};
 use socketioxide::socket::{Sid, Socket};
 use std::convert::Infallible;
 use std::sync::Arc;
@@ -22,6 +22,7 @@ use crate::metadata_structs::{
     map_dti_flt,
 };
 use crate::rule_structs::{RULE_SOCKET_KEY, RuleManager};
+use crate::socket_subscriptions::{SubscribesTopics, Subscriptions};
 use crate::{ClientData, SOCKET_DISCARD_PERCENT};
 
 pub async fn socket_handler(
@@ -157,27 +158,56 @@ pub async fn socket_handler_with_metadata(
     let client_socket_map: Arc<RwLock<FxHashMap<String, Sid>>> =
         Arc::new(RwLock::new(FxHashMap::default()));
     let writable_socket_map = client_socket_map.clone();
+    let subscriptions = Arc::new(Subscriptions::default());
+    // `data`: every topic, or only the topics of the socket's `set_subscriptions` lists. Registered
+    // in connect middleware, which socketioxide awaits before it acks the connection, so a list the
+    // client sends as soon as it is acked finds its handler. Counted only from the connect handler:
+    // socketioxide accepts the socket after middleware returns, and drops one whose transport
+    // closes before that without running its disconnect handler.
+    let mw_subscriptions = subscriptions.clone();
+    let register_subscriptions =
+        move |socket: SocketRef, SocketClientId(client_id): SocketClientId| {
+            let subscriptions = mw_subscriptions.clone();
+            let socket_map = writable_socket_map.clone();
+            async move {
+                // Attached before the socket is mapped or started, so once it is accepted, whenever it
+                // drops, both are undone, even before its connect handler has run.
+                let gone_subscriptions = subscriptions.clone();
+                let gone_socket_map = socket_map.clone();
+                let gone_client_id = client_id.clone();
+                socket.on_disconnect(async move |socket: SocketRef| {
+                    gone_subscriptions.unregister(&socket);
+                    if !gone_client_id.is_empty() {
+                        unmap_if_current(
+                            &mut *gone_socket_map.write().await,
+                            &gone_client_id,
+                            socket.id,
+                        );
+                    }
+                });
+                if !client_id.is_empty() {
+                    debug!(
+                        "Establishing client connection with {} on socket_id {}",
+                        client_id, socket.id
+                    );
+                    socket_map.write().await.insert(client_id, socket.id);
+                }
+                subscriptions.register(&socket);
+                Ok::<(), Infallible>(())
+            }
+        };
+    let start_subscriptions = subscriptions.clone();
     io.ns(
         "/",
-        |socket: SocketRef, SocketClientId(client_id): SocketClientId| async move {
-            // unfortunate locking and ref counting due to the async closures
-            let mut owned = writable_socket_map.write().await;
+        (async move |socket: SocketRef,
+                     SubscribesTopics(subscribes): SubscribesTopics,
+                     SocketClientId(client_id): SocketClientId| {
             if client_id.is_empty() {
                 warn!("Could not extract clientId query parameter, client unauthenticated");
-                return;
             }
-
-            debug!(
-                "Establishing client connection with {} on socket_id {}",
-                client_id, socket.id
-            );
-            owned.insert(client_id.clone(), socket.id);
-            drop(owned);
-
-            socket.on_disconnect(async move || {
-                writable_socket_map.write().await.remove(&client_id);
-            });
-        },
+            start_subscriptions.start(&socket, !subscribes);
+        })
+        .with(register_subscriptions),
     );
 
     let mut msg_cnt = 0u64;
@@ -205,12 +235,11 @@ pub async fn socket_handler_with_metadata(
                         // let sample = msg_cnt % 500 == 0;
                         // let age_ms = sample.then(|| (Utc::now() - data.timestamp).num_milliseconds());
                         // let emit_start = sample.then(tokio::time::Instant::now);
-                        send_socket_msg(
-                            &data,
-                            &mut upload_counter,
-                            &io,
-                            DATA_SOCKET_KEY,
-                        ).await;
+                        if keep_message(&mut upload_counter)
+                            && let Err(err) = subscriptions.emit_data(&io, &data).await
+                        {
+                            log_broadcast_err(&err);
+                        }
                         // if let (Some(age), Some(start)) = (age_ms, emit_start) {
                         //     debug!(
                         //         "emit sample: io.emit() took {:?}; data was {} ms old when emitted (sockets: {})",
@@ -302,6 +331,14 @@ pub async fn socket_handler_with_metadata(
                 last_instant = tokio::time::Instant::now();
             }
         }
+    }
+}
+
+/// Removes `client_id` from the client map if it still maps to `sid`: a reconnect with the same
+/// `clientId` may already have mapped it to its new socket.
+fn unmap_if_current(client_socket_map: &mut FxHashMap<String, Sid>, client_id: &str, sid: Sid) {
+    if client_socket_map.get(client_id) == Some(&sid) {
+        client_socket_map.remove(client_id);
     }
 }
 
@@ -469,33 +506,57 @@ async fn send_socket_msg<T>(
 ) where
     T: Serialize,
 {
-    // `SOCKET_DISCARD_PERCENT` is the percent of messages to DROP: 0 keeps everything,
-    // 100 drops everything. Cycle the counter through 0..100 and keep the message only
-    // when its position is at or above the discard threshold, e.g. a value of 25 drops
-    // positions 0..24 (~25%) and keeps positions 25..99 (~75%).
-    *upload_counter = upload_counter.wrapping_add(1) % 100;
-    if *upload_counter >= SOCKET_DISCARD_PERCENT.load(Ordering::Relaxed) {
-        match io
+    if keep_message(upload_counter)
+        && let Err(err) = io
             .emit(
                 socket_key,
                 &serde_json::to_string(client_data).expect("Could not serialize ClientData"),
             )
             .await
-        {
-            Ok(()) => (),
-            Err(err) => match err {
-                socketioxide::BroadcastError::Socket(e) => {
-                    trace!("Socket: Transmit error: {:?}", e);
-                }
-                socketioxide::BroadcastError::Serialize(_) => {
-                    warn!("Socket: Serialize error: {}", err);
-                }
-                socketioxide::BroadcastError::Adapter(_) => {
-                    warn!("Socket: Adapter error: {}", err);
-                }
-            },
-        }
-    } else {
+    {
+        log_broadcast_err(&err);
+    }
+}
+
+/// `SOCKET_DISCARD_PERCENT` is the percent of messages to DROP: 0 keeps everything,
+/// 100 drops everything. Cycle the counter through 0..100 and keep the message only
+/// when its position is at or above the discard threshold, e.g. a value of 25 drops
+/// positions 0..24 (~25%) and keeps positions 25..99 (~75%).
+fn keep_message(upload_counter: &mut u8) -> bool {
+    *upload_counter = upload_counter.wrapping_add(1) % 100;
+    let keep = *upload_counter >= SOCKET_DISCARD_PERCENT.load(Ordering::Relaxed);
+    if !keep {
         trace!("Discarding message!");
+    }
+    keep
+}
+
+fn log_broadcast_err(err: &socketioxide::BroadcastError) {
+    match err {
+        socketioxide::BroadcastError::Socket(e) => {
+            trace!("Socket: Transmit error: {:?}", e);
+        }
+        socketioxide::BroadcastError::Serialize(_) => {
+            warn!("Socket: Serialize error: {}", err);
+        }
+        socketioxide::BroadcastError::Adapter(_) => {
+            warn!("Socket: Adapter error: {}", err);
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn client_is_unmapped_only_from_its_current_socket() {
+        let (old, new) = (Sid::new(), Sid::new());
+        let mut map = FxHashMap::default();
+        map.insert("client".to_string(), new);
+        unmap_if_current(&mut map, "client", old); // the old socket's late disconnect
+        assert_eq!(map.get("client"), Some(&new));
+        unmap_if_current(&mut map, "client", new);
+        assert!(map.is_empty());
     }
 }
