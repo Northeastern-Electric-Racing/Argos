@@ -18,16 +18,16 @@ pub struct ConfigRequest {
     pub data: Option<Vec<f32>>,
 }
 
-/// Sends a configuration to the car over MQTT
+/// Sends a configuration to the car over siren
 /// * `key` - The key of the configuration, as defined in the cangen YAML
 /// * `data_query` - The data of the configuration, a URI query list of data=<f32>.  If empty or too short, filled with cangen `YAMl` defaults
-/// * `client` - The MQTT client to be used to send the data
+/// * `send_siren` - The channel to the siren publisher used to send the data
 ///
 /// More info: This follows the specification of sending a `command_data` object over siren to topic `CALYPSO_BIDIR_CMD_PREFIX`/<key>
 pub async fn send_config_command(
     Path(key): Path<String>,
     Query(data_query): Query<ConfigRequest>,
-    Extension(send_mqtt): Extension<mpsc::Sender<SirenSendable>>,
+    Extension(send_siren): Extension<mpsc::Sender<SirenSendable>>,
 ) -> Result<Json<String>, ScyllaError> {
     info!(
         "Sending car config with key: {}, and values: {:?}",
@@ -41,7 +41,7 @@ pub async fn send_config_command(
         payload.data = data;
     }
 
-    if send_mqtt
+    if send_siren
         .send(SirenSendable {
             command_data: payload,
             topic: format!("{CALYPSO_BIDIR_CMD_PREFIX}{key}"),
@@ -49,7 +49,7 @@ pub async fn send_config_command(
         .await
         .is_err()
     {
-        return Err(ScyllaError::MqttError(
+        return Err(ScyllaError::SirenError(
             "Message could not be transferred!".to_string(),
         ));
     }

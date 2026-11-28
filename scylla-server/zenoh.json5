@@ -1,0 +1,12 @@
+// Zenoh config for running scylla-server on the host with `cargo run`, connecting to the
+// router from `./argos.sh scylla-dev up` on localhost. The Docker image uses
+// siren-base/zenoh-scylla.json5 instead.
+{
+  mode: "client",
+  metadata: { name: "Scylla", location: "local" },
+  connect: {
+    timeout_ms: { router: -1, peer: -1, client: -1 },
+    endpoints: ["tcp/localhost:7447"],
+  },
+  scouting: { multicast: { enabled: false } },
+}

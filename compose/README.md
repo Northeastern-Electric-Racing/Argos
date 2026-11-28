@@ -16,7 +16,6 @@ Its syntax is
 Profiles:
 | Name         | Usecase                                                 | Scylla                                    | Siren                   | Client                                    | Database |
 | ------------ | ------------------------------------------------------- | ----------------------------------------- | ----------------------- | ----------------------------------------- | -------- |
-| `brick`      | Device connected to base station to collect data        | No rate limit                             | On base station         | External (`router`)                       | Active   |
 | `router`     | The base station collecting on a rate limit and hosting | Rate limited                              | Active, bridging to car | Active                                    | Active   |
 | `tpu`        | The on-car data collection node                         | Rate limited                              | External (TPU OS)       | None                                      | Active   |
 | `client-dev` | To develop the client with a working backend            | Rate limited                              | Active                  | None (run your own pointing to localhost) | Active   |
@@ -59,7 +58,7 @@ env STACK_OFFSET=$N \
 STACK_OFFSET=$N ./argos.sh fake-data down
 ```
 
-`STACK_OFFSET` is purely a project-name suffix: any non-empty value (including `0`) creates a separate compose project, so don't set it when running production profiles. Production profiles (`router`, `brick`, `tpu`) are unaffected when run with no env vars. Multiple `ng serve` clients and multiple `cargo run` scyllas are already supported via the existing port flags and are independent of this.
+`STACK_OFFSET` is purely a project-name suffix: any non-empty value (including `0`) creates a separate compose project, so don't set it when running production profiles. Production profiles (`router`, `tpu`) are unaffected when run with no env vars. Multiple `ng serve` clients and multiple `cargo run` scyllas are already supported via the existing port flags and are independent of this.
 
 #### Examples with and without profiles
 

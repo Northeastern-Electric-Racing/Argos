@@ -1,11 +1,11 @@
 use std::{
     f64::consts::TAU,
+    path::PathBuf,
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
 use clap::Parser;
 use protobuf::Message;
-use rumqttc::v5::{AsyncClient, MqttOptions, mqttbytes::QoS};
 use scylla_server::{
     lap_timing::{GPS_LOCATION_TOPIC, METRES_PER_DEGREE},
     proto::serverdata::ServerData,
@@ -20,9 +20,9 @@ const PUBLISH_PERIOD: Duration = Duration::from_millis(100);
 /// Publishes mock `TPU/GPS/Location` fixes driving laps of a circular loop
 #[derive(Parser, Debug)]
 struct GpsMockArgs {
-    /// The host url of the siren, including port and excluding protocol prefix
-    #[arg(short = 'u', long, env = "SCYLLA_SIREN_HOST_URL")]
-    siren_host_url: String,
+    /// Zenoh conf file
+    #[arg(long, env = "SCYLLA_ZENOH_CONF", default_value_os = "./zenoh.json5")]
+    zenoh_conf: PathBuf,
 }
 
 /// Metres east and north of the origin after `distance_m`; every lap starts at the origin
@@ -47,25 +47,10 @@ fn location(east_m: f64, north_m: f64, time_us: u64) -> ServerData {
 #[tokio::main]
 async fn main() {
     let args = GpsMockArgs::parse();
-    let (host, port) = args
-        .siren_host_url
-        .split_once(':')
-        .expect("Siren URL must be host:port");
-    let mut options = MqttOptions::new(
-        "GpsMock",
-        host,
-        port.parse::<u16>().expect("Invalid Siren port"),
-    );
-    options.set_keep_alive(Duration::from_secs(20));
-    let (client, mut eventloop) = AsyncClient::new(options, 10);
-    tokio::spawn(async move {
-        loop {
-            if let Err(error) = eventloop.poll().await {
-                eprintln!("MQTT connection error: {error}");
-                tokio::time::sleep(Duration::from_secs(1)).await;
-            }
-        }
-    });
+    let session =
+        zenoh::open(zenoh::Config::from_file(&args.zenoh_conf).expect("Could not read Zenoh conf"))
+            .await
+            .expect("Could not open Zenoh session");
 
     let step_m = SPEED_M_PER_S * PUBLISH_PERIOD.as_secs_f64();
     let mut ticker = tokio::time::interval(PUBLISH_PERIOD);
@@ -79,10 +64,7 @@ async fn main() {
         let payload = location(east_m, north_m, time_us)
             .write_to_bytes()
             .expect("ServerData always encodes");
-        if let Err(error) = client
-            .publish(GPS_LOCATION_TOPIC, QoS::AtMostOnce, false, payload)
-            .await
-        {
+        if let Err(error) = session.put(GPS_LOCATION_TOPIC, payload).await {
             eprintln!("Could not publish GPS fix: {error}");
         }
     }

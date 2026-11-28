@@ -16,7 +16,6 @@ use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use diesel_async::{AsyncConnection, AsyncPgConnection};
 use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
 use dotenvy::dotenv;
-use rumqttc::v5::AsyncClient;
 use scylla_server::{
     ArgosPoolHandle, BATCH_UPSERT_TIME, DATA_UPLOAD_DISABLE, RATE_LIMIT_MODE, RateLimitMode,
     SOCKET_DISCARD_PERCENT, STATIC_RATE_LIMIT_VALUE, SirenSendable, argos_database, build_pool,
@@ -31,18 +30,12 @@ use scylla_server::{
         run_controller, scylla_config_controller, trace_controller, track_controller,
         video_streamer_controller::{self},
     },
-    mqtt_processor::pub_handle,
     rule_structs::RuleManager,
     socket_handler::{socket_handler, socket_handler_with_metadata},
     track_handler::{LiveRunHandle, TracksChanged, track_handler},
     zenoh_processor::ZenohProcessor,
 };
-use scylla_server::{
-    ClientData,
-    argos_inserter::ArgosInserter,
-    db_handler,
-    mqtt_processor::{MqttProcessor, MqttProcessorOptions},
-};
+use scylla_server::{ClientData, argos_inserter::ArgosInserter, db_handler};
 use socketioxide::{SocketIo, extract::SocketRef};
 use tokio::{
     signal,
@@ -75,15 +68,6 @@ struct ScyllaArgs {
     // /// Whether to enable the socket io server in Scylla
     // #[arg(short, long, env = "SCYLLA_SOCKET")]
     // socket: bool,
-    /// The host url of the siren, including port and excluding protocol prefix
-    #[arg(
-        short = 'u',
-        long,
-        env = "SCYLLA_SIREN_HOST_URL",
-        default_value = "localhost:1883"
-    )]
-    siren_host_url: String,
-
     /// The time, in seconds between collection for a batch upsert
     #[arg(
         short = 't',
@@ -145,10 +129,6 @@ struct ScyllaArgs {
     /// The authentication password for privileged pages
     #[arg(long, env = "SCYLLA_PASSWORD", default_value = "admin")]
     password: String,
-
-    /// Use Zenoh instead of MQTT -- will eventually become default
-    #[arg(short = 'z', long, env = "SCYLLA_ZENOH")]
-    zenoh: bool,
 
     /// Zenoh conf file
     #[arg(long, env = "SCYLLA_ZENOH_CONF", default_value_os = "./zenoh.json5")]
@@ -267,15 +247,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         s.on_disconnect(async |_: SocketRef| debug!("Socket: Client disconnected from socket"));
     });
 
-    // channel to pass the mqtt data
+    // channels to pass the siren data
     // TODO tune buffer size
-    let (mqtt_send_db, mqtt_receive_db) = broadcast::channel::<ClientData>(10000);
-    let (mqtt_send_socket, mqtt_receive_socket) = broadcast::channel::<ClientData>(10000);
-    let (mqtt_send_out, mqtt_recv_out) = mpsc::channel::<SirenSendable>(100);
+    let (siren_send_db, siren_receive_db) = broadcast::channel::<ClientData>(10000);
+    let (siren_send_socket, siren_receive_socket) = broadcast::channel::<ClientData>(10000);
+    let (siren_send_out, siren_recv_out) = mpsc::channel::<SirenSendable>(100);
 
     // wraps a clone of the db-bound broadcast Sender so server-generated
-    // datapoints (e.g. Argos/Message rate) can be inserted alongside MQTT data
-    let argos_inserter = ArgosInserter::new(mqtt_send_db.clone());
+    // datapoints (e.g. Argos/Message rate) can be inserted alongside siren data
+    let argos_inserter = ArgosInserter::new(siren_send_db.clone());
 
     // channel to pass the processed data to the batch uploading thread
     // TODO tune buffer size
@@ -292,7 +272,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let live_run = LiveRunHandle::default();
     let fut = track_handler(
         token.clone(),
-        mqtt_send_socket.subscribe(),
+        siren_send_socket.subscribe(),
         argos_pool.clone(),
         tracks_changed.clone(),
         live_run.clone(),
@@ -304,7 +284,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     });
 
     if cli.no_metadata {
-        let fut = socket_handler(token.clone(), mqtt_receive_socket, io);
+        let fut = socket_handler(token.clone(), siren_receive_socket, io);
         task_tracker.spawn(async move {
             let res = tokio::spawn(fut).await;
             warn!(task = "socket_handler", "task ended: {:?}", res);
@@ -312,7 +292,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     } else {
         let fut = socket_handler_with_metadata(
             token.clone(),
-            mqtt_receive_socket,
+            siren_receive_socket,
             rules_manager.clone(),
             argos_inserter.clone(),
             io,
@@ -327,7 +307,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // spawn the database handler
-    let handling_loop_fut = db_handler::DbHandler::new(mqtt_receive_db, pool.clone())
+    let handling_loop_fut = db_handler::DbHandler::new(siren_receive_db, pool.clone())
         .handling_loop(db_send.clone(), token.clone());
     task_tracker.spawn(async move {
         let res = tokio::spawn(handling_loop_fut).await;
@@ -341,37 +321,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         warn!(task = "batching_loop", "task ended: {:?}", res);
     });
 
-    // run prod if this isnt present
-    if cli.zenoh {
-        info!("Running processor in Zenoh mode");
-        let recv = ZenohProcessor::new(
-            mqtt_send_db,
-            mqtt_send_socket,
-            mqtt_recv_out,
-            token.clone(),
-            cli.zenoh_conf,
-        )
-        .await;
-        task_tracker.spawn(recv.process_zenoh(pool.clone()));
-    } else {
-        // create and spawn the mqtt processor
-        info!("Running processor in MQTT (production) mode");
-        let (recv, opts) = MqttProcessor::new(
-            mqtt_send_db,
-            mqtt_send_socket,
-            token.clone(),
-            &MqttProcessorOptions {
-                mqtt_path: cli.siren_host_url,
-            },
-        );
-        let (client, eventloop) = AsyncClient::new(opts, 600);
-        let process_mqtt_fut = recv.process_mqtt(eventloop, client.clone(), pool.clone());
-        task_tracker.spawn(async move {
-            let res = tokio::spawn(process_mqtt_fut).await;
-            warn!(task = "mqtt_processor", "task ended: {:?}", res);
-        });
-        task_tracker.spawn(pub_handle(token.clone(), mqtt_recv_out, client));
-    }
+    let recv = ZenohProcessor::new(
+        siren_send_db,
+        siren_send_socket,
+        siren_recv_out,
+        token.clone(),
+        cli.zenoh_conf,
+    )
+    .await;
+    task_tracker.spawn(recv.process_zenoh(pool.clone()));
 
     let app = Router::new()
         .merge(
@@ -421,7 +379,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     "/config/set/{configKey}",
                     post(car_command_controller::send_config_command),
                 )
-                .layer(Extension(mqtt_send_out)),
+                .layer(Extension(siren_send_out)),
         )
         .merge(
             Router::new()
@@ -465,14 +423,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     "/insert/log",
                     post(file_insertion_controller::insert_logger_file).layer(Extension(db_send)),
                 )
-                .route(
-                    "/insert/update_logger",
-                    post(file_insertion_controller::request_logger_insert),
-                )
-                .route(
-                    "/insert/update_serial",
-                    post(file_insertion_controller::request_serial_insert),
-                )
                 // VIDEO STREAMING
                 .route(
                     "/videos/{file_name}",
@@ -482,10 +432,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     "/videos",
                     get(video_streamer_controller::get_videos)
                         .layer(Extension(VideoSuffix(cli.video_suffix))),
-                )
-                .route(
-                    "/videos/update",
-                    post(video_streamer_controller::request_updated_videos),
                 )
                 .route(
                     "/authenticate",

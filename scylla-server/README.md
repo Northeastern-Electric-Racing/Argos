@@ -1,6 +1,6 @@
 # Scylla Server
 
-The backend for argos, processes data storing it into the database, sends messages over MQTT to the car, and broadcasts data and metadata to the frontend.
+The backend for argos, processes data storing it into the database, sends messages over siren to the car, and broadcasts data and metadata to the frontend.
 
 ---
 
@@ -80,7 +80,7 @@ Write its `up.sql` and `down.sql`, then `diesel migration run --config-file dies
 
 #### Mock GPS:
 
-`SCYLLA_SIREN_HOST_URL=localhost:1883 cargo run --bin gps_mock` publishes mock fixes on `TPU/GPS/Location` every 100 ms, driving laps of a loop, so the map and lap timing work without the car. It is a dev tool: the Docker image ships only `scylla-server`.
+With the `scylla-dev` stack up, `cargo run --bin gps_mock` publishes mock fixes to the local Zenoh router (via `./zenoh.json5`) on `TPU/GPS/Location` every 100 ms, driving laps of a loop, so the map and lap timing work without the car. It is a dev tool: the Docker image ships only `scylla-server`.
 
 <!-- #### Test it yourself!
 

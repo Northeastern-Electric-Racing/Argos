@@ -283,7 +283,7 @@ impl DbHandler {
                         task = "handling_loop",
                         iter = iter_count,
                         data_queue_len = self.data_queue.len(),
-                        mqtt_recv_len = self.receiver.len(),
+                        siren_recv_len = self.receiver.len(),
                         msgs_in_window = msgs_since_hb,
                         "heartbeat"
                     );
@@ -295,7 +295,7 @@ impl DbHandler {
 
     #[instrument(skip(self), level = Level::TRACE)]
     async fn handle_msg(&mut self, msg: ClientData, data_channel: &mpsc::Sender<Vec<ClientData>>) {
-        trace!("Mqtt dispatcher: {}", self.receiver.len(),);
+        trace!("Siren dispatcher: {}", self.receiver.len(),);
 
         if !self.datatype_list.contains(&msg.name) {
             let Ok(mut database) = self.pool.get().await else {

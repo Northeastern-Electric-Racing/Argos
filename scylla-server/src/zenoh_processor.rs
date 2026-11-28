@@ -22,9 +22,9 @@ use super::ClientData;
 const YEAR_2000: chrono::DateTime<chrono::Utc> =
     chrono::DateTime::from_timestamp_millis(963_014_966_000).unwrap();
 
-/// The chief processor of incoming mqtt data, this handles
-/// - mqtt state
-/// - reception via mqtt and subsequent parsing
+/// The chief processor of incoming siren data, this handles
+/// - zenoh session state
+/// - reception via siren and subsequent parsing
 /// - labeling of data with runs
 /// - sending data over the channel to a db handler and socket
 ///
@@ -74,8 +74,7 @@ impl ZenohProcessor {
     }
 
     /// This handles the reception of zenoh messages, will not return
-    /// * `eventloop` - The eventloop returned by `::new` to connect to.  The loop isnt sync so this is the best that can be done
-    /// * `client` - The async mqttt v5 client to use for subscriptions
+    /// * `pool` - The database pool, used to create the initial run
     /// # Panics
     /// Panics if subscription call fails
     pub async fn process_zenoh(mut self, pool: Pool<AsyncPgConnection>) {
@@ -120,7 +119,7 @@ impl ZenohProcessor {
     }
 
     /// Parse the message
-    /// * `msg` - The mqtt message to parse
+    /// * `msg` - The siren message to parse
     /// returns the `ClientData` and whether it should be saved
     #[instrument(skip(self), level = Level::TRACE)]
     async fn parse_msg(

@@ -17,7 +17,6 @@ pub mod services;
 
 pub mod argos_inserter;
 pub mod db_handler;
-pub mod mqtt_processor;
 pub mod zenoh_processor;
 
 pub mod metadata_structs;

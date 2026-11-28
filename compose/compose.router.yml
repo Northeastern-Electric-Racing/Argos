@@ -2,7 +2,6 @@ services:
   scylla-server:
     environment:
       - SCYLLA_BATCH_UPSERT_TIME=20
-      - SCYLLA_ZENOH=true
     init: false
 
   client:

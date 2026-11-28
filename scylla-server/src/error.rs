@@ -25,8 +25,8 @@ pub enum ScyllaError {
     HttpError(StatusCode, String),
     /// An error when writing or retrieving a file was made
     FileError(String),
-    /// An error when receiving or sending an mqtt message
-    MqttError(String),
+    /// An error when receiving or sending a siren message
+    SirenError(String),
     /// An error from interacting with rules
     RuleError(RuleManagerError),
 }
@@ -63,7 +63,7 @@ impl IntoResponse for ScyllaError {
             ),
             ScyllaError::InvalidSetting(reason) => (StatusCode::BAD_REQUEST, reason),
             ScyllaError::HttpError(code, reason) => (code, reason),
-            ScyllaError::FileError(reason) | ScyllaError::MqttError(reason) => {
+            ScyllaError::FileError(reason) | ScyllaError::SirenError(reason) => {
                 (StatusCode::INTERNAL_SERVER_ERROR, reason)
             }
             ScyllaError::RuleError(err_type) => match err_type {
