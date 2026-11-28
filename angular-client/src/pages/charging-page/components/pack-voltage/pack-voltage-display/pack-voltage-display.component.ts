@@ -27,6 +27,7 @@ import HStackComponent from 'src/components/hstack/hstack.component';
 export default class PackVoltageDisplayComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
+  readonly graphTopics = [topics.packVoltage()];
   voltage: number = 0;
   packVoltData: GraphData[] = [];
   resetGraphButton = {

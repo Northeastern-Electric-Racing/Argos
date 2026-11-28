@@ -1,4 +1,4 @@
-<info-background title="Pack Temp" svgIcon="device_thermostat">
+<info-background title="Pack Temp" svgIcon="device_thermostat" [graphTopics]="graphTopics">
   <hstack>
     <div class="flex h-18.5 w-7 items-center justify-center">
       <thermometer [temperature]="packTemp" [min]="-15" [max]="30" />

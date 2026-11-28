@@ -13,7 +13,7 @@
   </div>
 
   <div [class]="tiles.speed">
-    <info-background svgIcon="speed" title="Speed" class="h-full w-full">
+    <info-background svgIcon="speed" title="Speed" [graphTopics]="speedGraphTopics" class="h-full w-full">
       <div class="flex h-full w-full items-center justify-center overflow-hidden">
         <half-gauge [current]="liveSpeed()" [max]="100" [min]="0" unit="mph" [color]="speedGaugeColor()" [size]="320" />
       </div>
@@ -21,13 +21,13 @@
   </div>
 
   <div [class]="tiles.stat">
-    <info-background title="Battery" class="h-full w-full">
+    <info-background title="Battery" [graphTopics]="socGraphTopics" class="h-full w-full">
       <gauge-stat [value]="liveSoc()" unit="%" [color]="socColor()" />
     </info-background>
   </div>
 
   <div [class]="tiles.stat">
-    <info-background title="Motor" class="h-full w-full">
+    <info-background title="Motor" [graphTopics]="motorTempGraphTopics" class="h-full w-full">
       <gauge-stat [value]="liveMotorTemp()" unit="°C" [color]="motorTempColor()" />
     </info-background>
   </div>

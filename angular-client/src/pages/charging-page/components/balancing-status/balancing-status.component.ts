@@ -17,6 +17,7 @@ export default class BalancingStatusComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   displayLight = input<boolean>(true);
   private storage = inject(Storage);
+  readonly graphTopics = [topics.statusBalancing()];
   isBalancing = signal(false);
   protected lightClass = computed(() => (this.isBalancing() ? statusLightClasses.balancing : statusLightClasses.off));
   currentSeconds = signal(0);

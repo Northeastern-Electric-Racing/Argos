@@ -54,6 +54,13 @@ export default class RtdsDebugCardComponent implements OnInit {
 
   readonly rtdsTopics = EFUSE_TOPICS.VCU.RTDS;
   readonly echo = EFUSE_TOPICS.VCU.Echo;
+  readonly graphTopics = [
+    this.rtdsTopics.Pin_State,
+    this.rtdsTopics.Sounding_State,
+    this.rtdsTopics.Reverse_State,
+    this.rtdsTopics.Error_State,
+    this.echo.BMS_Shutdown
+  ];
 
   isLocked = signal<boolean>(true);
 

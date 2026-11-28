@@ -1,5 +1,5 @@
 @if (isDesktop) {
-  <info-background svgIcon="electric_meter" title="Cell Voltage" [button]="resetGraphButton">
+  <info-background svgIcon="electric_meter" title="Cell Voltage" [button]="resetGraphButton" [graphTopics]="graphTopics">
     <hstack spacing="30px">
       <vstack class="mb-10 w-1/10">
         <typography variant="info-value" [content]="delta.toFixed(3) + 'V'" textClass="text-stat" />
@@ -26,5 +26,6 @@
     [highVoltsData]="highVoltsData"
     [lowVoltsData]="lowVoltsData"
     [resetGraphButton]="resetGraphButton"
+    [graphTopics]="graphTopics"
   />
 }

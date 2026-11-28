@@ -32,4 +32,5 @@ export default class HighLowCellMobileComponent {
   highVoltsData = input<GraphData[]>([]);
   lowVoltsData = input<GraphData[]>([]);
   resetGraphButton = input.required<{ onClick: () => void; icon: string; ariaLabel?: string }>();
+  graphTopics = input<string[]>([]);
 }

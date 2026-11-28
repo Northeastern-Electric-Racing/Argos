@@ -17,6 +17,7 @@ export default class ActiveStatusComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   displayLight = input<boolean>(true);
   private storage = inject(Storage);
+  readonly graphTopics = [topics.bmsMode()];
   isActive = signal(false);
   protected lightClass = computed(() => (this.isActive() ? statusLightClasses.active : statusLightClasses.off));
   currentSeconds = signal(0);

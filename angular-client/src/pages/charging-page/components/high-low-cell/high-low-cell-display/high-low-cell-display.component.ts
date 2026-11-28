@@ -33,6 +33,7 @@ import HStackComponent from 'src/components/hstack/hstack.component';
 export default class HighLowCellDisplayComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
+  readonly graphTopics = [topics.lowVoltsValue(), topics.highVoltsValue()];
   delta: number = 0;
   lowCellVoltage: number = 0;
   highCellVoltage: number = 0;

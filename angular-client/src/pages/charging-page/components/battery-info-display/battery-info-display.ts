@@ -17,6 +17,13 @@ import { injectIsMobile } from 'src/ui/layout/mobile';
 export class BatteryInfoDisplayComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
+  readonly graphTopics = [
+    topics.packTemp(),
+    topics.packVoltage(),
+    topics.stateOfCharge(),
+    topics.chargeCurrentLimit(),
+    topics.dischargeCurrentLimit()
+  ];
   voltage: number = 0;
   packTemp: number = 0;
   stateOfCharge: number = 0;

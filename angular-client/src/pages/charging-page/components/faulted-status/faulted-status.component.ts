@@ -17,6 +17,7 @@ export default class FaultedStatusComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   displayLight = input<boolean>(true);
   private storage = inject(Storage);
+  readonly graphTopics = [topics.bmsMode()];
   isFaulted = signal(false);
   protected lightClass = computed(() => (this.isFaulted() ? statusLightClasses.faulted : statusLightClasses.off));
   currentSeconds = signal(0);

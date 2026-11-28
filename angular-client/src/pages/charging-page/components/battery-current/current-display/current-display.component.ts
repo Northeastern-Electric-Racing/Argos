@@ -14,6 +14,7 @@ import TypographyComponent from 'src/components/typography/typography.component'
 export default class CurrentDisplayComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private storage = inject(Storage);
+  readonly graphTopics = [topics.current()];
   amps: number = 0;
 
   ngOnInit() {
